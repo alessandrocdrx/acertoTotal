@@ -28,6 +28,9 @@ const ok = (tecnica, nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} 
   ok('Lei de Hick', 'Filtros de contas em 4 botões numa linha só', await p.evaluate(() => { const t = [...document.querySelectorAll('.four .chip')].map(c => c.getBoundingClientRect().top); return t.length === 4 && new Set(t).size === 1; }));
   ok('Lei de Jakob', 'Botão flutuante, menu inferior e janela de baixo, como nos apps Android', (await p.locator('.fab').count()) === 1 && (await p.locator('nav.tabs').count()) === 1);
   ok('Identidade', 'Nome CelsoPix aparece dentro do app', (await p.locator('.brand').innerText()).includes('CelsoPix'));
+  const faixa = p.locator('#ambiente');
+  ok('Visibilidade do status', 'Faixa "Ambiente de teste" visível no topo, acima do nome do app', (await faixa.isVisible()) && /Ambiente de teste/.test(await faixa.innerText()) && (await faixa.boundingBox()).y < (await p.locator('.brand').boundingBox()).y);
+  ok('Acessibilidade', 'Faixa de ambiente é anunciada como nota', (await faixa.getAttribute('role')) === 'note');
   ok('Acessibilidade', 'Página declara idioma pt-BR (leitor de tela pronuncia certo)', (await p.evaluate(() => document.documentElement.lang)) === 'pt-BR');
 
   // Prevenção de erros + mensagem no próprio campo

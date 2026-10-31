@@ -3,7 +3,8 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
-const ASSETS = path.join(__dirname, '..', 'android', 'app', 'src', 'main', 'assets');
+const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
+const ASSETS = path.join(SRC, 'homolog', 'assets');
 const out = [];
 const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${cond ? '' : ' → ' + det}`);
 
@@ -35,7 +36,7 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
     });
     ok('Sem internet: app abre e funciona', (await p.locator('.crow').count()) > 0 && typeof (await p.evaluate(() => typeof XLSX)) === 'string' && (await p.evaluate(() => typeof XLSX)) === 'object');
     await p.click('button[data-tab=planilha]');
-    await p.click('[data-act=export-atrasados]');
+    await p.click('[data-act=export-custom]');
     await p.click('[data-act=xlsx-export]');
     await p.waitForFunction(() => window.__salvo);
     const r = await p.evaluate(() => {
@@ -44,7 +45,7 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
       const wb = XLSX.read(u, { type: 'array' });
       return { nome: window.__salvo.nome, linhas: XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }) };
     });
-    ok('Exportar no Android entrega um .xlsx válido para a ponte', /^atrasados-\d{4}-\d{2}-\d{2}\.xlsx$/.test(r.nome) && r.linhas[0][0] === 'Cliente' && r.linhas.length > 1, JSON.stringify(r.linhas[0]));
+    ok('Exportar no Android entrega um .xlsx válido para a ponte', /^contas-atrasadas-\d{4}-\d{2}-\d{2}\.xlsx$/.test(r.nome) && r.linhas[0][0] === 'Cliente' && r.linhas.length > 1, JSON.stringify(r.linhas[0]));
     ok('Depois de salvar, o app confirma', /Arquivo Excel salvo/.test(await p.locator('.toast').innerText()));
     await ctx.close();
   }
@@ -53,6 +54,18 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
     await p.click('button[data-tab=planilha]'); await p.click('[data-act=export-backup]'); await p.click('[data-act=xlsx-export]');
     await p.waitForTimeout(300);
     ok('Se o Android não conseguir salvar, o app avisa e não quebra', /Não foi possível salvar o arquivo/.test(await p.locator('.toast').innerText()) && p.errs.length === 0, p.errs.join('|'));
+    await ctx.close();
+  }
+
+  // Ambientes: o APK de teste mostra a faixa, o de produção não
+  for (const [amb, deveMostrar] of [['homolog', true], ['producao', false]]) {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+    const p = await ctx.newPage();
+    await p.route('**/*', r => r.request().url().startsWith('file://') ? r.continue() : r.abort());
+    await p.goto('file://' + path.join(SRC, amb, 'assets', 'index.html'));
+    await p.waitForSelector('.crow');
+    const vis = await p.locator('#ambiente').isVisible();
+    ok(`APK ${amb}: faixa "Ambiente de teste" ${deveMostrar ? 'aparece' : 'não aparece'}`, vis === deveMostrar, `visível=${vis}`);
     await ctx.close();
   }
 

@@ -138,15 +138,15 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
     await page.click('[data-act=close]');
 
     // Exportação
-    await page.click('[data-act=export-atrasados]');
+    await page.click('[data-act=export-custom]');
     const nLinhasPrev = await page.locator('.sheet tbody tr').count();
     await page.click('[data-act=xlsx-export]');
     await page.waitForFunction(() => window.__saved);
     const exp = await page.evaluate(() => { const wb = XLSX.read(new Uint8Array(window.__saved.bytes), { type: 'array' }); const ws = wb.Sheets[wb.SheetNames[0]]; return { fn: window.__saved.filename, aoa: XLSX.utils.sheet_to_json(ws, { header: 1 }) }; });
     const atrCount = imp.contas.filter(c => !c.pagoEm && c.venc < exp.fn.slice(-15, -5)).length;
-    rec('Código', 'Excel de atrasados: nome do arquivo com data e extensão .xlsx', /^atrasados-\d{4}-\d{2}-\d{2}\.xlsx$/.test(exp.fn), exp.fn);
+    rec('Código', 'Excel de atrasados: nome do arquivo com filtro, data e extensão .xlsx', /^contas-atrasadas-\d{4}-\d{2}-\d{2}\.xlsx$/.test(exp.fn), exp.fn);
     rec('Código', 'Excel de atrasados: linhas do arquivo = linhas da prévia', exp.aoa.length - 1 === nLinhasPrev, `${exp.aoa.length - 1} vs ${nLinhasPrev}`);
-    rec('Código', 'Excel: coluna Valor e Dias de atraso saem como número', typeof exp.aoa[1][3] === 'number' && typeof exp.aoa[1][5] === 'number', JSON.stringify(exp.aoa[1]));
+    rec('Código', 'Excel: coluna Valor e Dias de atraso saem como número', typeof exp.aoa[1][3] === 'number' && typeof exp.aoa[1][7] === 'number', JSON.stringify(exp.aoa[1]));
     await page.click('[data-act=close]');
     rec('Código', 'Baixar atrasados não zera aviso de backup', !(await st(page)).ultimoBackup);
     await page.evaluate(() => { window.__saved = null; });
@@ -168,7 +168,7 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
   {
     // Sem a capacidade de download (navegador comum): não deve quebrar
     const { page, ctx, errors } = await newPage(browser, { mockDownloads: false });
-    await go(page, 'planilha'); await page.click('[data-act=export-atrasados]'); await page.click('[data-act=xlsx-export]');
+    await go(page, 'planilha'); await page.click('[data-act=export-custom]'); await page.click('[data-act=xlsx-export]');
     await page.waitForTimeout(300);
     const t = await page.locator('.toast').innerText().catch(() => '');
     rec('Código', 'Sem permissão de download, mostra aviso e não gera erro', /indispon/.test(t) && errors.length === 0, t + ' ' + errors.join('|'));

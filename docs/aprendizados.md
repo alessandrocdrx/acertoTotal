@@ -64,12 +64,36 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R27. Foto de comprovante é reduzida para JPEG de no máximo 1280 px antes de guardar. O armazenamento do app tem cerca de 5 MB, e uma única foto de câmera pode lotá-lo. [android]
 - R28. Falha ao salvar nunca é silenciosa: com a memória cheia, o app avisa e diz o que fazer. [android]
 - R29. Um botão que depende de uma tarefa em andamento, como preparar um anexo, fica desativado até a tarefa terminar. Um botão desativado não usa `opacity`: troca de cor por tokens, conforme a regra R13. [android]
-- R30. A mesma chave assina todas as versões, para que o APK novo instale por cima do antigo sem apagar os dados. A chave e a senha nunca vão para o repositório: ficam em `android/celsopix.keystore` e `android/assinatura.properties`, os dois no .gitignore.
+- R30. Fase de teste: por decisão do cliente (31/10/2026), a chave pode mudar entre versões, e nesse caso a versão nova pede para desinstalar a anterior. Desinstalar apaga os dados, então exporte a cópia de segurança antes. A chave e a senha nunca vão para o repositório: ficam em `android/celsopix.keystore` e `android/assinatura.properties`, os dois no .gitignore.
 - R31. Depois de compilar, confira se a compilação passou ("BUILD SUCCESSFUL" ou código de saída 0), e não só se o APK existe. Apague a saída antiga antes de compilar. Um APK velho na pasta parece sucesso. Ao mover ou renomear recursos (`res/`), compile com `clean`: o cache incremental acusa "resource not found" mesmo com o arquivo no lugar.
+- R32. Todo ambiente que não é produção mostra a faixa "Ambiente de teste" no topo, e o app de teste tem outro nome e outro pacote ("CelsoPix Teste", `br.com.celsopix.teste`). Assim nunca se confunde teste com o oficial. [usabilidade, android]
+- R33. Variantes Android (productFlavors) não podem ter nome começando com "test". Usamos `homolog` para o ambiente de teste.
+- R34. Exportar sempre diz o que vai sair antes de sair: a contagem e o total ao vivo, os filtros escritos na prévia e no nome do arquivo. [exportacao]
+- R35. Quando um teste falhar, descubra primeiro se o erro é do app ou do teste. Exemplo: o `selectOption` do Playwright não foca o campo, então "perdeu o foco" era falso alarme. Corrija o lado errado e registre.
+- R36. Script que substitui uma função inteira precisa terminar na chave de fechamento dela, e não no início da próxima função citada. Senão apaga tudo o que fica entre as duas. O `assert` antes de gravar salvou o arquivo.
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-014 · 31/10/2026 · Ambiente de teste, chave de reinstalação e exportação com filtros
+- **Pedido do cliente:**
+  1. Uma mensagem de ambiente de teste.
+  2. Por enquanto, a chave pode ser uma que exige reinstalar.
+  3. Filtros para a exportação: por situação, por cliente e outros.
+- **Feito:**
+  - **Faixa de ambiente:** aparece no topo de todas as telas: "Ambiente de teste: os dados podem ser apagados a qualquer momento."
+  - **Variantes do Android:** a `homolog` gera o app "CelsoPix Teste" (`br.com.celsopix.teste`, versão 0.2.0-teste), com faixa. A `producao` gera o "CelsoPix", sem faixa. As duas podem ficar instaladas juntas.
+  - **Exportação:** a aba Planilha abre com o cartão "Exportar contas". Ele tem filtros de situação (Todas, Em aberto, Atrasadas, Pagas), cliente e período de vencimento.
+  - **Contagem ao vivo:** mostra a quantidade e o total enquanto se ajustam os filtros.
+  - **Prévia e arquivo:** a prévia diz quais filtros foram usados, e o nome do arquivo também (`contas-atrasadas-marina-alves-AAAA-MM-DD.xlsx`).
+  - **Validação do período:** um período invertido mostra o erro embaixo do campo e desativa o botão. "Limpar filtros" só aparece quando algum filtro foi mudado.
+  - O antigo cartão "Atrasados" virou o filtro padrão do cartão novo.
+- **Problemas no caminho:**
+  - **Script de substituição:** a primeira versão marcava o fim do trecho no início de outra função e ia apagar o `render()` e mais 150 linhas. O `assert` parou antes de gravar (R36).
+  - **Nome da variante:** o Gradle recusou a variante "teste" (R33).
+  - **Falso alarme de foco:** um teste acusou perda de foco que não existia, porque o Playwright não foca o campo ao escolher uma opção (R35).
+- **Como evitar:** Regras R30 e R32 a R36. Foi criada a suíte `testes/exportacao.test.js`, com 25 verificações, que recalcula tudo a partir dos dados. A suíte android ganhou o teste da faixa por variante.
 
 ### A-013 · 31/10/2026 · Primeiro APK (casca Android do protótipo)
 - **O que aconteceu:** O cliente pediu um APK para baixar. Ao preparar o protótipo para rodar no celular, encontrei dois riscos que no navegador passavam despercebidos:

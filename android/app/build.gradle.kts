@@ -13,12 +13,29 @@ android {
         applicationId = "br.com.celsopix"
         minSdk = 29
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0-prototipo"
+        versionCode = 2
+        versionName = "0.2.0"
+    }
+
+    // Dois apps separados: o de teste (faixa "Ambiente de teste", ícone próprio)
+    // e o de produção. Podem ficar instalados juntos no mesmo celular.
+    flavorDimensions += "ambiente"
+    productFlavors {
+        create("homolog") {
+            dimension = "ambiente"
+            applicationIdSuffix = ".teste"
+            versionNameSuffix = "-teste"
+            resValue("string", "app_name", "CelsoPix Teste")
+        }
+        create("producao") {
+            dimension = "ambiente"
+            resValue("string", "app_name", "CelsoPix")
+        }
     }
 
     // Assinatura: lida de android/assinatura.properties, que NÃO vai para o repositório
-    // (chave e senha são segredos). Sem esse arquivo, o release sai com a chave de debug.
+    // (chave e senha são segredos). Sem esse arquivo, o release sai com a chave de debug
+    // do computador que compilou: nesse caso a versão nova pede desinstalar a anterior.
     val assinatura = rootProject.file("assinatura.properties")
     signingConfigs {
         if (assinatura.exists()) {

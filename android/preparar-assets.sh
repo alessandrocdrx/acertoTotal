@@ -2,23 +2,29 @@
 # Copia o protótipo testado para dentro do APK, pronto para funcionar sem internet:
 # - troca o leitor de Excel do CDN por uma cópia local;
 # - remove as fontes do Google (o app usa as fontes do sistema);
-# - injeta a ponte de download do Android no lugar da permissão do artefato.
+# - injeta a ponte de download do Android no lugar da permissão do artefato;
+# - marca o ambiente (teste ou producao).
 set -euo pipefail
 cd "$(dirname "$0")"
-DEST=app/src/main/assets
-mkdir -p "$DEST"
 XLSX=../testes/vendor/xlsx.js
 [ -s "$XLSX" ] || { mkdir -p ../testes/vendor; curl -sSf -o "$XLSX" https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js; }
-cp "$XLSX" "$DEST/xlsx.full.min.js"
 
-python3 - ../prototipo/celsopix.html "$DEST/index.html" <<'PY'
+# Um conjunto de páginas por variante do app: homolog (ambiente "teste", mostra a faixa
+# de aviso) e producao (sem faixa). O Android não aceita variante com nome começando por "test".
+for PAR in homolog:teste producao:producao; do
+VARIANTE=${PAR%%:*}; AMB=${PAR##*:}
+DEST=app/src/$VARIANTE/assets
+mkdir -p "$DEST"
+cp "$XLSX" "$DEST/xlsx.full.min.js"
+python3 - ../prototipo/celsopix.html "$DEST/index.html" "$AMB" <<'PY'
 import re, sys
-src, dst = sys.argv[1], sys.argv[2]
+src, dst, amb = sys.argv[1], sys.argv[2], sys.argv[3]
 s = open(src, encoding='utf-8').read()
 s, n1 = re.subn(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com[^>]*>\n?', '', s)
 s, n2 = re.subn(r'https://cdnjs\.cloudflare\.com/ajax/libs/xlsx/[^"]+', 'xlsx.full.min.js', s)
 assert n1 == 1 and n2 == 1, f'protótipo mudou: fontes={n1} xlsx={n2}'
 ponte = """<script>
+window.CELSOPIX_AMBIENTE = '""" + amb + """';
 // Ponte Android: substitui a permissão de download do artefato.
 window.claude = { use: function (nome) {
   if (nome !== 'downloads' || !window.CelsoPixAndroid) return Promise.resolve(null);
@@ -38,4 +44,5 @@ head = ('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'
         + ponte + '</head><body>\n')
 open(dst, 'w', encoding='utf-8').write(head + s + '\n</body></html>\n')
 PY
-echo "assets prontos em $DEST"
+done
+echo "assets prontos em app/src/homolog/assets e app/src/producao/assets"
