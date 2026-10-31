@@ -3,7 +3,7 @@
 # - troca o leitor de Excel do CDN por uma cópia local;
 # - remove as fontes do Google (o app usa as fontes do sistema);
 # - injeta a ponte de download do Android no lugar da permissão do artefato;
-# - marca o ambiente (teste ou producao).
+# - marca o ambiente (teste ou producao) e os dias de avaliação (homolog: 7; producao: sem limite).
 set -euo pipefail
 cd "$(dirname "$0")"
 XLSX=../testes/vendor/xlsx.js
@@ -11,20 +11,22 @@ XLSX=../testes/vendor/xlsx.js
 
 # Um conjunto de páginas por variante do app: homolog (ambiente "teste", mostra a faixa
 # de aviso) e producao (sem faixa). O Android não aceita variante com nome começando por "test".
-for PAR in homolog:teste producao:producao; do
-VARIANTE=${PAR%%:*}; AMB=${PAR##*:}
+# Formato: variante:ambiente:dias de avaliação (0 = sem limite).
+for PAR in homolog:teste:7 producao:producao:0; do
+IFS=: read -r VARIANTE AMB DIAS <<< "$PAR"
 DEST=app/src/$VARIANTE/assets
 mkdir -p "$DEST"
 cp "$XLSX" "$DEST/xlsx.full.min.js"
-python3 - ../prototipo/celsopix.html "$DEST/index.html" "$AMB" <<'PY'
+python3 - ../prototipo/celsopix.html "$DEST/index.html" "$AMB" "$DIAS" <<'PY'
 import re, sys
-src, dst, amb = sys.argv[1], sys.argv[2], sys.argv[3]
+src, dst, amb, dias = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
 s = open(src, encoding='utf-8').read()
 s, n1 = re.subn(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com[^>]*>\n?', '', s)
 s, n2 = re.subn(r'https://cdnjs\.cloudflare\.com/ajax/libs/xlsx/[^"]+', 'xlsx.full.min.js', s)
 assert n1 == 1 and n2 == 1, f'protótipo mudou: fontes={n1} xlsx={n2}'
 ponte = """<script>
 window.CELSOPIX_AMBIENTE = '""" + amb + """';
+window.CELSOPIX_LIMITE_DIAS = """ + str(dias) + """;
 // Ponte Android: substitui a permissão de download do artefato.
 window.claude = { use: function (nome) {
   if (nome !== 'downloads' || !window.CelsoPixAndroid) return Promise.resolve(null);

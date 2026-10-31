@@ -9,7 +9,7 @@ App de controle de cobranças Pix: cadastrar clientes e contas, dar baixa com o 
 
 ## Comandos
 
-- Testes: `bash testes/rodar.sh` roda as suítes app, estatisticas, tema, usabilidade, exportacao, importacao e android com Playwright e Chromium.
+- Testes: `bash testes/rodar.sh` roda as suítes app, estatisticas, tema, usabilidade, exportacao, importacao, avaliacao e android com Playwright e Chromium.
 - As capturas de tela ficam em `testes/capturas/`. Elas não vão para o repositório.
 - APK de teste: `bash android/preparar-assets.sh && cd android && ./gradlew clean assembleHomologRelease --max-workers=1`. O de produção usa `assembleProducaoRelease`. O SDK fica em `/opt/android-sdk` (`android/local.properties`). O arquivo sai em `android/app/build/outputs/apk/<variante>/release/`.
 - A interface do APK vem do protótipo. Nunca edite `android/app/src/*/assets/` à mão.

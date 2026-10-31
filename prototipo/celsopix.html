@@ -41,6 +41,8 @@ button{cursor:pointer}
 .phone{font-size:16px;position:relative;width:390px;height:min(800px,calc(100dvh - 32px));background:var(--surface);border:10px solid var(--frame);border-radius:38px;overflow:hidden;display:flex;flex-direction:column}
 .head{padding:16px 18px 10px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
 .ambiente{background:var(--warn-bg);color:var(--warn);font-size:13px;font-weight:700;text-align:center;padding:7px 16px;line-height:1.3;border-bottom:1px solid var(--line)}
+.ambiente span{display:block}
+.ambiente.fim{background:var(--bad-bg);color:var(--bad)}
 .brand{display:flex;align-items:center;gap:7px;margin-bottom:6px;font-family:var(--font-d);font-weight:700;font-size:15px;color:var(--accent)}
 .brand svg{width:22px;height:22px;flex:none}
 .head h2{font-family:var(--font-d);font-size:28px;margin:0;line-height:1.1}
@@ -103,6 +105,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .toggle input{width:22px;height:22px;accent-color:var(--accent);flex:none}
 .imp-iguais{margin:8px 0;font-size:14px}
 .imp-iguais summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--muted);font-weight:600}
+.leitura{background:var(--bad-bg);color:var(--bad);border-radius:12px;padding:10px 12px;font-weight:600;font-size:14px;margin:6px 0 10px}
 .lbl{font-size:14px;font-weight:600;margin:4px 0 6px}
 .card .four{margin:0 0 12px}
 .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -205,7 +208,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
   </section>
 
   <div class="phone" id="phone">
-    <div class="ambiente" id="ambiente" role="note" hidden>Ambiente de teste: os dados podem ser apagados a qualquer momento.</div>
+    <div class="ambiente" id="ambiente" role="note" hidden></div>
     <header class="head"><div><div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M16 6l10 10-10 10L6 16z" fill="none" stroke="var(--accent-fg)" stroke-width="2" stroke-linejoin="round"/><path d="M11.5 16.5l3 3 6-6.5" fill="none" stroke="var(--accent-fg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>CelsoPix</span></div><h2 id="title"></h2><small id="subtitle"></small></div><div id="headAction"></div></header>
     <main class="screen" id="screen"></main>
     <nav class="tabs" id="tabs"></nav>
@@ -273,6 +276,11 @@ function pill(c){var s=status(c);return '<span class="pill '+s+'">'+LABEL[s]+'</
 function sum(list){return list.reduce(function(a,c){return a+c.valor},0)}
 function daysBetween(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5)}
 
+var LIMITE_DIAS=0,AV={inicio:0,fim:0,relogio:false};
+function somenteLeitura(){return LIMITE_DIAS>0&&(AV.relogio||Date.now()>=AV.fim)}
+function diasRestantes(){return Math.max(0,Math.ceil((AV.fim-Date.now())/864e5))}
+var MSG_LEITURA='Avaliação encerrada: o app está só para consulta.';
+var ACOES_ESCRITA=['baixa','desfazer','excluir-conta','salvar-conta','salvar-cliente','nova-conta','nova-conta-cli','novo-cliente','editar-cliente','pick-comp','pick-xl','import-sample','import-confirm','export-custom','export-backup','export-filtrado','xlsx-export','copy-export'];
 var tab='contas',filter='abertas',query='',queryC='',pendingComp=null,toastT;
 var $=function(id){return document.getElementById(id)};
 function toast(m,undo){
@@ -314,7 +322,7 @@ function contaRow(c,semNome){
   else if(s==='atrasada'){d=daysBetween(c.venc,today);info='Atrasada há '+d+' dia'+(d===1?'':'s')}
   else{d=daysBetween(today,c.venc);info='Em aberto · '+(d===0?'vence hoje':'vence em '+d+' dia'+(d===1?'':'s'))}
   return '<div class="crow '+s+'"><button class="cmain" data-act="conta" data-id="'+c.id+'"><span class="t">'+esc(semNome?c.descricao:cl.nome)+'</span><span class="s">'+(semNome?'':esc(c.descricao)+' · ')+'venc. '+fmtD(c.venc)+'</span><span class="pill '+s+'">'+(s==='paga'?'✓ ':'')+info+'</span></button>'
-   +'<div class="cside"><span class="v">'+brl.format(c.valor)+'</span>'+(s==='paga'?'':'<button class="btn primary sm" data-act="conta" data-id="'+c.id+'">Dar baixa</button>')+'</div></div>';
+   +'<div class="cside"><span class="v">'+brl.format(c.valor)+'</span>'+(s==='paga'||somenteLeitura()?'':'<button class="btn primary sm" data-act="conta" data-id="'+c.id+'">Dar baixa</button>')+'</div></div>';
 }
 
 function resumoContas(){
@@ -326,7 +334,7 @@ function resumoContas(){
    +'<div class="mini bad"><span>Em atraso</span><strong>'+brl0.format(sum(atr))+'</strong></div>'
    +'<div class="mini ok"><span>Pagas no mês</span><strong>'+brl0.format(sum(rec))+'</strong></div></div>';
   var bk=S.ultimoBackup?daysBetween(S.ultimoBackup,today):null;
-  if(bk===null||bk>7)h+='<div class="warn">'+(bk===null?'Você ainda não fez cópia de segurança.':'Última cópia de segurança há '+bk+' dias.')+' <a href="#" data-act="go" data-tab="planilha" style="color:inherit;font-weight:600;display:inline-block;padding:14px 6px;margin:-14px 0">Fazer agora</a></div>';
+  if(!somenteLeitura()&&(bk===null||bk>7))h+='<div class="warn">'+(bk===null?'Você ainda não fez cópia de segurança.':'Última cópia de segurança há '+bk+' dias.')+' <a href="#" data-act="go" data-tab="planilha" style="color:inherit;font-weight:600;display:inline-block;padding:14px 6px;margin:-14px 0">Fazer agora</a></div>';
   return h;
 }
 function filteredContas(){
@@ -352,7 +360,7 @@ function viewContas(){
   return resumoContas()+'<div class="field"><input id="q" type="search" placeholder="Buscar cliente ou descrição" value="'+esc(query)+'" aria-label="Buscar"></div>'
    +'<div class="chips four" role="group" aria-label="Filtrar contas">'+f.map(function(x){return '<button class="chip" data-act="filter" data-f="'+x[0]+'" aria-pressed="'+(filter===x[0])+'"><span>'+x[1]+'</span><b>'+n[x[0]]+'</b></button>'}).join('')+'</div>'
    +(list.length?list.map(function(c){return contaRow(c)}).join(''):emptyContas())
-   +'<button class="fab" data-act="nova-conta" aria-label="Nova conta">+ Nova conta</button>';
+   +(somenteLeitura()?'':'<button class="fab" data-act="nova-conta" aria-label="Nova conta">+ Nova conta</button>');
 }
 function viewClientes(){
   var q=queryC.trim().toLowerCase();
@@ -364,7 +372,7 @@ function viewClientes(){
     var atr=cs.filter(function(x){return status(x)==='atrasada'}).length;
     return '<button class="row" data-act="cliente" data-id="'+c.id+'"><span class="t">'+esc(c.nome)+'</span><span class="v"'+(ab?'':' style="color:var(--ok)"')+'>'+(ab?brl.format(ab):'Em dia')+'</span><span class="s">'+esc(c.telefone||'sem telefone')+' · '+cs.length+' conta'+(cs.length===1?'':'s')+'</span><span class="p">'+(atr?'<span class="pill atrasada">'+atr+' atrasada'+(atr>1?'s':'')+'</span>':'')+'</span></button>';
   }).join(''):(q?'<div class="empty">Nenhum cliente encontrado para “'+esc(queryC.trim())+'”.<br><button class="btn" data-act="limpar-busca-c">Limpar busca</button></div>':'<div class="empty">Nenhum cliente ainda. Toque em “+ Novo cliente”.</div>');
-  return h+'<button class="fab" data-act="novo-cliente" aria-label="Novo cliente">+ Novo cliente</button>';
+  return h+(somenteLeitura()?'':'<button class="fab" data-act="novo-cliente" aria-label="Novo cliente">+ Novo cliente</button>');
 }
 var expPadrao={status:'atrasadas',cliente:'',de:'',ate:''},expF=Object.assign({},expPadrao);
 var XF_LABEL={todas:'Todas',abertas:'Em aberto',atrasadas:'Atrasadas',pagas:'Pagas'};
@@ -400,6 +408,7 @@ function atualizaXf(){
   bt.disabled=!l.length;
 }
 function viewPlanilha(){
+  if(somenteLeitura())return '<div class="card"><h3 class="ct">Só consulta</h3><p>A avaliação terminou em '+fimTxt()+'. Importar e exportar planilhas fica disponível na versão completa. Você ainda pode consultar contas, clientes, números e o histórico abaixo.</p>'+historicoImport()+'</div>';
   var bk=S.ultimoBackup?'Última cópia: '+fmtD(S.ultimoBackup):'Nenhuma cópia feita ainda';
   var mudou=JSON.stringify(expF)!==JSON.stringify(expPadrao);
   var opts=S.clientes.slice().sort(function(a,b){return a.nome.localeCompare(b.nome)}).map(function(c){return '<option value="'+c.id+'"'+(c.id===expF.cliente?' selected':'')+'>'+esc(c.nome)+'</option>'}).join('');
@@ -467,10 +476,22 @@ function viewNumeros(){
   return h;
 }
 var TITLES={contas:['Contas',''],clientes:['Clientes',S.clientes.length+' cadastrados'],numeros:['Estatísticas','Seus números'],planilha:['Planilha','Importar e exportar']};
+function fimTxt(){return fmtD(iso(new Date(AV.fim)))}
+function atualizaFaixa(){
+  var f=$('ambiente'),l=[],fim=somenteLeitura();
+  if(fim)l.push(AV.relogio?'O relógio do aparelho foi atrasado. A avaliação foi encerrada e o app está só para consulta.':'Avaliação encerrada em '+fimTxt()+'. O app está só para consulta: dá para ver tudo, mas não cadastrar, dar baixa, importar ou exportar.');
+  else{
+    if(AMBIENTE!=='producao')l.push('Ambiente de teste: os dados podem ser apagados a qualquer momento.');
+    if(LIMITE_DIAS>0){var d=diasRestantes();l.push('Avaliação: '+(d<=1?'termina hoje':'faltam '+d+' dias')+' (até '+fimTxt()+').')}
+  }
+  f.innerHTML=l.map(function(t){return '<span>'+esc(t)+'</span>'}).join('');
+  f.hidden=!l.length;f.classList.toggle('fim',fim);
+}
 function render(){
+  atualizaFaixa();
   TITLES.contas[1]='Hoje, '+fmtD(today);TITLES.clientes[1]=S.clientes.length+' cadastrados';TITLES.numeros[1]=PERIODOS[statsPeriod];
   $('title').textContent=TITLES[tab][0];$('subtitle').textContent=TITLES[tab][1];
-  $('headAction').innerHTML=(tab==='contas'?'<button class="btn" data-act="export-filtrado" aria-label="Exportar contas em Excel">Exportar</button>':'')+'<button class="iconbtn" data-act="aparencia" aria-label="Tema e paleta"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>';
+  $('headAction').innerHTML=(tab==='contas'&&!somenteLeitura()?'<button class="btn" data-act="export-filtrado" aria-label="Exportar contas em Excel">Exportar</button>':'')+'<button class="iconbtn" data-act="aparencia" aria-label="Tema e paleta"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>';
   var v={contas:viewContas,clientes:viewClientes,numeros:viewNumeros,planilha:viewPlanilha}[tab]();
   var sc=$('screen'),pos=sc.scrollTop;sc.innerHTML=v;sc.scrollTop=pos;
   $('tabs').innerHTML=TABS.map(function(t){return '<button data-act="go" data-tab="'+t[0]+'" aria-current="'+(tab===t[0])+'">'+ICON[t[0]]+t[1]+'</button>'}).join('');
@@ -490,7 +511,9 @@ function sheetConta(id){
     h+='<div class="comp"><strong>Comprovante anexado</strong><div style="color:var(--muted);font-size:13px">'+esc(c.comprovante.nome)+'</div>'
      +(c.comprovante.data&&c.comprovante.tipo.indexOf('image')===0?'<img alt="Comprovante Pix" src="'+c.comprovante.data+'">':'')+'</div>';
   }
-  if(s!=='paga'){
+  if(somenteLeitura()){
+    h+='<p class="leitura">'+esc(MSG_LEITURA)+'</p><div class="actions"><button class="btn block" data-act="close">Fechar</button></div>';
+  }else if(s!=='paga'){
     h+='<h3>Dar baixa</h3><div class="field"><label for="dtpago">Data do pagamento</label><input id="dtpago" type="date" value="'+today+'" max="'+today+'"></div>'
      +'<div class="comp"><strong>Comprovante Pix (opcional)</strong><div style="color:var(--muted);font-size:13px;margin:2px 0 8px" id="compname">Nenhum arquivo escolhido. O app guarda o arquivo, sem conferir.</div>'
      +'<input type="file" id="fcomp" accept="image/*,application/pdf" hidden><button class="btn" data-act="pick-comp">Anexar foto ou PDF</button></div>'
@@ -498,7 +521,7 @@ function sheetConta(id){
   }else{
     h+='<div class="actions"><button class="btn block danger" data-act="desfazer" data-id="'+c.id+'">Desfazer baixa</button><button class="btn block" data-act="close">Fechar</button></div>';
   }
-  h+='<button class="btn block quiet danger" data-act="excluir-conta" data-id="'+c.id+'">Excluir esta conta</button>';
+  if(!somenteLeitura())h+='<button class="btn block quiet danger" data-act="excluir-conta" data-id="'+c.id+'">Excluir esta conta</button>';
   sheet(h);
   var f=$('fcomp');if(f)f.addEventListener('change',function(){
     var file=f.files[0];if(!file)return;
@@ -515,6 +538,7 @@ function sheetConta(id){
   });
 }
 function sheetNovaConta(clienteId){
+  if(somenteLeitura()){toast(MSG_LEITURA);return}
   if(!S.clientes.length){toast('Cadastre um cliente primeiro');return}
   var opts='<option value=""'+(clienteId?'':' selected')+' disabled>Escolha o cliente</option>'+S.clientes.slice().sort(function(a,b){return a.nome.localeCompare(b.nome)}).map(function(c){return '<option value="'+c.id+'"'+(c.id===clienteId?' selected':'')+'>'+esc(c.nome)+'</option>'}).join('');
   sheet('<h2>Nova conta</h2><p class="sub">Uma cobrança a receber.</p>'
@@ -525,6 +549,7 @@ function sheetNovaConta(clienteId){
    +'<div class="actions"><button class="btn primary block" data-act="salvar-conta">Salvar conta</button><button class="btn block" data-act="close">Cancelar</button></div>');
 }
 function sheetNovoCliente(id){
+  if(somenteLeitura()){toast(MSG_LEITURA);return}
   var c=(id&&S.clientes.find(function(x){return x.id===id}))||{};
   sheet('<h2>'+(id?'Editar cliente':'Novo cliente')+'</h2><p class="sub">Só o nome é obrigatório.</p>'
    +'<div class="field"><label for="n-nome">Nome</label><input id="n-nome" autocomplete="off" value="'+esc(c.nome||'')+'"></div>'
@@ -538,7 +563,7 @@ function sheetCliente(id){
   var cs=S.contas.filter(function(x){return x.clienteId===id}).sort(function(a,b){return a.venc<b.venc?-1:1});
   sheet('<h2>'+esc(c.nome)+'</h2><p class="sub">'+esc([c.telefone,c.email].filter(Boolean).join(' · ')||'Sem contato')+'</p>'
    +'<h3>Contas</h3>'+(cs.length?cs.map(function(x){return contaRow(x,true)}).join(''):'<div class="empty">Sem contas ainda.</div>')
-   +'<div class="actions"><button class="btn primary block" data-act="nova-conta-cli" data-id="'+id+'">Nova conta para este cliente</button><button class="btn block" data-act="editar-cliente" data-id="'+id+'">Editar dados</button><button class="btn block" data-act="close">Fechar</button></div>');
+   +'<div class="actions">'+(somenteLeitura()?'<p class="leitura">'+esc(MSG_LEITURA)+'</p>':'<button class="btn primary block" data-act="nova-conta-cli" data-id="'+id+'">Nova conta para este cliente</button><button class="btn block" data-act="editar-cliente" data-id="'+id+'">Editar dados</button>')+'<button class="btn block" data-act="close">Fechar</button></div>');
 }
 
 function tableOf(head,rows){
@@ -547,6 +572,7 @@ function tableOf(head,rows){
 }
 var lastExport=null;
 function sheetExport(kind){
+  if(somenteLeitura()){toast(MSG_LEITURA);return}
   var head,rows,titulo,filtros='';
   if(kind==='custom'){
     head=['Cliente','Telefone','Descrição','Valor','Vencimento','Situação','Pago em','Dias de atraso'];titulo='Exportar contas';filtros=resumoFiltros();
@@ -669,6 +695,7 @@ function sheetImport(pl){
   if(cb)cb.addEventListener('change',conta);conta();
 }
 function aplicarImport(){
+  if(somenteLeitura()){toast(MSG_LEITURA);return}
   var pl=planoAtual;if(!pl)return;
   var cb=$('imp-atualizar'),atualizar=!cb||cb.checked,antes=JSON.stringify(S),n=totalMudancas(pl,atualizar);
   var itens=itensDoPlano(pl,atualizar);
@@ -698,6 +725,7 @@ function sheetLog(i){
   sheet(h+'<div class="actions"><button class="btn block" data-act="close">Fechar</button></div>');
 }
 function readXlsx(file){
+  if(somenteLeitura()){toast(MSG_LEITURA);return}
   if(typeof XLSX==='undefined'){toast('Leitor de Excel indisponível agora');return}
   var r=new FileReader();
   r.onload=function(){
@@ -755,6 +783,7 @@ function sheetAparencia(){
 document.addEventListener('click',function(e){
   var el=e.target.closest('[data-act]');if(!el)return;
   var a=el.dataset.act;
+  if(somenteLeitura()&&ACOES_ESCRITA.indexOf(a)>-1){e.preventDefault();toast(MSG_LEITURA);return}
   if(a==='close-bg'){if(e.target!==el)return;closeSheet();return}
   e.preventDefault();
   if(a==='go'){closeSheet();tab=el.dataset.tab;render()}
@@ -837,11 +866,23 @@ document.addEventListener('click',function(e){
     try{navigator.clipboard.writeText(lastExport.tsv).then(done,fallback)}catch(err){fallback()}
   }
 });
-$('reset').addEventListener('click',function(){S=sample();save();closeSheet();tab='contas';filter='abertas';query='';render();toast('Dados de exemplo restaurados')});
+$('reset').addEventListener('click',function(){if(somenteLeitura()){toast(MSG_LEITURA);return}S=sample();save();closeSheet();tab='contas';filter='abertas';query='';render();toast('Dados de exemplo restaurados')});
 document.documentElement.lang='pt-BR';
 // Ambiente: o APK de produção define CELSOPIX_AMBIENTE='producao'; qualquer outro caso é teste.
 var AMBIENTE=window.CELSOPIX_AMBIENTE||'teste';
-$('ambiente').hidden=AMBIENTE==='producao';
+// Período de avaliação: conta a partir do primeiro uso neste aparelho. Depois dele, o app fica só
+// para consulta. CELSOPIX_LIMITE_DIAS=0 desliga o limite (variante de produção do APK).
+LIMITE_DIAS=window.CELSOPIX_LIMITE_DIAS!=null?+window.CELSOPIX_LIMITE_DIAS:7;
+AV=(function(){
+  var k='celsopix-avaliacao',a=null,agora=Date.now();
+  try{a=JSON.parse(localStorage.getItem(k)||'null')}catch(e){}
+  if(!a||!a.inicio)a={inicio:agora,visto:agora};
+  // Relógio voltado mais de 1 dia em relação ao último uso: trata como avaliação encerrada.
+  if(agora<a.visto-864e5)a.relogio=true;
+  a.visto=Math.max(a.visto,agora);
+  try{localStorage.setItem(k,JSON.stringify(a))}catch(e){}
+  return {inicio:a.inicio,fim:a.inicio+LIMITE_DIAS*864e5,relogio:!!a.relogio};
+})();
 applyTheme();
 render();
 })();

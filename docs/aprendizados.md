@@ -75,10 +75,31 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R38. Importar de novo não duplica nada. A mesma conta é o mesmo cliente com a mesma descrição e o mesmo vencimento, sem diferença de maiúsculas, acentos ou espaços. Reimportar a própria cópia de segurança dá zero mudanças. Um campo vazio na planilha não apaga um dado que já existe. [importacao]
 - R39. Data só é aceita se existir de verdade. "32/13/2026" e "30/02/2026" são recusadas, não convertidas. [importacao]
 - R40. Testes que comparam texto de títulos usam comparação sem maiúsculas: `text-transform: uppercase` muda o que o `innerText` devolve.
+- R41. Período de avaliação: 7 dias contados do primeiro uso no aparelho, guardados à parte dos dados (restaurar ou importar não reinicia a contagem). A faixa do topo mostra quantos dias faltam e até quando. Depois do prazo, o app fica só para consulta: ver, buscar, filtrar, ver números e trocar o tema continuam. Cadastrar, editar, dar baixa, excluir, importar e exportar ficam bloqueados, tanto na tela (os botões somem e uma mensagem explica) quanto no código (toda ação de escrita passa por uma trava). Nenhum dado é apagado. [avaliacao]
+- R42. Quando uma função fica bloqueada, nenhum aviso pode mandar a pessoa usar essa função. Exemplo: o aviso "Fazer cópia de segurança" some no modo só consulta. [avaliacao]
+- R43. Limite controlado só no aparelho pode ser burlado limpando os dados do app. O app detecta o relógio atrasado mais de 1 dia, mas um bloqueio que ninguém contorne exige servidor de licenças. Não prometa mais que isso.
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-016 · 31/10/2026 · Limite de uso de 7 dias (só consulta depois)
+- **Pedido do cliente:** "Coloca um limite de uso de 7 dias. Depois, o app não exporta nem importa e, do CRUD, fica somente a leitura."
+- **Feito:**
+  - **Contagem:** começa no primeiro uso, numa chave própria do armazenamento (`celsopix-avaliacao`).
+  - **Faixa do topo:** mostra "Avaliação: faltam N dias (até dd/mm/aaaa)", e "termina hoje" no último dia. Depois do prazo, fica vermelha e explica o que ainda dá para fazer.
+  - **Telas no modo só consulta:**
+    - "Dar baixa", "+ Nova conta", "+ Novo cliente", "Exportar", "Editar dados", "Excluir" e "Desfazer baixa" somem;
+    - as fichas mostram "Avaliação encerrada: o app está só para consulta";
+    - a aba Planilha mostra o cartão "Só consulta", que mantém o histórico de importações para leitura;
+    - continuam funcionando a busca, os filtros, os números e o tema.
+  - **Trava central:** no clique de qualquer ação de escrita, e de novo dentro das funções que gravam ou geram arquivo. Mesmo um botão injetado na página é bloqueado.
+  - **Relógio atrasado** mais de 1 dia em relação ao último uso: a avaliação encerra e continua encerrada depois de recarregar.
+  - **APK de teste:** limite de 7 dias. **Variante de produção:** sem limite (`CELSOPIX_LIMITE_DIAS = 0`), o que se muda numa linha de `android/preparar-assets.sh`.
+- **Encontrado na revisão visual:** no modo só consulta continuava aparecendo "Você ainda não fez cópia de segurança. Fazer agora", que levava a uma função bloqueada. Corrigido (R42).
+- **Erro de teste (R35):** o teste tocou no botão de tema do painel de apresentação, que fica escondido no celular, em vez do botão do cabeçalho.
+- **Limite conhecido (R43):** limpar os dados do app recomeça a contagem. Para um bloqueio de verdade, a versão final precisa de licença validada num servidor.
+- **Como evitar:** Regras R41 a R43. Foi criada a suíte `testes/avaliacao.test.js`, com 35 verificações.
 
 ### A-015 · 31/10/2026 · Importar com prévia, atualização e histórico
 - **Pedido do cliente:** "O importar tinha que ter uma prévia também, principalmente para dados atualizados, um log do que foi mudado."
