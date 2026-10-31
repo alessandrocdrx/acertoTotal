@@ -107,13 +107,15 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
     await go(page, 'planilha');
     const before = await st(page);
     await page.click('[data-act=import-sample]');
+    rec('Código', 'Importar mostra prévia e não grava nada antes de confirmar', JSON.stringify(await st(page)) === JSON.stringify(before) && /Prévia da importação/.test(await page.locator('.sheet h2').innerText()));
+    await page.click('[data-act=import-confirm]');
     const after = await st(page);
     rec('Código', 'Planilha de exemplo cria 3 clientes e 4 contas', after.clientes.length - before.clientes.length === 3 && after.contas.length - before.contas.length === 4, `+${after.clientes.length - before.clientes.length} clientes, +${after.contas.length - before.contas.length} contas`);
-    await page.click('[data-act=close]');
     await page.click('[data-act=import-sample]');
-    const after2 = await st(page);
-    rec('Código', 'Reimportar não duplica clientes existentes (mesmo nome)', after2.clientes.length === after.clientes.length);
+    rec('Código', 'Reimportar a mesma planilha: "Nada para importar"', await page.locator('[data-act=import-confirm]').isDisabled() && /Nada para importar/.test(await page.locator('[data-act=import-confirm]').innerText()));
     await page.click('[data-act=close]');
+    const after2 = await st(page);
+    rec('Código', 'Reimportar não duplica clientes nem contas', after2.clientes.length === after.clientes.length && after2.contas.length === after.contas.length);
 
     // Import de .xlsx real, com formatos mistos
     const bytes = await page.evaluate(() => {
@@ -126,16 +128,16 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
       return Array.from(new Uint8Array(XLSX.write(wb, { type: 'array', bookType: 'xlsx' })));
     });
     await page.setInputFiles('#xl', { name: 'clientes.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: Buffer.from(bytes) });
-    await page.waitForSelector('.sheet h2:has-text("Importação concluída")');
+    await page.waitForSelector('.sheet h2:has-text("Prévia da importação")');
+    const rel = await page.locator('.sheet').innerText();
+    rec('Código', 'Prévia lista as linhas com problema e o motivo', /Linha 4\s+Falta o nome do cliente/.test(rel) && /Linha 5\s+Conta de Teste Três não importada: falta o vencimento/.test(rel), rel.slice(0, 400));
+    await page.click('[data-act=import-confirm]');
     const imp = await st(page);
     const c1 = imp.contas.find(c => c.descricao === 'Mensal'), c2 = imp.contas.find(c => c.descricao === 'Parcela');
     rec('Código', 'Import .xlsx: valor em formato brasileiro "1.250,50" vira 1250.5', c1 && c1.valor === 1250.5, c1 && String(c1.valor));
     rec('Código', 'Import .xlsx: data texto 05/11/2026 vira 2026-11-05', c1 && c1.venc === '2026-11-05', c1 && c1.venc);
     rec('Código', 'Import .xlsx: data do Excel (fuso São Paulo) vira 2026-11-10 sem deslocar um dia', c2 && c2.venc === '2026-11-10', c2 && c2.venc);
     rec('Código', 'Import .xlsx: linha sem nome ignorada; sem data cria só o cliente', !imp.clientes.some(c => c.nome === '') && imp.clientes.some(c => c.nome === 'Teste Três') && !imp.contas.some(c => c.descricao === 'Sem data'));
-    const rel = await page.locator('.sheet .sub').innerText();
-    rec('Código', 'Relatório da importação informa linhas ignoradas', /1 linha/.test(rel), rel);
-    await page.click('[data-act=close]');
 
     // Exportação
     await page.click('[data-act=export-custom]');

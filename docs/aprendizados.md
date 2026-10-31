@@ -71,10 +71,33 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R34. Exportar sempre diz o que vai sair antes de sair: a contagem e o total ao vivo, os filtros escritos na prévia e no nome do arquivo. [exportacao]
 - R35. Quando um teste falhar, descubra primeiro se o erro é do app ou do teste. Exemplo: o `selectOption` do Playwright não foca o campo, então "perdeu o foco" era falso alarme. Corrija o lado errado e registre.
 - R36. Script que substitui uma função inteira precisa terminar na chave de fechamento dela, e não no início da próxima função citada. Senão apaga tudo o que fica entre as duas. O `assert` antes de gravar salvou o arquivo.
+- R37. Importar acontece em duas etapas. A prévia mostra o que entra, o que muda (valor antigo riscado e valor novo em destaque) e as linhas com problema (número da linha e motivo). Nada é gravado até a pessoa confirmar. Depois de confirmar, aparece o "Desfazer", e a importação fica registrada no histórico. [importacao]
+- R38. Importar de novo não duplica nada. A mesma conta é o mesmo cliente com a mesma descrição e o mesmo vencimento, sem diferença de maiúsculas, acentos ou espaços. Reimportar a própria cópia de segurança dá zero mudanças. Um campo vazio na planilha não apaga um dado que já existe. [importacao]
+- R39. Data só é aceita se existir de verdade. "32/13/2026" e "30/02/2026" são recusadas, não convertidas. [importacao]
+- R40. Testes que comparam texto de títulos usam comparação sem maiúsculas: `text-transform: uppercase` muda o que o `innerText` devolve.
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-015 · 31/10/2026 · Importar com prévia, atualização e histórico
+- **Pedido do cliente:** "O importar tinha que ter uma prévia também, principalmente para dados atualizados, um log do que foi mudado."
+- **Como era:** Importar gravava na hora, sem mostrar nada antes. Só criava, nunca atualizava. Importar a mesma planilha duas vezes duplicava todas as contas. Os erros apareciam só como "N linhas ignoradas", sem dizer quais nem por quê.
+- **Feito:**
+  - **Prévia antes de gravar,** com resumo em números: clientes novos, contas novas, atualizações, sem mudança e com problema.
+  - **"O que vai mudar":** mostra, campo a campo, o valor antigo riscado e o novo em destaque. Vale para telefone, e-mail, valor e baixa (coluna "Pago em").
+  - **Opção "Atualizar estes dados",** para importar só o que é novo.
+  - **"Linhas com problema":** cada uma com o número da linha e o motivo (falta nome, valor inválido, data que não existe, pagamento no futuro, conta repetida no arquivo).
+  - **Contas já iguais** ficam recolhidas.
+  - **Botão claro:** "Importar N mudanças", ou "Nada para importar", desativado.
+  - **Depois de confirmar:** "Desfazer" por 6 segundos e um registro em "Últimas importações" (as 10 mais recentes, guardadas no app). Cada registro mostra o que mudou, o que entrou e o que ficou de fora.
+  - **Reconhecimento de nomes:** "marina  alves" é reconhecida como "Marina Alves".
+  - **Colunas aceitas:** "Cliente" e "Pago em", para que os arquivos exportados possam voltar ao app.
+  - **Mesmo arquivo de novo:** agora pode ser escolhido outra vez (antes, escolher o mesmo arquivo não fazia nada).
+- **Defeito antigo encontrado pelos testes:** o leitor de datas aceitava "32/13/2026" e gravava uma data impossível. Corrigido: a data passa a ser conferida (R39).
+- **Erro de teste (R35):** um teste não achou "O que mudou" porque o título aparece em maiúsculas na tela (R40).
+- **Dados de exemplo:** algumas contas do histórico tinham o mesmo cliente, descrição e vencimento que contas atuais, o que deixava a cópia de segurança com contas repetidas. As datas foram ajustadas.
+- **Como evitar:** Regras R37 a R40. Foi criada a suíte `testes/importacao.test.js`, com 36 verificações, que inclui a ida e volta da cópia de segurança, sem nenhuma mudança.
 
 ### A-014 · 31/10/2026 · Ambiente de teste, chave de reinstalação e exportação com filtros
 - **Pedido do cliente:**

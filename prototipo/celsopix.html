@@ -86,6 +86,23 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .pal-r small{display:block;color:var(--muted);font-size:12px;font-weight:400}
 .sw{height:46px;border-radius:10px;display:grid;place-items:center;align-content:center;font-weight:700;font-size:15px;line-height:1.1;border:1px solid rgba(128,128,128,.35)}
 .sw small{font-size:11px;font-weight:500;color:inherit;opacity:1}
+.imp-res{list-style:none;padding:0;margin:0 0 6px;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.imp-res li{background:var(--surface2);border-radius:12px;padding:8px 10px;display:grid}
+.imp-res b{font-size:20px;font-variant-numeric:tabular-nums}
+.imp-res span{font-size:12px;color:var(--muted)}
+.imp-res li.bad b{color:var(--bad)}
+.imp-lista{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:6px}
+.imp-it{display:grid;gap:2px;padding:9px 12px;border-radius:12px;background:var(--surface2);border-left:4px solid var(--line);font-size:14px;overflow-wrap:anywhere}
+.imp-it.novo{border-left-color:var(--ok)}
+.imp-it.atualizado{border-left-color:var(--warn)}
+.imp-it.erro{border-left-color:var(--bad)}
+.imp-it del{color:var(--muted)}
+.imp-it ins{text-decoration:none;font-weight:700}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.toggle{display:flex;align-items:center;gap:10px;min-height:48px;font-weight:600;margin:0 0 6px}
+.toggle input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.imp-iguais{margin:8px 0;font-size:14px}
+.imp-iguais summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--muted);font-weight:600}
 .lbl{font-size:14px;font-weight:600;margin:4px 0 6px}
 .card .four{margin:0 0 12px}
 .dates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -218,7 +235,7 @@ function sample(){
     [3,'Taxa de matrícula',150,-2,0],[2,'Parcela 1/6',420,-4,0]];
   var contas=k.map(function(x){return {id:uid(),clienteId:c[x[0]].id,descricao:x[1],valor:x[2],venc:addDays(x[3]),pagoEm:x[4]==null?null:addDays(x[4]),comprovante:null}});
   for(var m=1;m<=5;m++){
-    [[0,'Mensalidade',180,-30*m-5,m%3],[1,'Fornecimento de pães',1250,-30*m-10,(m*2)%5],[3,'Mensalidade do estúdio',890,-30*m,m%2?0:3],[4,'Consultoria',600,-30*m-3,(m%3)-1]].forEach(function(x){
+    [[0,'Mensalidade',180,-30*m-8,m%3],[1,'Fornecimento de pães',1250,-30*m-12,(m*2)%5],[3,'Mensalidade do estúdio',890,-30*m-1,m%2?0:3],[4,'Consultoria',600,-30*m-3,(m%3)-1]].forEach(function(x){
       contas.push({id:uid(),clienteId:c[x[0]].id,descricao:x[1],valor:x[2],venc:addDays(x[3]),pagoEm:addDays(x[3]+x[4]),comprovante:m%2?null:{nome:'comprovante-pix.pdf',tipo:'application/pdf',data:null}});
     });
   }
@@ -393,8 +410,8 @@ function viewPlanilha(){
    +'<p class="hint" style="margin:0 0 10px">Deixe as datas em branco para incluir todas.</p>'
    +'<p class="xf-count" id="xf-count" aria-live="polite"></p>'
    +'<div class="actions"><button class="btn primary block" data-act="export-custom">Ver prévia e exportar</button>'+(mudou?'<button class="btn block quiet" data-act="xf-limpar">Limpar filtros</button>':'')+'</div></div>'
-   +'<div class="card"><h3 class="ct">Importar clientes e contas</h3><p>Envie um Excel (.xlsx) ou CSV com as colunas: Nome, Telefone, E-mail, Descrição, Valor, Vencimento.</p>'
-   +'<input type="file" id="xl" accept=".xlsx,.xls,.csv" hidden><div class="actions"><button class="btn block" data-act="pick-xl">Escolher planilha</button><button class="btn block" data-act="import-sample">Usar planilha de exemplo</button></div></div>'
+   +'<div class="card"><h3 class="ct">Importar clientes e contas</h3><p>Envie um Excel (.xlsx) ou CSV com as colunas: Nome, Telefone, E-mail, Descrição, Valor, Vencimento e, se quiser, Pago em. Antes de gravar, você vê uma prévia do que entra e do que muda.</p>'
+   +'<input type="file" id="xl" accept=".xlsx,.xls,.csv" hidden><div class="actions"><button class="btn block" data-act="pick-xl">Escolher planilha</button><button class="btn block" data-act="import-sample">Usar planilha de exemplo</button></div>'+historicoImport()+'</div>'
    +'<div class="card"><h3 class="ct">Cópia de segurança</h3><p>'+bk+'. Todos os clientes e contas em uma planilha.</p><button class="btn block" data-act="export-backup">Exportar Excel</button></div>';
 }
 
@@ -460,7 +477,7 @@ function render(){
   [['q','query'],['qc','queryC']].forEach(function(x){var q=$(x[0]);if(q)q.addEventListener('input',function(){if(x[1]==='query')query=q.value;else queryC=q.value;var p=q.selectionStart;render();var n=$(x[0]);n.focus();n.setSelectionRange(p,p)})});
   [['xf-cli','cliente'],['xf-de','de'],['xf-ate','ate']].forEach(function(x){var el=$(x[0]);if(!el)return;['change','input'].forEach(function(ev){el.addEventListener(ev,function(){expF[x[1]]=el.value;atualizaXf()})})});
   if(tab==='planilha')atualizaXf();
-  var xl=$('xl');if(xl)xl.addEventListener('change',function(){if(xl.files[0])readXlsx(xl.files[0])});
+  var xl=$('xl');if(xl)xl.addEventListener('change',function(){if(xl.files[0])readXlsx(xl.files[0]);xl.value=''});
 }
 
 function sheetConta(id){
@@ -547,13 +564,15 @@ function sheetExport(kind){
    +'<div class="actions"><button class="btn primary block" data-act="xlsx-export">Baixar Excel (.xlsx)</button><button class="btn block" data-act="copy-export">Copiar para colar no Excel</button><button class="btn block" data-act="close">Fechar</button></div>');
 }
 
+// Só aceita datas que existem: 32/13/2026 ou 30/02/2026 viram null em vez de uma data inventada.
+function dataReal(y,m,d){var t=new Date(Date.UTC(+y,+m-1,+d));return t.getUTCFullYear()===+y&&t.getUTCMonth()===+m-1&&t.getUTCDate()===+d?y+'-'+pad(+m)+'-'+pad(+d):null}
 function parseDate(v){
   if(!v)return null;
   if(v instanceof Date&&!isNaN(v))return iso(new Date(v.getTime()+12*36e5));
   if(typeof v==='number'){var d=new Date(Math.round((v-25569)*864e5));return iso(new Date(d.getTime()+12*36e5))}
   var s=String(v).trim(),m;
-  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)))return m[3]+'-'+pad(+m[2])+'-'+pad(+m[1]);
-  if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/)))return m[1]+'-'+m[2]+'-'+m[3];
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)))return dataReal(m[3],m[2],m[1]);
+  if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/)))return dataReal(m[1],m[2],m[3]);
   return null;
 }
 function parseMoney(v){
@@ -562,27 +581,128 @@ function parseMoney(v){
   if(s.indexOf(',')>-1)s=s.replace(/\./g,'').replace(',','.');
   var n=parseFloat(s);return isNaN(n)?null:n;
 }
-function importRows(rows){
-  var novosC=0,novasContas=0,ign=0;
-  rows.forEach(function(r){
-    var g={};Object.keys(r).forEach(function(k){g[k.toString().trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')]=r[k]});
-    var nome=String(g['nome']||'').trim();if(!nome){ign++;return}
+// ---------- Importação em duas etapas: prévia (nada muda) e confirmação (com histórico e desfazer)
+function norm(t){return String(t==null?'':t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim()}
+function vazio(v){return v==null||String(v).trim()===''}
+var planoAtual=null;
+function planejarImport(rows,arquivo){
+  var plano={arquivo:arquivo,clientesNovos:[],clientesAtualizados:[],contasNovas:[],contasAtualizadas:[],semMudanca:[],erros:[]};
+  var porNome={},novos={},vistas={};
+  S.clientes.forEach(function(c){porNome[norm(c.nome)]=c});
+  rows.forEach(function(r,i){
+    var linha=r.__rowNum__!=null?r.__rowNum__+1:i+2,g={};
+    Object.keys(r).forEach(function(k){g[norm(k)]=r[k]});
+    if(Object.keys(g).every(function(k){return vazio(g[k])}))return;
+    var nome=String(vazio(g['nome'])?(g['cliente']||''):g['nome']).trim().replace(/\s+/g,' ');
+    if(!nome){plano.erros.push({linha:linha,texto:'falta o nome do cliente. Linha ignorada.'});return}
     var tel=String(g['telefone']||'').trim(),mail=String(g['e-mail']||g['email']||'').trim();
-    var cl=S.clientes.find(function(c){return c.nome.toLowerCase()===nome.toLowerCase()});
-    if(!cl){cl={id:uid(),nome:nome,telefone:tel,email:mail,obs:''};S.clientes.push(cl);novosC++}
-    var val=parseMoney(g['valor']),venc=parseDate(g['vencimento']);
-    if(val!=null&&venc){S.contas.push({id:uid(),clienteId:cl.id,descricao:String(g['descricao']||'Conta').trim(),valor:val,venc:venc,pagoEm:null,comprovante:null});novasContas++}
+    var k=norm(nome),cl=porNome[k],nv=novos[k];
+    if(!cl&&!nv){nv=novos[k]={id:uid(),nome:nome,telefone:tel,email:mail,obs:''};plano.clientesNovos.push(nv)}
+    else if(nv){if(tel&&!nv.telefone)nv.telefone=tel;if(mail&&!nv.email)nv.email=mail}
+    else{
+      var at=plano.clientesAtualizados.find(function(x){return x.cliente===cl});
+      [['telefone','Telefone',tel],['email','E-mail',mail]].forEach(function(f){
+        if(!f[2]||f[2]===(cl[f[0]]||'')||(at&&at.mud.some(function(m){return m.campo===f[0]})))return;
+        if(!at){at={cliente:cl,mud:[]};plano.clientesAtualizados.push(at)}
+        at.mud.push({campo:f[0],rot:f[1],de:cl[f[0]]||'(vazio)',para:f[2],v:f[2]});
+      });
+    }
+    var tv=!vazio(g['valor']),tvc=!vazio(g['vencimento']),tp=!vazio(g['pago em']);
+    if(!tv&&!tvc&&!tp)return;
+    var val=tv?parseMoney(g['valor']):null,venc=tvc?parseDate(g['vencimento']):null,pg=tp?parseDate(g['pago em']):null;
+    var erro=!tv?'falta o valor':(val==null||val<=0?'o valor “'+g['valor']+'” não é um número válido':(!tvc?'falta o vencimento':(!venc?'o vencimento “'+g['vencimento']+'” não é uma data':(tp&&!pg?'“Pago em” “'+g['pago em']+'” não é uma data':(pg&&pg>today?'“Pago em” é depois de hoje':'')))));
+    if(erro){plano.erros.push({linha:linha,texto:'conta de '+nome+' não importada: '+erro+'.'});return}
+    var desc=String(vazio(g['descricao'])?'Conta':g['descricao']).trim(),chave=k+'|'+norm(desc)+'|'+venc;
+    if(vistas[chave]){plano.erros.push({linha:linha,texto:'conta repetida no arquivo ('+nome+', '+desc+', vence '+fmtD(venc)+'). Ignorada.'});return}
+    vistas[chave]=1;
+    var ex=cl&&S.contas.find(function(c){return c.clienteId===cl.id&&norm(c.descricao)===norm(desc)&&c.venc===venc});
+    if(!ex){plano.contasNovas.push({cliente:cl||nv,descricao:desc,valor:val,venc:venc,pagoEm:pg});return}
+    var mud=[];
+    if(Math.abs(ex.valor-val)>0.004)mud.push({campo:'valor',rot:'Valor',de:brl.format(ex.valor),para:brl.format(val),v:val});
+    if(pg&&pg!==ex.pagoEm)mud.push({campo:'pagoEm',rot:'Baixa',de:ex.pagoEm?'paga em '+fmtD(ex.pagoEm):'em aberto',para:'paga em '+fmtD(pg),v:pg});
+    if(mud.length)plano.contasAtualizadas.push({conta:ex,mud:mud});else plano.semMudanca.push(ex);
   });
-  save();render();
-  sheet('<h2>Importação concluída</h2><p class="sub">'+novosC+' cliente'+(novosC===1?'':'s')+' novo'+(novosC===1?'':'s')+' e '+novasContas+' conta'+(novasContas===1?'':'s')+' criada'+(novasContas===1?'':'s')+'.'+(ign?' '+ign+' linha(s) sem nome foram ignoradas.':'')+'</p>'
-   +'<div class="actions"><button class="btn primary block" data-act="go" data-tab="contas">Ver contas</button><button class="btn block" data-act="close">Fechar</button></div>');
+  return plano;
+}
+// Transforma o plano em itens de texto: os mesmos na prévia e no histórico.
+function itensDoPlano(pl,atualizar){
+  var it=[],cn=function(c){return cli(c.clienteId).nome+' · '+c.descricao+' · vence '+fmtD(c.venc)};
+  if(atualizar){
+    pl.clientesAtualizados.forEach(function(x){it.push({tipo:'atualizado',titulo:x.cliente.nome,linhas:x.mud.map(function(m){return [m.rot,m.de,m.para]})})});
+    pl.contasAtualizadas.forEach(function(x){it.push({tipo:'atualizado',titulo:cn(x.conta),linhas:x.mud.map(function(m){return [m.rot,m.de,m.para]})})});
+  }
+  pl.clientesNovos.forEach(function(c){it.push({tipo:'novo',titulo:'Cliente: '+c.nome,linhas:[[null,[c.telefone,c.email].filter(Boolean).join(' · ')||'sem contato']]})});
+  pl.contasNovas.forEach(function(c){it.push({tipo:'novo',titulo:'Conta: '+c.cliente.nome+' · '+c.descricao,linhas:[[null,brl.format(c.valor)+' · vence '+fmtD(c.venc)+(c.pagoEm?' · paga em '+fmtD(c.pagoEm):'')]]})});
+  pl.erros.forEach(function(e){it.push({tipo:'erro',titulo:'Linha '+e.linha,linhas:[[null,e.texto.charAt(0).toUpperCase()+e.texto.slice(1)]]})});
+  return it;
+}
+function itensHtml(itens,tipo){
+  var l=itens.filter(function(x){return x.tipo===tipo});
+  return '<ul class="imp-lista">'+l.map(function(x){return '<li class="imp-it '+tipo+'"><strong>'+esc(x.titulo)+'</strong>'+x.linhas.map(function(z){
+    return z[0]===null?'<span>'+esc(z[1])+'</span>':'<span>'+esc(z[0])+': <del>'+esc(z[1])+'</del> <span aria-hidden="true">→</span><span class="sr"> para </span> <ins>'+esc(z[2])+'</ins></span>';
+  }).join('')+'</li>'}).join('')+'</ul>';
+}
+function totalMudancas(pl,atualizar){return pl.clientesNovos.length+pl.contasNovas.length+(atualizar?pl.clientesAtualizados.length+pl.contasAtualizadas.length:0)}
+function resumoImport(r){
+  var p=[];
+  if(r.clientesNovos)p.push(r.clientesNovos+' cliente'+(r.clientesNovos>1?'s novos':' novo'));
+  if(r.contasNovas)p.push(r.contasNovas+' conta'+(r.contasNovas>1?'s novas':' nova'));
+  var at=(r.clientesAtualizados||0)+(r.contasAtualizadas||0);if(at)p.push(at+' atualizaç'+(at>1?'ões':'ão'));
+  if(r.erros)p.push(r.erros+' linha'+(r.erros>1?'s':'')+' com problema');
+  return p.join(' · ')||'nenhuma mudança';
+}
+function sheetImport(pl){
+  planoAtual=pl;
+  var nAt=pl.clientesAtualizados.length+pl.contasAtualizadas.length,itens=itensDoPlano(pl,true);
+  var res=[['Clientes novos',pl.clientesNovos.length],['Contas novas',pl.contasNovas.length],['Atualizações',nAt],['Sem mudança',pl.semMudanca.length],['Com problema',pl.erros.length]];
+  var h='<h2>Prévia da importação</h2><p class="sub">'+esc(pl.arquivo)+'. Nada muda até você confirmar.</p>'
+   +'<ul class="imp-res">'+res.map(function(x){return '<li'+(x[0]==='Com problema'&&x[1]?' class="bad"':'')+'><b>'+x[1]+'</b><span>'+x[0]+'</span></li>'}).join('')+'</ul>';
+  if(nAt)h+='<h3>O que vai mudar</h3><p class="hint">Dados que já existem no app e estão diferentes na planilha.</p>'+itensHtml(itens,'atualizado')
+   +'<label class="toggle"><input type="checkbox" id="imp-atualizar" checked> Atualizar estes dados</label>';
+  if(pl.clientesNovos.length+pl.contasNovas.length)h+='<h3>O que vai entrar</h3>'+itensHtml(itens,'novo');
+  if(pl.erros.length)h+='<h3>Linhas com problema</h3><p class="hint">Não serão importadas. Corrija na planilha e importe de novo.</p>'+itensHtml(itens,'erro');
+  if(pl.semMudanca.length)h+='<details class="imp-iguais"><summary>'+pl.semMudanca.length+' conta'+(pl.semMudanca.length>1?'s já estão iguais':' já está igual')+' no app</summary><ul class="imp-lista">'+pl.semMudanca.map(function(c){return '<li class="imp-it"><span>'+esc(cli(c.clienteId).nome+' · '+c.descricao+' · vence '+fmtD(c.venc))+'</span></li>'}).join('')+'</ul></details>';
+  h+='<div class="actions"><button class="btn primary block" data-act="import-confirm"></button><button class="btn block" data-act="close">Cancelar</button></div>';
+  sheet(h);
+  var cb=$('imp-atualizar'),bt=document.querySelector('[data-act=import-confirm]');
+  var conta=function(){var n=totalMudancas(pl,!cb||cb.checked);bt.textContent=n?'Importar '+n+' mudança'+(n>1?'s':''):'Nada para importar';bt.disabled=!n};
+  if(cb)cb.addEventListener('change',conta);conta();
+}
+function aplicarImport(){
+  var pl=planoAtual;if(!pl)return;
+  var cb=$('imp-atualizar'),atualizar=!cb||cb.checked,antes=JSON.stringify(S),n=totalMudancas(pl,atualizar);
+  var itens=itensDoPlano(pl,atualizar);
+  pl.clientesNovos.forEach(function(c){S.clientes.push(c)});
+  if(atualizar){
+    pl.clientesAtualizados.forEach(function(x){x.mud.forEach(function(m){x.cliente[m.campo]=m.v})});
+    pl.contasAtualizadas.forEach(function(x){x.mud.forEach(function(m){x.conta[m.campo]=m.v})});
+  }
+  pl.contasNovas.forEach(function(c){S.contas.push({id:uid(),clienteId:c.cliente.id,descricao:c.descricao,valor:c.valor,venc:c.venc,pagoEm:c.pagoEm||null,comprovante:null})});
+  S.importacoes=[{quando:new Date().toISOString(),arquivo:pl.arquivo,resumo:{clientesNovos:pl.clientesNovos.length,contasNovas:pl.contasNovas.length,clientesAtualizados:atualizar?pl.clientesAtualizados.length:0,contasAtualizadas:atualizar?pl.contasAtualizadas.length:0,erros:pl.erros.length},itens:itens}].concat(S.importacoes||[]).slice(0,10);
+  planoAtual=null;save();closeSheet();render();
+  toast('Importação concluída: '+n+' mudança'+(n>1?'s':''),function(){S=JSON.parse(antes);save();render();toast('Importação desfeita')});
+}
+function quandoTxt(iso){var d=new Date(iso);return fmtD(iso2(d))+' às '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function iso2(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function historicoImport(){
+  var l=S.importacoes||[];if(!l.length)return '';
+  return '<p class="lbl" style="margin-top:14px">Últimas importações</p>'+l.slice(0,5).map(function(x,i){
+    return '<button class="row" data-act="import-log" data-i="'+i+'"><span class="t">'+esc(x.arquivo)+'</span><span class="v" style="font-weight:500;font-size:13px">'+quandoTxt(x.quando)+'</span><span class="s">'+esc(resumoImport(x.resumo))+'</span></button>';
+  }).join('');
+}
+function sheetLog(i){
+  var x=(S.importacoes||[])[i];if(!x)return;
+  var h='<h2>Registro da importação</h2><p class="sub">'+esc(x.arquivo)+' · '+quandoTxt(x.quando)+'<br>'+esc(resumoImport(x.resumo))+'</p>';
+  [['atualizado','O que mudou'],['novo','O que entrou'],['erro','Linhas que ficaram de fora']].forEach(function(t){if(x.itens.some(function(z){return z.tipo===t[0]}))h+='<h3>'+t[1]+'</h3>'+itensHtml(x.itens,t[0])});
+  if(!x.itens.length)h+='<div class="empty">Nada mudou nesta importação.</div>';
+  sheet(h+'<div class="actions"><button class="btn block" data-act="close">Fechar</button></div>');
 }
 function readXlsx(file){
   if(typeof XLSX==='undefined'){toast('Leitor de Excel indisponível agora');return}
   var r=new FileReader();
   r.onload=function(){
-    try{var wb=XLSX.read(r.result,{type:'array',cellDates:true});var ws=wb.Sheets[wb.SheetNames[0]];importRows(XLSX.utils.sheet_to_json(ws,{defval:''}))}
-    catch(e){toast('Não consegui ler esse arquivo')}
+    try{var wb=XLSX.read(r.result,{type:'array',cellDates:true});var ws=wb.Sheets[wb.SheetNames[0]];sheetImport(planejarImport(XLSX.utils.sheet_to_json(ws,{defval:''}),file.name))}
+    catch(e){toast('Não consegui ler esse arquivo. Confira se é um Excel (.xlsx) ou CSV.')}
   };
   r.readAsArrayBuffer(file);
 }
@@ -684,7 +804,9 @@ document.addEventListener('click',function(e){
     if(eid){Object.assign(S.clientes.find(function(x){return x.id===eid}),dados);save();closeSheet();render();toast('Dados atualizados')}
     else{dados.id=uid();S.clientes.push(dados);save();closeSheet();render();toast('Cliente cadastrado')}
   }
-  else if(a==='import-sample')importRows(sampleRows());
+  else if(a==='import-sample')sheetImport(planejarImport(sampleRows(),'Planilha de exemplo'));
+  else if(a==='import-confirm')aplicarImport();
+  else if(a==='import-log')sheetLog(+el.dataset.i);
   else if(a==='export-custom')sheetExport('custom');
   else if(a==='xf-status'){expF.status=el.dataset.v;render()}
   else if(a==='xf-limpar'){expF=Object.assign({},expPadrao);render()}
