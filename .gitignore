@@ -1,0 +1,7 @@
+testes/vendor/
+testes/.build/
+testes/capturas/
+node_modules/
+.env
+.env.*
+!.env.example
