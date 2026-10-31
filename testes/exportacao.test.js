@@ -25,6 +25,8 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   await p.waitForSelector('.crow');
   await p.evaluate(() => document.getElementById('reset').click()); // grava os dados de exemplo
   await p.click('button[data-tab=planilha]');
+  await p.click('[data-act=export-abrir]');
+  await p.waitForSelector('#xf-count');
 
   const S = await p.evaluate(() => JSON.parse(localStorage.getItem('baixa-pix-v2')));
   const hoje = await p.evaluate(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
@@ -44,7 +46,7 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   const soma = l => l.reduce((a, c) => a + c.valor, 0);
   const reais = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  ok('Exportar contas é o primeiro cartão da aba Planilha', (await p.locator('.card .ct').first().innerText()) === 'Exportar contas');
+  ok('Exportar abre uma janela própria só com os filtros', (await p.locator('.sheet h2').innerText()) === 'Exportar contas');
   ok('Filtro padrão: Atrasadas', (await p.getAttribute('[data-act=xf-status][data-v=atrasadas]', 'aria-pressed')) === 'true');
   const e0 = esperado({ status: 'atrasadas' });
   ok('Contagem ao vivo mostra quantidade e total do filtro', (await contagem()) === `${e0.length} contas · ${reais(soma(e0))}`.replace(/ /g, ' ') || (await contagem()).replace(/ /g, ' ') === `${e0.length} contas · ${reais(soma(e0))}`.replace(/ /g, ' '), await contagem());
@@ -90,12 +92,13 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   ok('Arquivo tem as colunas Situação, Pago em e Dias de atraso', JSON.stringify(arq.aoa[0]) === JSON.stringify(['Cliente', 'Telefone', 'Descrição', 'Valor', 'Vencimento', 'Situação', 'Pago em', 'Dias de atraso']));
   ok('Arquivo tem só as contas filtradas, todas da Marina', arq.aoa.length - 1 === exp.length && arq.aoa.slice(1).every(r => r[0] === 'Marina Alves'));
   ok('Soma dos valores do arquivo bate com os dados', Math.abs(arq.aoa.slice(1).reduce((a, r) => a + r[3], 0) - soma(exp)) < 0.01);
-  await p.click('[data-act=close]');
+  await p.click('.sheet [data-act=export-abrir]');
+  ok('"Voltar aos filtros" volta com os filtros que estavam escolhidos', (await p.inputValue('#xf-cli')) === marina.id && (await p.inputValue('#xf-de')) === de);
 
   // Limpar filtros
-  ok('"Limpar filtros" aparece quando algum filtro foi mudado', (await p.locator('[data-act=xf-limpar]').count()) === 1);
+  ok('"Limpar filtros" aparece quando algum filtro foi mudado', await p.locator('[data-act=xf-limpar]').isVisible());
   await p.click('[data-act=xf-limpar]');
-  ok('"Limpar filtros" volta ao padrão e some', (await p.inputValue('#xf-cli')) === '' && (await p.inputValue('#xf-de')) === '' && (await p.getAttribute('[data-act=xf-status][data-v=atrasadas]', 'aria-pressed')) === 'true' && (await p.locator('[data-act=xf-limpar]').count()) === 0);
+  ok('"Limpar filtros" volta ao padrão e some', (await p.inputValue('#xf-cli')) === '' && (await p.inputValue('#xf-de')) === '' && (await p.getAttribute('[data-act=xf-status][data-v=atrasadas]', 'aria-pressed')) === 'true' && !(await p.locator('[data-act=xf-limpar]').isVisible()));
 
   // Filtro sem resultado
   await p.click('[data-act=xf-status][data-v=pagas]');

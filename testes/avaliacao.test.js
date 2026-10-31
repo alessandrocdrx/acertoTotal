@@ -83,14 +83,14 @@ const DIA = 864e5;
     ok('Números: estatísticas continuam disponíveis', (await p.locator('.statbox').count()) === 1);
     await p.click('button[data-tab=planilha]');
     const pl = await p.locator('#screen').innerText();
-    ok('Planilha: cartão "Só consulta" explica, sem importar nem exportar', /Só consulta/i.test(pl) && /versão completa/.test(pl) && (await p.locator('[data-act=pick-xl], [data-act=export-custom], [data-act=export-backup], [data-act=import-sample]').count()) === 0);
+    ok('Planilha: cartão "Só consulta" explica, sem importar nem exportar', /Só consulta/i.test(pl) && /versão completa/.test(pl) && (await p.locator('[data-act=pick-xl], [data-act=import-abrir], [data-act=export-abrir], [data-act=export-backup], [data-act=import-modelo]').count()) === 0);
     await p.click('.iconbtn[data-act=aparencia]');
     await p.click('.seg button[data-t=dark]');
     ok('Tema continua podendo ser trocado (não mexe nos dados)', (await p.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'dark');
     await p.keyboard.press('Escape');
 
     // Tentativas de burlar pela página: ações de escrita disparadas direto
-    for (const act of ['nova-conta', 'novo-cliente', 'import-sample', 'export-backup', 'pick-xl', 'baixa', 'excluir-conta']) {
+    for (const act of ['nova-conta', 'novo-cliente', 'import-abrir', 'import-sample', 'import-modelo', 'export-abrir', 'export-backup', 'pick-xl', 'baixa', 'excluir-conta']) {
       await p.evaluate(a => { const b = document.createElement('button'); b.dataset.act = a; b.dataset.id = 'x'; document.body.appendChild(b); b.click(); b.remove(); }, act);
       ok(`Ação "${act}" disparada direto é bloqueada com aviso`, (await p.locator('.sheet').count()) === 0 && /só para consulta/.test(await p.locator('.toast').innerText()));
     }

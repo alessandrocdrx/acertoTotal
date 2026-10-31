@@ -13,8 +13,8 @@ android {
         applicationId = "br.com.celsopix"
         minSdk = 29
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "0.5.0"
     }
 
     // Dois apps separados: o de teste (faixa "Ambiente de teste", ícone próprio)

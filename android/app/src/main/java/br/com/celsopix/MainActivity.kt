@@ -131,10 +131,18 @@ class MainActivity : ComponentActivity() {
         web.saveState(outState)
     }
 
+    // Planilhas que chegam pelo WhatsApp, Drive ou e-mail muitas vezes vêm como "application/octet-stream"
+    // e ficariam apagadas no seletor. Aceitamos esse tipo também: o app confere o conteúdo e explica se não for planilha.
     private fun tiposMime(aceito: String): List<String> = when (aceito) {
-        ".xlsx" -> listOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        ".xls" -> listOf("application/vnd.ms-excel")
-        ".csv" -> listOf("text/csv", "text/comma-separated-values", "text/plain")
+        ".xlsx", ".xlsm" -> listOf(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel.sheet.macroEnabled.12",
+            "application/octet-stream",
+            "application/zip",
+        )
+        ".xls" -> listOf("application/vnd.ms-excel", "application/x-excel", "application/octet-stream")
+        ".ods" -> listOf("application/vnd.oasis.opendocument.spreadsheet")
+        ".csv" -> listOf("text/csv", "text/comma-separated-values", "application/csv", "text/plain", "application/octet-stream")
         else -> listOf(aceito)
     }
 

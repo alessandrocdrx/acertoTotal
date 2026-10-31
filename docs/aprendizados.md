@@ -78,10 +78,42 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R41. Período de avaliação: 7 dias contados do primeiro uso no aparelho, guardados à parte dos dados (restaurar ou importar não reinicia a contagem). A faixa do topo mostra quantos dias faltam e até quando. Depois do prazo, o app fica só para consulta: ver, buscar, filtrar, ver números e trocar o tema continuam. Cadastrar, editar, dar baixa, excluir, importar e exportar ficam bloqueados, tanto na tela (os botões somem e uma mensagem explica) quanto no código (toda ação de escrita passa por uma trava). Nenhum dado é apagado. [avaliacao]
 - R42. Quando uma função fica bloqueada, nenhum aviso pode mandar a pessoa usar essa função. Exemplo: o aviso "Fazer cópia de segurança" some no modo só consulta. [avaliacao]
 - R43. Limite controlado só no aparelho pode ser burlado limpando os dados do app. O app detecta o relógio atrasado mais de 1 dia, mas um bloqueio que ninguém contorne exige servidor de licenças. Não prometa mais que isso.
+- R44. Toda mensagem de erro de importação diz quatro coisas: a linha, a coluna, a célula (ex.: "Valor (E6)") e como corrigir, com um exemplo. "Arquivo inválido" ou "erro na linha 6" sozinhos não servem. Uma linha com mais de um problema mostra todos de uma vez. [importacao]
+- R45. Uma tela, uma tarefa. Importar, exportar e fazer cópia de segurança são cartões separados na aba Planilha, cada um com um botão que abre o seu fluxo. Filtros e formulários não ficam soltos na tela principal. Só a tarefa principal tem botão de destaque. [importacao, exportacao]
+- R46. Fluxo de várias etapas mostra as etapas ("1 Arquivo · 2 Colunas · 3 Conferir") e a atual. O botão principal fica fixo embaixo da janela, visível mesmo com a lista rolada. [importacao]
+- R47. Importar aceita a planilha como ela vem: títulos com outros nomes ("Cliente", "Data de vencimento", "Valor (R$)"), títulos fora da linha 1, várias abas, CSV do Excel brasileiro (";" e acentos em Windows-1252), valores "R$ 1.234,56" e "1,234.56", datas dd/mm/aa e dd-mm-aaaa. O que o app não reconhece, a pessoa escolhe no passo "Colunas", vendo a letra, o título e um exemplo de cada coluna. [importacao]
+- R48. O tipo do arquivo vem do conteúdo, não da extensão. No Android, planilhas do WhatsApp e do Drive chegam sem extensão ou como "application/octet-stream". O seletor do APK aceita esses tipos, e o app confere os primeiros bytes para explicar quando o arquivo é uma imagem, um PDF ou outra coisa. [importacao]
+- R49. CSV é lido como texto puro (`raw: true`). Se o leitor converter datas sozinho, "10/11/2026" vira 11 de outubro, no formato americano. [importacao]
+- R50. Desfazer uma importação funciona a qualquer momento, pelo histórico, mesmo depois de fechar o app. O app guarda o que entrou e o valor de antes de cada dado mudado. O que a pessoa usou depois (uma baixa, um comprovante, uma conta nova no cliente importado) fica, e o aviso diz quantos itens ficaram. [importacao]
+- R51. Linhas com problema podem ser baixadas numa planilha com as colunas originais e mais "Linha no arquivo" e "Problema". A pessoa corrige ali e importa de novo. O que já entrou não se repete, e as duas colunas extras são ignoradas. [importacao]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-017 · 31/10/2026 · Planilha confusa e erros de importação sem explicação
+- **Relato do cliente:** "Essa área é muito sensível e está confusa. Também é difícil importar a planilha, e se há erro não diz qual linha, coluna ou por quê."
+- **Causas de verdade:**
+  - **Tela:** a aba Planilha empilhava três coisas diferentes (filtros de exportação, importação e cópia de segurança) numa tela longa. Os filtros apareciam primeiro e empurravam a importação para baixo.
+  - **Erros:** a mensagem dizia a linha, mas não a coluna nem a célula, nem como corrigir. Uma linha com dois problemas mostrava só o primeiro.
+  - **Títulos:** só os nomes exatos eram aceitos ("Nome", "Valor", "Vencimento"). Com "Cliente" ou "Data de vencimento", toda linha virava "falta o valor", sem dizer que o problema era o título da coluna.
+  - **Formato e arquivo:** títulos fora da linha 1, outra aba ou CSV do Excel brasileiro (";" e acentos) falhavam. No Android, o seletor deixava apagadas as planilhas vindas do WhatsApp ou do Drive (tipo "octet-stream").
+  - **Valores:** "12abc" virava 12 sem aviso, e "1,234.56" virava 1,23456.
+  - **Desfazer:** só existia por 6 segundos, no aviso que aparece embaixo da tela.
+- **Feito:**
+  - **Aba Planilha:** três cartões, um por tarefa, cada um com um botão (R45). Os filtros de exportação foram para uma janela própria, com "Voltar aos filtros" na prévia. A cópia de segurança mostra o estado: "Nunca feita", "Feita hoje" ou "Feita há N dias".
+  - **Importar em 3 passos com etapas visíveis (R46):**
+    - **Passo 1:** explica cada coluna, com exemplo e o que é obrigatório. Tem "Baixar planilha modelo" e "Testar com a planilha de exemplo", e sugere uma cópia de segurança antes.
+    - **Passo 2:** só aparece quando falta alguma coluna. A pessoa escolhe a coluna vendo a letra, o título e um exemplo.
+    - **Passo 3:** prévia com os problemas no topo, as colunas usadas e "Ajustar colunas".
+  - **Erros (R44):** cada erro diz a linha, a coluna, a célula e como corrigir, por exemplo: "Linha 6 · Bruno Costa — Valor (E6): “abc” não é um valor. Use só números, por exemplo 150,00." "Ver problemas" leva até a lista. "Baixar linhas com problema" gera uma planilha para corrigir e importar de novo (R51).
+  - **Avisos que não barram a linha:** e-mail estranho e telefone curto aparecem em "Para conferir".
+  - **Leitura (R47 a R49):** os títulos são reconhecidos por sinônimos e por palavra-chave, a linha de títulos é procurada nas 15 primeiras linhas e a aba com dados é escolhida sozinha. O CSV é lido como texto, no formato brasileiro. O tipo do arquivo é conferido pelo conteúdo. Arquivo grande demais, vazio, com senha, imagem ou PDF ganha um título e uma instrução próprios.
+  - **Tela de conclusão:** mostra o que foi gravado e o que ficou de fora, com "Ver contas" e "Desfazer importação".
+  - **Desfazer pelo histórico a qualquer momento (R50).**
+  - **APK 0.5.0:** o seletor de arquivos aceita os tipos que chegam pelo WhatsApp e pelo Drive.
+- **Decisão:** uma linha com problema fica inteira de fora, inclusive o cliente. Antes, "sem vencimento" criava só o cliente. Era confuso: a linha aparecia como erro, mas metade dela entrava.
+- **Como evitar:** Regras R44 a R51. A suíte `testes/importacao.test.js` foi reescrita e tem 94 verificações, incluindo acessibilidade (axe) dos três passos nos dois temas e o layout em 320 px.
 
 ### A-016 · 31/10/2026 · Limite de uso de 7 dias (só consulta depois)
 - **Pedido do cliente:** "Coloca um limite de uso de 7 dias. Depois, o app não exporta nem importa e, do CRUD, fica somente a leitura."
@@ -254,7 +286,7 @@ As entradas mais recentes ficam no topo.
 | **Clientes** | Valor em aberto ou "Em dia" à direita (R7). Selo de atrasadas. Busca quando há mais de 5 clientes. |
 | **Ficha do cliente** | Contas pela descrição, sem repetir o nome. "Nova conta para este cliente" já com o cliente preenchido. "Editar dados". |
 | **Números** | Período em 3 opções. Cada gráfico tem o valor escrito ao lado. Frase simples explicando a taxa. Tocar no devedor abre o cliente. Mensagens sem divisão por zero quando não há dados. |
-| **Planilha** | Colunas esperadas explicadas, planilha de exemplo, prévia antes de exportar, aviso de backup atrasado. |
+| **Planilha** | Uma tarefa por cartão (lei de Hick), etapas visíveis (status do sistema), modelo e exemplo (reconhecer em vez de lembrar), prévia antes de gravar (prevenção de erros), erro com linha, coluna, célula e solução (ajudar a corrigir), desfazer a qualquer momento (controle e liberdade), botão principal fixo embaixo (lei de Fitts). |
 | **Tema e paleta** | Claro como padrão (R18). Amostras com contraste numérico. |
 
 ## Pendências conhecidas

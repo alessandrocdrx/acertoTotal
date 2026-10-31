@@ -106,11 +106,14 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
     // Importação
     await go(page, 'planilha');
     const before = await st(page);
+    await page.click('[data-act=import-abrir]');
     await page.click('[data-act=import-sample]');
     rec('Código', 'Importar mostra prévia e não grava nada antes de confirmar', JSON.stringify(await st(page)) === JSON.stringify(before) && /Prévia da importação/.test(await page.locator('.sheet h2').innerText()));
     await page.click('[data-act=import-confirm]');
+    await page.click('.sheet [data-act=close]');
     const after = await st(page);
     rec('Código', 'Planilha de exemplo cria 3 clientes e 4 contas', after.clientes.length - before.clientes.length === 3 && after.contas.length - before.contas.length === 4, `+${after.clientes.length - before.clientes.length} clientes, +${after.contas.length - before.contas.length} contas`);
+    await page.click('[data-act=import-abrir]');
     await page.click('[data-act=import-sample]');
     rec('Código', 'Reimportar a mesma planilha: "Nada para importar"', await page.locator('[data-act=import-confirm]').isDisabled() && /Nada para importar/.test(await page.locator('[data-act=import-confirm]').innerText()));
     await page.click('[data-act=close]');
@@ -130,16 +133,18 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
     await page.setInputFiles('#xl', { name: 'clientes.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: Buffer.from(bytes) });
     await page.waitForSelector('.sheet h2:has-text("Prévia da importação")');
     const rel = await page.locator('.sheet').innerText();
-    rec('Código', 'Prévia lista as linhas com problema e o motivo', /Linha 4\s+Falta o nome do cliente/.test(rel) && /Linha 5\s+Conta de Teste Três não importada: falta o vencimento/.test(rel), rel.slice(0, 400));
+    rec('Código', 'Prévia lista as linhas com problema e o motivo', /Linha 4\s+Nome \(A4\): está vazio/.test(rel) && /Linha 5 · Teste Três\s+Vencimento \(F5\): está vazio/.test(rel), rel.slice(0, 400));
     await page.click('[data-act=import-confirm]');
+    await page.click('.sheet [data-act=close]');
     const imp = await st(page);
     const c1 = imp.contas.find(c => c.descricao === 'Mensal'), c2 = imp.contas.find(c => c.descricao === 'Parcela');
     rec('Código', 'Import .xlsx: valor em formato brasileiro "1.250,50" vira 1250.5', c1 && c1.valor === 1250.5, c1 && String(c1.valor));
     rec('Código', 'Import .xlsx: data texto 05/11/2026 vira 2026-11-05', c1 && c1.venc === '2026-11-05', c1 && c1.venc);
     rec('Código', 'Import .xlsx: data do Excel (fuso São Paulo) vira 2026-11-10 sem deslocar um dia', c2 && c2.venc === '2026-11-10', c2 && c2.venc);
-    rec('Código', 'Import .xlsx: linha sem nome ignorada; sem data cria só o cliente', !imp.clientes.some(c => c.nome === '') && imp.clientes.some(c => c.nome === 'Teste Três') && !imp.contas.some(c => c.descricao === 'Sem data'));
+    rec('Código', 'Import .xlsx: linha com problema fica inteira de fora (sem nome, sem data)', !imp.clientes.some(c => c.nome === '') && !imp.clientes.some(c => c.nome === 'Teste Três') && !imp.contas.some(c => c.descricao === 'Sem data'));
 
     // Exportação
+    await page.click('[data-act=export-abrir]');
     await page.click('[data-act=export-custom]');
     const nLinhasPrev = await page.locator('.sheet tbody tr').count();
     await page.click('[data-act=xlsx-export]');
@@ -170,7 +175,7 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
   {
     // Sem a capacidade de download (navegador comum): não deve quebrar
     const { page, ctx, errors } = await newPage(browser, { mockDownloads: false });
-    await go(page, 'planilha'); await page.click('[data-act=export-custom]'); await page.click('[data-act=xlsx-export]');
+    await go(page, 'planilha'); await page.click('[data-act=export-abrir]'); await page.click('[data-act=export-custom]'); await page.click('[data-act=xlsx-export]');
     await page.waitForTimeout(300);
     const t = await page.locator('.toast').innerText().catch(() => '');
     rec('Código', 'Sem permissão de download, mostra aviso e não gera erro', /indispon/.test(t) && errors.length === 0, t + ' ' + errors.join('|'));

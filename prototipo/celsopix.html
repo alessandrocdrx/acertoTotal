@@ -74,7 +74,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 #headAction{display:flex;gap:8px;align-items:center;flex:none}
 #headAction .btn{white-space:nowrap}
 .chips.four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.four .chip{display:grid;justify-items:center;gap:1px;padding:6px 2px;border-radius:14px;font-size:13px;line-height:1.2}
+.four .chip{display:grid;justify-items:center;align-content:center;gap:1px;padding:6px 2px;border-radius:14px;font-size:13px;line-height:1.2}
 .four .chip b{font-size:17px}
 .iconbtn{flex:none;width:44px;height:44px;border:1px solid var(--line);background:var(--surface);border-radius:12px;display:grid;place-items:center;padding:0;color:var(--fg)}
 .iconbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -183,6 +183,40 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .money input{padding-left:44px}
 .btn.quiet{border-color:transparent;background:none}
 .empty .btn{margin-top:12px}
+.task{background:var(--surface2);border-radius:16px;padding:14px;margin-bottom:12px}
+.task .actions{margin-top:12px}
+.task-h{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;align-items:start}
+.task-h .ic{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.task-h svg,.ok-ico svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.task-h h3{margin:0 0 2px;font-size:17px;text-transform:none;letter-spacing:0;color:var(--fg)}
+.task-h p{margin:0;color:var(--muted);font-size:14px}
+.bk{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:14px;color:var(--muted);margin:10px 0 0}
+.passos{list-style:none;padding:0;margin:6px 0 12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.passos li{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);font-weight:500;border-top:3px solid var(--line);padding-top:7px;min-width:0}
+.passos li b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--surface2);font-size:12px;flex:none}
+.passos li.feito{border-color:var(--accent);color:var(--fg)}
+.passos li.feito b{background:var(--accent-soft);color:var(--accent)}
+.passos li.atual{border-color:var(--accent);color:var(--fg);font-weight:700}
+.passos li.atual b{background:var(--accent);color:var(--accent-fg)}
+.alerta{background:var(--bad-bg);color:var(--bad);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:500;margin:0 0 12px}
+.alerta.info{background:var(--accent-soft);color:var(--fg)}
+.alerta-bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.alerta .btn{color:var(--fg)}
+.actions.fixo{position:sticky;bottom:-18px;background:var(--surface);margin:14px -18px -18px;padding:10px 18px 18px;border-top:1px solid var(--line);z-index:1}
+.actions.fixo .xf-count{margin:0}
+.colmod{list-style:none;padding:0;margin:0 0 10px;border:1px solid var(--line);border-radius:12px}
+.colmod li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px}
+.colmod li:last-child{border-bottom:0}
+.colmod small{display:block;color:var(--muted);font-size:13px}
+.colmod .ex{color:var(--muted);font-size:13px;text-align:right;overflow-wrap:anywhere}
+.obr{font-style:normal;font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-bg);border-radius:99px;padding:1px 8px;white-space:nowrap}
+.imp-cols{background:var(--surface2);border-radius:12px;padding:10px 12px;font-size:14px;margin:0 0 12px;display:grid;gap:8px;justify-items:start;color:var(--muted)}
+.imp-it.aviso{border-left-color:var(--warn)}
+.imp-it b{color:var(--fg)}
+.ok-ico{width:52px;height:52px;border-radius:50%;background:var(--ok-bg);color:var(--ok);display:grid;place-items:center;margin:4px 0 10px}
+.ok-ico svg{width:28px;height:28px;stroke-width:2.4}
+.lista-ok{margin:0 0 10px;padding-left:20px}
+.lista-ok li{margin-bottom:4px}
 @media (max-width:860px){
   .stage{display:block;min-height:0}.pitch{display:none}
   body{padding-block:0;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
@@ -200,7 +234,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
     <ol>
       <li><b>1</b><span>Na aba <strong>Contas</strong>, toque em <strong>Dar baixa</strong> numa conta em aberto e informe a data do pagamento.</span></li>
       <li><b>2</b><span>Anexe um comprovante Pix (foto ou PDF). O app guarda o arquivo, sem conferir.</span></li>
-      <li><b>3</b><span>Na aba <strong>Planilha</strong>, importe um Excel ou use a planilha de exemplo.</span></li>
+      <li><b>3</b><span>Na aba <strong>Planilha</strong>, toque em <strong>Importar planilha</strong>. Antes de gravar, o app mostra o que entra, o que muda e cada erro com a linha e a coluna.</span></li>
       <li><b>4</b><span>Exporte em Excel (.xlsx) com filtros por situação, cliente e período de vencimento.</span></li>
     </ol>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="reset">Restaurar dados de exemplo</button><button class="btn" data-act="aparencia">Tema e paleta</button></div>
@@ -213,6 +247,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
     <main class="screen" id="screen"></main>
     <nav class="tabs" id="tabs"></nav>
     <div id="layer"></div>
+    <input type="file" id="xl" accept=".xlsx,.xls,.xlsm,.csv,.ods" hidden>
   </div>
 </div>
 
@@ -280,7 +315,7 @@ var LIMITE_DIAS=0,AV={inicio:0,fim:0,relogio:false};
 function somenteLeitura(){return LIMITE_DIAS>0&&(AV.relogio||Date.now()>=AV.fim)}
 function diasRestantes(){return Math.max(0,Math.ceil((AV.fim-Date.now())/864e5))}
 var MSG_LEITURA='Avaliação encerrada: o app está só para consulta.';
-var ACOES_ESCRITA=['baixa','desfazer','excluir-conta','salvar-conta','salvar-cliente','nova-conta','nova-conta-cli','novo-cliente','editar-cliente','pick-comp','pick-xl','import-sample','import-confirm','export-custom','export-backup','export-filtrado','xlsx-export','copy-export'];
+var ACOES_ESCRITA=['baixa','desfazer','excluir-conta','salvar-conta','salvar-cliente','nova-conta','nova-conta-cli','novo-cliente','editar-cliente','pick-comp','pick-xl','import-sample','import-confirm','export-custom','export-backup','export-filtrado','xlsx-export','copy-export','import-abrir','import-modelo','imp-colunas','imp-map-ok','imp-erros','imp-desfazer','imp-desfazer-sim','export-abrir'];
 var tab='contas',filter='abertas',query='',queryC='',pendingComp=null,toastT;
 var $=function(id){return document.getElementById(id)};
 function toast(m,undo){
@@ -398,6 +433,7 @@ function slug(t){return t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowe
 // Atualiza só a contagem e o botão, sem redesenhar a tela (o foco fica no campo).
 function atualizaXf(){
   var el=$('xf-count'),bt=document.querySelector('[data-act=export-custom]');if(!el||!bt)return;
+  var lp=document.querySelector('[data-act=xf-limpar]');if(lp)lp.hidden=JSON.stringify(expF)===JSON.stringify(expPadrao);
   if(expF.de&&expF.ate&&expF.de>expF.ate){
     if($('xf-ate').getAttribute('aria-invalid')!=='true')fieldError('xf-ate','A data final é antes da inicial');
     el.textContent='Corrija o período para exportar.';bt.disabled=true;return;
@@ -405,23 +441,41 @@ function atualizaXf(){
   var e=$('xf-ate'),pe=$('xf-ate-err');if(pe){pe.remove();e.removeAttribute('aria-invalid');e.removeAttribute('aria-describedby')}
   var l=contasExport();
   el.textContent=l.length?l.length+' conta'+(l.length===1?'':'s')+' · '+brl.format(sum(l)):'Nenhuma conta com esses filtros.';
-  bt.disabled=!l.length;
+  bt.disabled=!l.length;bt.textContent=l.length?'Ver prévia ('+l.length+')':'Ver prévia';
 }
+// ---------- Aba Planilha: três tarefas separadas, cada uma abre o seu próprio fluxo.
+ICON.importar='<svg viewBox="0 0 24 24"><path d="M12 3v11M7.5 9.5L12 14l4.5-4.5"/><path d="M4 16v4h16v-4"/></svg>';
+ICON.exportar='<svg viewBox="0 0 24 24"><path d="M12 14V3M7.5 7.5L12 3l4.5 4.5"/><path d="M4 16v4h16v-4"/></svg>';
+ICON.backup='<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.6-3.4 7.9-8 9-4.6-1.1-8-4.4-8-9V6z"/><path d="M8.8 12.2l2.2 2.2 4.3-4.6"/></svg>';
+function backupInfo(){
+  if(!S.ultimoBackup)return {cls:'atrasada',txt:'Nunca feita',dica:'Faça agora: é o que salva seus dados se o celular for trocado ou perdido.'};
+  var d=daysBetween(S.ultimoBackup,today);
+  return {cls:d>7?'pendente':'paga',txt:d<=0?'Feita hoje':(d===1?'Feita ontem':'Feita há '+d+' dias'),dica:d>7?'Já faz mais de uma semana. Faça uma nova cópia.':'Última cópia em '+fmtD(S.ultimoBackup)+'.'};
+}
+function tarefa(ic,titulo,texto){return '<div class="task-h"><span class="ic" aria-hidden="true">'+ICON[ic]+'</span><div><h3>'+titulo+'</h3><p>'+texto+'</p></div></div>'}
 function viewPlanilha(){
-  if(somenteLeitura())return '<div class="card"><h3 class="ct">Só consulta</h3><p>A avaliação terminou em '+fimTxt()+'. Importar e exportar planilhas fica disponível na versão completa. Você ainda pode consultar contas, clientes, números e o histórico abaixo.</p>'+historicoImport()+'</div>';
-  var bk=S.ultimoBackup?'Última cópia: '+fmtD(S.ultimoBackup):'Nenhuma cópia feita ainda';
-  var mudou=JSON.stringify(expF)!==JSON.stringify(expPadrao);
+  if(somenteLeitura())return '<div class="card"><h3 class="ct">Só consulta</h3><p>A avaliação terminou em '+fimTxt()+'. Importar e exportar planilhas fica disponível na versão completa. Você ainda pode consultar contas, clientes, números e o histórico abaixo.</p></div>'+historicoImport();
+  var b=backupInfo();
+  return '<section class="task" aria-label="Importar">'+tarefa('importar','Importar planilha','Traga clientes e contas de um Excel. Você confere tudo antes de gravar e pode desfazer depois.')
+   +'<div class="actions"><button class="btn primary block" data-act="import-abrir">Importar planilha</button><button class="btn block quiet" data-act="import-modelo">Baixar planilha modelo</button></div></section>'
+   +'<section class="task" aria-label="Exportar">'+tarefa('exportar','Exportar contas','Escolha situação, cliente e período. Sai um arquivo Excel (.xlsx).')
+   +'<div class="actions"><button class="btn block" data-act="export-abrir">Exportar contas</button></div></section>'
+   +'<section class="task" aria-label="Cópia de segurança">'+tarefa('backup','Cópia de segurança','Todos os clientes e contas numa planilha. Guarde fora do celular.')
+   +'<p class="bk"><span class="pill '+b.cls+'">'+b.txt+'</span><span>'+b.dica+'</span></p>'
+   +'<div class="actions"><button class="btn block" data-act="export-backup">Fazer cópia de segurança</button></div></section>'
+   +historicoImport();
+}
+// Filtros da exportação ficam numa janela própria: escolher, ver quantas contas saem e seguir para a prévia.
+function sheetFiltros(){
   var opts=S.clientes.slice().sort(function(a,b){return a.nome.localeCompare(b.nome)}).map(function(c){return '<option value="'+c.id+'"'+(c.id===expF.cliente?' selected':'')+'>'+esc(c.nome)+'</option>'}).join('');
-  return '<div class="card"><h3 class="ct">Exportar contas</h3><p>Escolha o que vai para a planilha.</p>'
+  sheet('<h2>Exportar contas</h2><p class="sub">Escolha o que vai para a planilha.</p>'
    +'<p class="lbl" id="xf-st-l">Situação</p><div class="chips four" role="group" aria-labelledby="xf-st-l">'+['todas','abertas','atrasadas','pagas'].map(function(v){return '<button class="chip" data-act="xf-status" data-v="'+v+'" aria-pressed="'+(expF.status===v)+'"><span>'+XF_LABEL[v]+'</span></button>'}).join('')+'</div>'
    +'<div class="field"><label for="xf-cli">Cliente</label><select id="xf-cli"><option value="">Todos os clientes</option>'+opts+'</select></div>'
    +'<div class="dates"><div class="field"><label for="xf-de">Vencimento de</label><input id="xf-de" type="date" value="'+expF.de+'"></div><div class="field"><label for="xf-ate">Até</label><input id="xf-ate" type="date" value="'+expF.ate+'"></div></div>'
-   +'<p class="hint" style="margin:0 0 10px">Deixe as datas em branco para incluir todas.</p>'
-   +'<p class="xf-count" id="xf-count" aria-live="polite"></p>'
-   +'<div class="actions"><button class="btn primary block" data-act="export-custom">Ver prévia e exportar</button>'+(mudou?'<button class="btn block quiet" data-act="xf-limpar">Limpar filtros</button>':'')+'</div></div>'
-   +'<div class="card"><h3 class="ct">Importar clientes e contas</h3><p>Envie um Excel (.xlsx) ou CSV com as colunas: Nome, Telefone, E-mail, Descrição, Valor, Vencimento e, se quiser, Pago em. Antes de gravar, você vê uma prévia do que entra e do que muda.</p>'
-   +'<input type="file" id="xl" accept=".xlsx,.xls,.csv" hidden><div class="actions"><button class="btn block" data-act="pick-xl">Escolher planilha</button><button class="btn block" data-act="import-sample">Usar planilha de exemplo</button></div>'+historicoImport()+'</div>'
-   +'<div class="card"><h3 class="ct">Cópia de segurança</h3><p>'+bk+'. Todos os clientes e contas em uma planilha.</p><button class="btn block" data-act="export-backup">Exportar Excel</button></div>';
+   +'<p class="hint" style="margin:0 0 6px">Deixe as datas em branco para incluir todas.</p>'
+   +'<div class="actions fixo"><p class="xf-count" id="xf-count" aria-live="polite"></p><button class="btn primary block" data-act="export-custom">Ver prévia</button><button class="btn block quiet" data-act="xf-limpar">Limpar filtros</button><button class="btn block" data-act="close">Cancelar</button></div>');
+  [['xf-cli','cliente'],['xf-de','de'],['xf-ate','ate']].forEach(function(x){var el=$(x[0]);['change','input'].forEach(function(ev){el.addEventListener(ev,function(){expF[x[1]]=el.value;atualizaXf()})})});
+  atualizaXf();
 }
 
 ICON.numeros='<svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>';
@@ -496,9 +550,6 @@ function render(){
   var sc=$('screen'),pos=sc.scrollTop;sc.innerHTML=v;sc.scrollTop=pos;
   $('tabs').innerHTML=TABS.map(function(t){return '<button data-act="go" data-tab="'+t[0]+'" aria-current="'+(tab===t[0])+'">'+ICON[t[0]]+t[1]+'</button>'}).join('');
   [['q','query'],['qc','queryC']].forEach(function(x){var q=$(x[0]);if(q)q.addEventListener('input',function(){if(x[1]==='query')query=q.value;else queryC=q.value;var p=q.selectionStart;render();var n=$(x[0]);n.focus();n.setSelectionRange(p,p)})});
-  [['xf-cli','cliente'],['xf-de','de'],['xf-ate','ate']].forEach(function(x){var el=$(x[0]);if(!el)return;['change','input'].forEach(function(ev){el.addEventListener(ev,function(){expF[x[1]]=el.value;atualizaXf()})})});
-  if(tab==='planilha')atualizaXf();
-  var xl=$('xl');if(xl)xl.addEventListener('change',function(){if(xl.files[0])readXlsx(xl.files[0]);xl.value=''});
 }
 
 function sheetConta(id){
@@ -587,42 +638,208 @@ function sheetExport(kind){
   lastExport={kind:kind,head:head,rows:rows,titulo:titulo,file:kind==='custom'?'contas-'+slug(XF_LABEL[expF.status])+(expF.cliente?'-'+slug(cli(expF.cliente).nome):''):{backup:'backup-celsopix',filtrado:'contas'}[kind],tsv:[head].concat(rows).map(function(r){return r.join('\t')}).join('\n')};
   sheet('<h2>'+titulo+'</h2><p class="sub">'+(filtros?'Filtros: '+esc(filtros)+'. ':'')+rows.length+' linha'+(rows.length===1?'':'s')+'. Baixe como Excel (.xlsx) ou copie e cole numa planilha.</p>'
    +(rows.length?tableOf(head,rows):'<div class="empty">Nenhuma conta com esses filtros.</div>')
-   +'<div class="actions"><button class="btn primary block" data-act="xlsx-export">Baixar Excel (.xlsx)</button><button class="btn block" data-act="copy-export">Copiar para colar no Excel</button><button class="btn block" data-act="close">Fechar</button></div>');
+   +'<div class="actions"><button class="btn primary block" data-act="xlsx-export">Baixar Excel (.xlsx)</button><button class="btn block" data-act="copy-export">Copiar para colar no Excel</button>'+(kind==='custom'?'<button class="btn block" data-act="export-abrir">Voltar aos filtros</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>');
 }
 
 // Só aceita datas que existem: 32/13/2026 ou 30/02/2026 viram null em vez de uma data inventada.
 function dataReal(y,m,d){var t=new Date(Date.UTC(+y,+m-1,+d));return t.getUTCFullYear()===+y&&t.getUTCMonth()===+m-1&&t.getUTCDate()===+d?y+'-'+pad(+m)+'-'+pad(+d):null}
+// Datas: aceita data do Excel, dd/mm/aaaa (também com - ou .), dd/mm/aa e aaaa-mm-dd.
 function parseDate(v){
-  if(!v)return null;
-  if(v instanceof Date&&!isNaN(v))return iso(new Date(v.getTime()+12*36e5));
-  if(typeof v==='number'){var d=new Date(Math.round((v-25569)*864e5));return iso(new Date(d.getTime()+12*36e5))}
+  if(v==null||v==='')return null;
+  if(v instanceof Date)return isNaN(v)?null:iso(new Date(v.getTime()+12*36e5));
+  if(typeof v==='number'){if(v<1||v>2958465)return null;var d=new Date(Math.round((v-25569)*864e5));return iso(new Date(d.getTime()+12*36e5))}
   var s=String(v).trim(),m;
-  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)))return dataReal(m[3],m[2],m[1]);
-  if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/)))return dataReal(m[1],m[2],m[3]);
+  if((m=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4}|\d{2})$/)))return dataReal(m[3].length===2?'20'+m[3]:m[3],m[2],m[1]);
+  if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$/)))return dataReal(m[1],m[2],m[3]);
   return null;
 }
+// Valores: 150 · 150,5 · 1.234,56 · R$ 1.234,56 · 1,234.56. Texto com letras ("12abc") é recusado.
 function parseMoney(v){
-  if(typeof v==='number')return v;
-  var s=String(v||'').replace(/[^\d,.-]/g,'');
-  if(s.indexOf(',')>-1)s=s.replace(/\./g,'').replace(',','.');
-  var n=parseFloat(s);return isNaN(n)?null:n;
+  if(typeof v==='number')return isFinite(v)?Math.round(v*100)/100:null;
+  var s=String(v==null?'':v).replace(/R\$|\s| /gi,'');
+  if(!/^-?[\d.,]+$/.test(s)||!/\d/.test(s))return null;
+  var neg=s.charAt(0)==='-';s=s.replace('-','');
+  var lc=s.lastIndexOf(','),lp=s.lastIndexOf('.');
+  if(lc>-1&&lp>-1){var dec=lc>lp?',':'.';s=s.split(dec===','?'.':',').join('').replace(dec,'.')}
+  else if(lc>-1)s=(s.match(/,/g).length>1)?s.replace(/,/g,''):s.replace(',','.');
+  else if(lp>-1&&/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');
+  if(!/^\d+(\.\d+)?$/.test(s))return null;
+  var n=Math.round(parseFloat(s)*100)/100;return neg?-n:n;
 }
-// ---------- Importação em duas etapas: prévia (nada muda) e confirmação (com histórico e desfazer)
+// ---------- Importação: 1 Arquivo → 2 Colunas → 3 Conferir. Nada é gravado antes de confirmar.
 function norm(t){return String(t==null?'':t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim()}
 function vazio(v){return v==null||String(v).trim()===''}
-var planoAtual=null;
-function planejarImport(rows,arquivo){
-  var plano={arquivo:arquivo,clientesNovos:[],clientesAtualizados:[],contasNovas:[],contasAtualizadas:[],semMudanca:[],erros:[]};
+function str(v){return vazio(v)?'':String(v).trim().replace(/\s+/g,' ')}
+function fmtCel(v){if(v instanceof Date)return isNaN(v)?'':fmtD(iso(new Date(v.getTime()+12*36e5)));if(typeof v==='number')return String(v).replace('.',',');return String(v==null?'':v).trim()}
+var EX_DATA='10/11/2026';
+// Campos do app e os nomes de coluna que cada um reconhece (sem acento, minúsculo).
+var CAMPOS=[
+ {k:'nome',rot:'Nome',rotL:'Nome do cliente',req:'sim',ex:'Marina Alves',sin:['nome','cliente','nome do cliente','nome completo','razao social','devedor','pagador'],tem:['nome','cliente']},
+ {k:'telefone',rot:'Telefone',rotL:'Telefone',ex:'(11) 98888-7777',sin:['telefone','celular','whatsapp','fone','tel','contato'],tem:['telefone','fone','celular','whats']},
+ {k:'email',rot:'E-mail',rotL:'E-mail',ex:'marina@exemplo.com',sin:['e-mail','email','e mail'],tem:['mail']},
+ {k:'descricao',rot:'Descrição',rotL:'Descrição',ex:'Mensalidade',dica:'Se ficar vazia, a conta entra como “Conta”.',sin:['descricao','referencia','servico','produto','historico','detalhe','item'],tem:['descri','referen','servi']},
+ {k:'valor',rot:'Valor',rotL:'Valor',req:'conta',ex:'150,00',sin:['valor','total','preco','quantia'],tem:['valor','preco']},
+ {k:'venc',rot:'Vencimento',rotL:'Vencimento',req:'conta',ex:EX_DATA,dica:'Dia/mês/ano.',sin:['vencimento','data de vencimento','vence','venc','vencto','data venc'],tem:['venc']},
+ {k:'pago',rot:'Pago em',rotL:'Pago em',ex:'05/11/2026',dica:'Só se já foi paga. Vazio = em aberto.',sin:['pago em','data de pagamento','data do pagamento','pagamento','pago','quitado em','data pagamento'],tem:['pago','pagamento','quitad']}];
+var ORDEM_TEM=['venc','valor','pago','email','telefone','descricao','nome'];
+function campoK(k){return CAMPOS.filter(function(c){return c.k===k})[0]}
+function normCab(t){return norm(t).replace(/[^a-z0-9 \-]/g,' ').replace(/\s+/g,' ').trim()}
+function campoDoTitulo(t){
+  var n=normCab(t);if(!n)return null;
+  var c=CAMPOS.filter(function(x){return x.sin.some(function(s){return normCab(s)===n})})[0];if(c)return c.k;
+  for(var i=0;i<ORDEM_TEM.length;i++){var x=campoK(ORDEM_TEM[i]);if(x.tem.some(function(s){return n.indexOf(s)>-1}))return x.k}
+  return null;
+}
+// Acha a linha de títulos nas 15 primeiras linhas: a que reconhece mais campos.
+function analisarAba(ws,nome){
+  if(!ws||!ws['!ref'])return {nome:nome,cab:-1};
+  var rg=XLSX.utils.decode_range(ws['!ref']),aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:true,raw:true});
+  var cab=-1,score=0;
+  for(var i=0;i<Math.min(15,aoa.length);i++){
+    var vis={},s=0;(aoa[i]||[]).forEach(function(t){var k=campoDoTitulo(t);if(k&&!vis[k]){vis[k]=1;s++}});
+    if(s>score&&(s>=2||vis.nome)){score=s;cab=i}
+  }
+  if(cab<0)return {nome:nome,cab:-1};
+  var larg=aoa.reduce(function(m,r){return Math.max(m,(r||[]).length)},0),cols=[],linhas=[];
+  for(var r=cab+1;r<aoa.length;r++){var row=aoa[r]||[];if(row.some(function(v){return !vazio(v)}))linhas.push({linha:rg.s.r+r+1,v:row})}
+  for(var j=0;j<larg;j++){
+    var tit=str(aoa[cab][j]),ex='';
+    for(var q=0;q<linhas.length&&q<30;q++){if(!vazio(linhas[q].v[j])){ex=fmtCel(linhas[q].v[j]);break}}
+    if(tit||ex)cols.push({j:j,titulo:tit,letra:XLSX.utils.encode_col(rg.s.c+j),campo:campoDoTitulo(tit),ex:ex});
+  }
+  return {nome:nome,cab:cab,linhaCab:rg.s.r+cab+1,cols:cols,linhas:linhas,score:score,titulos:aoa[cab]};
+}
+function autoMapa(cols){var m={};cols.forEach(function(c){if(c.campo&&m[c.campo]==null)m[c.campo]=c.j});return m}
+function faltaColuna(m){
+  if(m.nome==null)return 'Não achei a coluna com o nome do cliente. Escolha abaixo qual é.';
+  if((m.valor==null)!==(m.venc==null))return 'Achei a coluna '+(m.valor==null?'do vencimento, mas não a do valor':'do valor, mas não a do vencimento')+'. Escolha abaixo. Para importar só clientes, marque “Não usar” nas duas.';
+  return '';
+}
+var IMP=null;
+function passos(n){
+  return '<ol class="passos" aria-label="Etapas da importação">'+['Arquivo','Colunas','Conferir'].map(function(t,i){var k=i+1;
+    return '<li class="'+(k<n?'feito':(k===n?'atual':''))+'"'+(k===n?' aria-current="step"':'')+'><b aria-hidden="true">'+(k<n?'✓':k)+'</b>'+t+(k<n?'<span class="sr"> (feito)</span>':'')+'</li>'}).join('')+'</ol>';
+}
+function sheetImportar(){
+  IMP=null;
+  var b=backupInfo(),dica=b.cls!=='paga'?'<div class="alerta info"><b>Dica:</b> faça uma cópia de segurança antes de importar. <button class="btn sm" data-act="export-backup">Fazer cópia agora</button></div>':'';
+  sheet('<h2>Importar planilha</h2>'+passos(1)
+   +'<p class="sub">A planilha precisa ter os títulos das colunas na primeira linha e uma conta por linha.</p>'
+   +'<ul class="colmod">'+CAMPOS.map(function(c){return '<li><span><b>'+c.rotL+'</b>'+(c.req==='sim'?' <em class="obr">obrigatória</em>':(c.req==='conta'?' <em class="obr">para contas</em>':''))+(c.dica?'<small>'+c.dica+'</small>':'')+'</span><span class="ex">'+esc(c.ex)+'</span></li>'}).join('')+'</ul>'
+   +'<p class="hint">Os títulos podem variar: “Cliente” em vez de “Nome”, “Data de vencimento” em vez de “Vencimento”. Se o app não reconhecer alguma coluna, você escolhe no passo seguinte. Aceita Excel (.xlsx, .xls) e CSV.</p>'
+   +dica
+   +'<div class="actions fixo"><button class="btn primary block" data-act="pick-xl">Escolher arquivo</button><button class="btn block" data-act="import-modelo">Baixar planilha modelo</button><button class="btn block quiet" data-act="import-sample">Testar com a planilha de exemplo</button></div>');
+}
+function erroArquivo(arquivo,titulo,texto,modelo){
+  IMP=null;
+  sheet('<h2>'+esc(titulo)+'</h2>'+passos(1)+'<p class="sub">'+esc(arquivo)+'</p><div class="alerta" role="alert">'+esc(texto)+'</div>'
+   +'<div class="actions"><button class="btn primary block" data-act="pick-xl">Escolher outro arquivo</button>'+(modelo?'<button class="btn block" data-act="import-modelo">Baixar planilha modelo</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>');
+}
+// O tipo do arquivo vem do conteúdo, não do nome: no Android, arquivos do WhatsApp e do Drive chegam às vezes sem extensão.
+function tipoArquivo(u8,nome){
+  var h=Array.prototype.slice.call(u8,0,8).map(function(x){return x.toString(16).padStart(2,'0')}).join('');
+  if(h.indexOf('504b0304')===0)return 'planilha';
+  if(h.indexOf('d0cf11e0')===0)return 'planilha';
+  if(h.indexOf('ffd8ff')===0||h.indexOf('89504e47')===0||h.indexOf('47494638')===0||h.indexOf('52494646')===0)return 'imagem';
+  if(h.indexOf('25504446')===0)return 'pdf';
+  var amostra=u8.subarray(0,2048),ruins=0;for(var i=0;i<amostra.length;i++){var c=amostra[i];if(c===0||(c<9)||(c>13&&c<32&&c!==27))ruins++}
+  return ruins===0?'texto':'outro';
+}
+function decodificar(u8){try{return new TextDecoder('utf-8',{fatal:true}).decode(u8).replace(/^﻿/,'')}catch(e){return new TextDecoder('windows-1252').decode(u8)}}
+function lerArquivo(file){
+  if(somenteLeitura()){toast(MSG_LEITURA);return}
+  if(typeof XLSX==='undefined'){toast('Leitor de Excel indisponível agora');return}
+  if(!file.size)return erroArquivo(file.name,'O arquivo está vazio','Abra a planilha no Excel, confira se ela tem dados e salve de novo.');
+  if(file.size>10*1048576)return erroArquivo(file.name,'Arquivo grande demais','O limite é 10 MB. Divida a planilha em partes menores e importe uma de cada vez.');
+  sheet('<h2>Lendo a planilha…</h2>'+passos(1)+'<p class="sub" role="status">'+esc(file.name)+'</p>');
+  var r=new FileReader();
+  r.onerror=function(){erroArquivo(file.name,'Não deu para abrir o arquivo','Escolha de novo. Se o arquivo estiver na nuvem (Drive, OneDrive), baixe para o celular antes.')};
+  r.onload=function(){
+    var u8=new Uint8Array(r.result),tipo=tipoArquivo(u8,file.name),wb;
+    if(tipo==='imagem'||tipo==='pdf')return erroArquivo(file.name,'Esse arquivo não é uma planilha','É '+(tipo==='pdf'?'um PDF':'uma imagem')+'. Escolha o arquivo do Excel (.xlsx ou .xls) ou CSV.');
+    if(tipo==='outro')return erroArquivo(file.name,'Esse arquivo não é uma planilha','Escolha um arquivo do Excel (.xlsx ou .xls) ou CSV.');
+    try{
+      // CSV: lido como texto puro, para "10/11/2026" não virar 11 de outubro (formato americano).
+      wb=tipo==='texto'?XLSX.read(decodificar(u8),{type:'string',raw:true}):XLSX.read(u8,{type:'array',cellDates:true});
+    }catch(e){
+      var senha=/password|encrypt|protect/i.test(String(e&&e.message));
+      return erroArquivo(file.name,senha?'A planilha tem senha':'Não deu para ler o arquivo',senha?'Abra no Excel, tire a senha e salve de novo. Depois importe aqui.':'O arquivo pode estar danificado. Abra no Excel e use “Salvar como” › Pasta de Trabalho do Excel (.xlsx).');
+    }
+    abrirPlanilha(wb,file.name);
+  };
+  r.readAsArrayBuffer(file);
+}
+function abrirPlanilha(wb,arquivo){
+  var abas=wb.SheetNames.map(function(n){return analisarAba(wb.Sheets[n],n)}).filter(function(a){return a.cab>-1});
+  if(!abas.length)return erroArquivo(arquivo,'Não achei os títulos das colunas','A primeira linha da planilha precisa ter os nomes das colunas, como Nome, Valor e Vencimento. Baixe a planilha modelo para ver como fica.',true);
+  abas.sort(function(a,b){return (b.linhas.length>0)-(a.linhas.length>0)||b.score-a.score});
+  IMP={arquivo:arquivo,abas:abas,aba:0,map:autoMapa(abas[0].cols),totalAbas:wb.SheetNames.length};
+  seguirImport();
+}
+function seguirImport(){
+  var A=IMP.abas[IMP.aba];
+  if(!A.linhas.length)return erroArquivo(IMP.arquivo,'A planilha está sem dados','Achei os títulos na linha '+A.linhaCab+(IMP.abas.length>1?' da aba “'+A.nome+'”':'')+', mas nenhuma linha preenchida embaixo deles.',true);
+  if(A.linhas.length>5000)return erroArquivo(IMP.arquivo,'Planilha grande demais','São '+A.linhas.length.toLocaleString('pt-BR')+' linhas. Importe no máximo 5.000 de cada vez: divida a planilha em partes.');
+  if(faltaColuna(IMP.map))sheetColunas();else gerarPrevia();
+}
+function sheetColunas(){
+  var A=IMP.abas[IMP.aba],m=IMP.map,falta=faltaColuna(m);
+  var h='<h2>Conferir colunas</h2>'+passos(2)+'<p class="sub">'+esc(IMP.arquivo)+'. Diga em qual coluna da planilha está cada informação.</p>';
+  if(falta)h+='<div class="alerta" role="alert">'+esc(falta)+'</div>';
+  if(IMP.abas.length>1)h+='<div class="field"><label for="map-aba">Aba da planilha</label><select id="map-aba">'+IMP.abas.map(function(a,i){return '<option value="'+i+'"'+(i===IMP.aba?' selected':'')+'>'+esc(a.nome)+' ('+a.linhas.length+' linha'+(a.linhas.length===1?'':'s')+')</option>'}).join('')+'</select></div>';
+  h+='<p class="hint">Títulos na linha '+A.linhaCab+' · '+A.linhas.length+' linha'+(A.linhas.length===1?'':'s')+' com dados.</p>';
+  CAMPOS.forEach(function(c){
+    h+='<div class="field"><label for="map-'+c.k+'">'+c.rotL+(c.req==='sim'?' <em class="obr">obrigatória</em>':(c.req==='conta'?' <em class="obr">para contas</em>':''))+'</label><select id="map-'+c.k+'"><option value="">Não usar</option>'
+     +A.cols.map(function(x){return '<option value="'+x.j+'"'+(m[c.k]===x.j?' selected':'')+'>'+x.letra+' · '+esc(x.titulo||'(sem título)')+(x.ex?' — ex.: '+esc(x.ex.slice(0,24)):'')+'</option>'}).join('')+'</select></div>';
+  });
+  var usados={};CAMPOS.forEach(function(c){if(m[c.k]!=null)usados[m[c.k]]=1});
+  var ign=A.cols.filter(function(x){return !usados[x.j]});
+  if(ign.length)h+='<p class="hint">Colunas que ficam de fora: '+ign.map(function(x){return esc(x.letra+' '+(x.titulo||'(sem título)'))}).join(', ')+'.</p>';
+  h+='<div class="actions fixo"><button class="btn primary block" data-act="imp-map-ok">Continuar</button><button class="btn block" data-act="import-abrir">Voltar</button></div>';
+  sheet(h);
+  var ab=$('map-aba');if(ab)ab.addEventListener('change',function(){IMP.aba=+ab.value;IMP.map=autoMapa(IMP.abas[IMP.aba].cols);sheetColunas()});
+}
+function confirmarColunas(){
+  var m={},visto={};
+  for(var i=0;i<CAMPOS.length;i++){
+    var c=CAMPOS[i],v=$('map-'+c.k).value;if(v==='')continue;
+    if(visto[v]){fieldError('map-'+c.k,'Essa coluna já está em “'+visto[v]+'”. Escolha outra ou “Não usar”.');return}
+    visto[v]=c.rotL;m[c.k]=+v;
+  }
+  if(m.nome==null){fieldError('map-nome','Escolha a coluna com o nome do cliente');return}
+  if(m.valor==null&&m.venc!=null){fieldError('map-valor','Para importar contas, escolha também a coluna do valor');return}
+  if(m.venc==null&&m.valor!=null){fieldError('map-venc','Para importar contas, escolha também a coluna do vencimento');return}
+  IMP.map=m;IMP.ajustado=true;gerarPrevia();
+}
+function linhasDoMapa(){
+  var A=IMP.abas[IMP.aba],m=IMP.map,letra={};A.cols.forEach(function(x){letra[x.j]=x.letra});
+  return A.linhas.map(function(L){var g={},ref={};CAMPOS.forEach(function(c){if(m[c.k]!=null){g[c.k]=L.v[m[c.k]];ref[c.k]=letra[m[c.k]]+L.linha}});return {linha:L.linha,g:g,ref:ref,bruto:L.v}});
+}
+function gerarPrevia(){IMP.plano=planejarImport(linhasDoMapa(),IMP.arquivo,IMP.map.valor==null);sheetImport(IMP.plano)}
+function planejarImport(linhas,arquivo,soClientes){
+  var plano={arquivo:arquivo,soClientes:!!soClientes,clientesNovos:[],clientesAtualizados:[],contasNovas:[],contasAtualizadas:[],semMudanca:[],erros:[],avisos:[]};
   var porNome={},novos={},vistas={};
   S.clientes.forEach(function(c){porNome[norm(c.nome)]=c});
-  rows.forEach(function(r,i){
-    var linha=r.__rowNum__!=null?r.__rowNum__+1:i+2,g={};
-    Object.keys(r).forEach(function(k){g[norm(k)]=r[k]});
-    if(Object.keys(g).every(function(k){return vazio(g[k])}))return;
-    var nome=String(vazio(g['nome'])?(g['cliente']||''):g['nome']).trim().replace(/\s+/g,' ');
-    if(!nome){plano.erros.push({linha:linha,texto:'falta o nome do cliente. Linha ignorada.'});return}
-    var tel=String(g['telefone']||'').trim(),mail=String(g['e-mail']||g['email']||'').trim();
-    var k=norm(nome),cl=porNome[k],nv=novos[k];
+  linhas.forEach(function(L){
+    var g=L.g,probs=[],avs=[];
+    var P=function(lista,k,txt){lista.push({col:campoK(k).rot,ref:L.ref[k]||'',txt:txt})};
+    var nome=str(g.nome),tel=str(g.telefone),mail=str(g.email);
+    var tv=!vazio(g.valor),tvc=!vazio(g.venc),tp=!vazio(g.pago),temConta=!soClientes&&(tv||tvc||tp);
+    var val=null,venc=null,pg=null;
+    if(!nome)P(probs,'nome','está vazio. Preencha o nome do cliente.');
+    if(temConta){
+      if(!tv)P(probs,'valor','está vazio. Preencha o valor, por exemplo 150,00.');
+      else{val=parseMoney(g.valor);if(val==null)P(probs,'valor','“'+fmtCel(g.valor)+'” não é um valor. Use só números, por exemplo 150,00.');else if(val<=0)P(probs,'valor','“'+fmtCel(g.valor)+'” precisa ser maior que zero.')}
+      if(!tvc)P(probs,'venc','está vazio. Preencha a data, por exemplo '+EX_DATA+'.');
+      else{venc=parseDate(g.venc);if(!venc)P(probs,'venc','“'+fmtCel(g.venc)+'” não é uma data válida. Use dia/mês/ano, por exemplo '+EX_DATA+'.')}
+      if(tp){pg=parseDate(g.pago);if(!pg)P(probs,'pago','“'+fmtCel(g.pago)+'” não é uma data válida. Use dia/mês/ano ou deixe vazio se não foi paga.');else if(pg>today)P(probs,'pago',fmtD(pg)+' é depois de hoje. Se ainda não foi paga, deixe vazio.')}
+    }
+    if(probs.length){plano.erros.push({linha:L.linha,nome:nome,problemas:probs,bruto:L.bruto});return}
+    if(mail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){P(avs,'email','“'+mail+'” não parece um e-mail. O cliente entra sem e-mail.');mail=''}
+    if(tel&&tel.replace(/\D/g,'').length<8)P(avs,'telefone','“'+tel+'” tem poucos dígitos. Entra assim mesmo; confira depois.');
+    var k=norm(nome),cl=porNome[k],nv=novos[k],desc=str(g.descricao)||'Conta',chave=k+'|'+norm(desc)+'|'+venc;
+    if(temConta&&vistas[chave]){plano.erros.push({linha:L.linha,nome:nome,problemas:[{col:null,ref:'',txt:'Conta repetida: igual à linha '+vistas[chave]+' (mesmo cliente, descrição e vencimento). Apague uma das duas.'}],bruto:L.bruto});return}
+    if(avs.length)plano.avisos.push({linha:L.linha,nome:nome,problemas:avs});
     if(!cl&&!nv){nv=novos[k]={id:uid(),nome:nome,telefone:tel,email:mail,obs:''};plano.clientesNovos.push(nv)}
     else if(nv){if(tel&&!nv.telefone)nv.telefone=tel;if(mail&&!nv.email)nv.email=mail}
     else{
@@ -633,14 +850,8 @@ function planejarImport(rows,arquivo){
         at.mud.push({campo:f[0],rot:f[1],de:cl[f[0]]||'(vazio)',para:f[2],v:f[2]});
       });
     }
-    var tv=!vazio(g['valor']),tvc=!vazio(g['vencimento']),tp=!vazio(g['pago em']);
-    if(!tv&&!tvc&&!tp)return;
-    var val=tv?parseMoney(g['valor']):null,venc=tvc?parseDate(g['vencimento']):null,pg=tp?parseDate(g['pago em']):null;
-    var erro=!tv?'falta o valor':(val==null||val<=0?'o valor “'+g['valor']+'” não é um número válido':(!tvc?'falta o vencimento':(!venc?'o vencimento “'+g['vencimento']+'” não é uma data':(tp&&!pg?'“Pago em” “'+g['pago em']+'” não é uma data':(pg&&pg>today?'“Pago em” é depois de hoje':'')))));
-    if(erro){plano.erros.push({linha:linha,texto:'conta de '+nome+' não importada: '+erro+'.'});return}
-    var desc=String(vazio(g['descricao'])?'Conta':g['descricao']).trim(),chave=k+'|'+norm(desc)+'|'+venc;
-    if(vistas[chave]){plano.erros.push({linha:linha,texto:'conta repetida no arquivo ('+nome+', '+desc+', vence '+fmtD(venc)+'). Ignorada.'});return}
-    vistas[chave]=1;
+    if(!temConta)return;
+    vistas[chave]=L.linha;
     var ex=cl&&S.contas.find(function(c){return c.clienteId===cl.id&&norm(c.descricao)===norm(desc)&&c.venc===venc});
     if(!ex){plano.contasNovas.push({cliente:cl||nv,descricao:desc,valor:val,venc:venc,pagoEm:pg});return}
     var mud=[];
@@ -653,20 +864,29 @@ function planejarImport(rows,arquivo){
 // Transforma o plano em itens de texto: os mesmos na prévia e no histórico.
 function itensDoPlano(pl,atualizar){
   var it=[],cn=function(c){return cli(c.clienteId).nome+' · '+c.descricao+' · vence '+fmtD(c.venc)};
+  var pb=function(x){return x.problemas.map(function(p){return ['!',p.col?p.col+(p.ref?' ('+p.ref+')':'')+':':'',p.txt]})};
   if(atualizar){
     pl.clientesAtualizados.forEach(function(x){it.push({tipo:'atualizado',titulo:x.cliente.nome,linhas:x.mud.map(function(m){return [m.rot,m.de,m.para]})})});
     pl.contasAtualizadas.forEach(function(x){it.push({tipo:'atualizado',titulo:cn(x.conta),linhas:x.mud.map(function(m){return [m.rot,m.de,m.para]})})});
   }
   pl.clientesNovos.forEach(function(c){it.push({tipo:'novo',titulo:'Cliente: '+c.nome,linhas:[[null,[c.telefone,c.email].filter(Boolean).join(' · ')||'sem contato']]})});
   pl.contasNovas.forEach(function(c){it.push({tipo:'novo',titulo:'Conta: '+c.cliente.nome+' · '+c.descricao,linhas:[[null,brl.format(c.valor)+' · vence '+fmtD(c.venc)+(c.pagoEm?' · paga em '+fmtD(c.pagoEm):'')]]})});
-  pl.erros.forEach(function(e){it.push({tipo:'erro',titulo:'Linha '+e.linha,linhas:[[null,e.texto.charAt(0).toUpperCase()+e.texto.slice(1)]]})});
+  pl.erros.forEach(function(e){it.push({tipo:'erro',titulo:'Linha '+e.linha+(e.nome?' · '+e.nome:''),linhas:pb(e)})});
+  (pl.avisos||[]).forEach(function(e){it.push({tipo:'aviso',titulo:'Linha '+e.linha+' · '+e.nome,linhas:pb(e)})});
   return it;
 }
-function itensHtml(itens,tipo){
-  var l=itens.filter(function(x){return x.tipo===tipo});
-  return '<ul class="imp-lista">'+l.map(function(x){return '<li class="imp-it '+tipo+'"><strong>'+esc(x.titulo)+'</strong>'+x.linhas.map(function(z){
+function itemHtml(x){
+  return '<li class="imp-it '+x.tipo+'"><strong>'+esc(x.titulo)+'</strong>'+x.linhas.map(function(z){
+    if(z[0]==='!')return '<span>'+(z[1]?'<b>'+esc(z[1])+'</b> ':'')+esc(z[2])+'</span>';
     return z[0]===null?'<span>'+esc(z[1])+'</span>':'<span>'+esc(z[0])+': <del>'+esc(z[1])+'</del> <span aria-hidden="true">→</span><span class="sr"> para </span> <ins>'+esc(z[2])+'</ins></span>';
-  }).join('')+'</li>'}).join('')+'</ul>';
+  }).join('')+'</li>';
+}
+// Listas longas: mostra as 20 primeiras e recolhe o resto.
+function itensHtml(itens,tipo){
+  var l=itens.filter(function(x){return x.tipo===tipo}),max=20;
+  var h='<ul class="imp-lista">'+l.slice(0,max).map(itemHtml).join('')+'</ul>';
+  if(l.length>max)h+='<details class="imp-iguais"><summary>Mostrar mais '+(l.length-max)+'</summary><ul class="imp-lista">'+l.slice(max).map(itemHtml).join('')+'</ul></details>';
+  return h;
 }
 function totalMudancas(pl,atualizar){return pl.clientesNovos.length+pl.contasNovas.length+(atualizar?pl.clientesAtualizados.length+pl.contasAtualizadas.length:0)}
 function resumoImport(r){
@@ -677,67 +897,118 @@ function resumoImport(r){
   if(r.erros)p.push(r.erros+' linha'+(r.erros>1?'s':'')+' com problema');
   return p.join(' · ')||'nenhuma mudança';
 }
+function colunasHtml(){
+  if(!IMP||!IMP.abas)return '';
+  var A=IMP.abas[IMP.aba],m=IMP.map,letra={};A.cols.forEach(function(x){letra[x.j]=x.letra});
+  var usadas=CAMPOS.filter(function(c){return m[c.k]!=null}).map(function(c){return c.rot+' ('+letra[m[c.k]]+')'});
+  return '<div class="imp-cols"><span>'+(IMP.totalAbas>1?'Aba “'+esc(A.nome)+'” · ':'')+'Títulos na linha '+A.linhaCab+'. Colunas usadas: '+esc(usadas.join(', '))+'.</span><button class="btn sm" data-act="imp-colunas">Ajustar colunas</button></div>';
+}
 function sheetImport(pl){
-  planoAtual=pl;
-  var nAt=pl.clientesAtualizados.length+pl.contasAtualizadas.length,itens=itensDoPlano(pl,true);
-  var res=[['Clientes novos',pl.clientesNovos.length],['Contas novas',pl.contasNovas.length],['Atualizações',nAt],['Sem mudança',pl.semMudanca.length],['Com problema',pl.erros.length]];
-  var h='<h2>Prévia da importação</h2><p class="sub">'+esc(pl.arquivo)+'. Nada muda até você confirmar.</p>'
-   +'<ul class="imp-res">'+res.map(function(x){return '<li'+(x[0]==='Com problema'&&x[1]?' class="bad"':'')+'><b>'+x[1]+'</b><span>'+x[0]+'</span></li>'}).join('')+'</ul>';
+  var nAt=pl.clientesAtualizados.length+pl.contasAtualizadas.length,itens=itensDoPlano(pl,true),ne=pl.erros.length;
+  var res=[['Clientes novos',pl.clientesNovos.length],['Contas novas',pl.contasNovas.length],['Atualizações',nAt],['Sem mudança',pl.semMudanca.length],['Com problema',ne]];
+  var h='<h2>Prévia da importação</h2>'+passos(3)+'<p class="sub">'+esc(pl.arquivo)+'. Nada muda até você confirmar.</p>'
+   +'<ul class="imp-res">'+res.map(function(x){return '<li'+(x[0]==='Com problema'&&x[1]?' class="bad"':'')+'><b>'+x[1]+'</b><span>'+x[0]+'</span></li>'}).join('')+'</ul>'
+   ;
+  if(ne)h+='<div class="alerta" role="alert"><b>'+ne+' linha'+(ne>1?'s':'')+' com problema '+(ne>1?'ficam':'fica')+' de fora.</b> Você pode importar o resto agora e corrigir essas depois.<div class="alerta-bt"><button class="btn sm" data-act="imp-ver-prob">Ver problemas</button><button class="btn sm" data-act="imp-erros">Baixar linhas com problema</button></div></div>';
+  h+=colunasHtml();
+  if(pl.soClientes)h+='<div class="alerta info">A planilha não tem colunas de valor e vencimento: só os clientes serão importados.</div>';
   if(nAt)h+='<h3>O que vai mudar</h3><p class="hint">Dados que já existem no app e estão diferentes na planilha.</p>'+itensHtml(itens,'atualizado')
    +'<label class="toggle"><input type="checkbox" id="imp-atualizar" checked> Atualizar estes dados</label>';
   if(pl.clientesNovos.length+pl.contasNovas.length)h+='<h3>O que vai entrar</h3>'+itensHtml(itens,'novo');
-  if(pl.erros.length)h+='<h3>Linhas com problema</h3><p class="hint">Não serão importadas. Corrija na planilha e importe de novo.</p>'+itensHtml(itens,'erro');
+  if(ne)h+='<h3 id="imp-prob" tabindex="-1">Linhas com problema</h3><p class="hint">Não serão importadas. Corrija na planilha e importe de novo: o que já entrou não se repete.</p>'+itensHtml(itens,'erro');
+  if(pl.avisos.length)h+='<h3>Para conferir</h3><p class="hint">Estas linhas entram, mas vale olhar.</p>'+itensHtml(itens,'aviso');
   if(pl.semMudanca.length)h+='<details class="imp-iguais"><summary>'+pl.semMudanca.length+' conta'+(pl.semMudanca.length>1?'s já estão iguais':' já está igual')+' no app</summary><ul class="imp-lista">'+pl.semMudanca.map(function(c){return '<li class="imp-it"><span>'+esc(cli(c.clienteId).nome+' · '+c.descricao+' · vence '+fmtD(c.venc))+'</span></li>'}).join('')+'</ul></details>';
-  h+='<div class="actions"><button class="btn primary block" data-act="import-confirm"></button><button class="btn block" data-act="close">Cancelar</button></div>';
+  h+='<div class="actions fixo"><button class="btn primary block" data-act="import-confirm"></button><button class="btn block" data-act="close">Cancelar</button></div>';
   sheet(h);
   var cb=$('imp-atualizar'),bt=document.querySelector('[data-act=import-confirm]');
   var conta=function(){var n=totalMudancas(pl,!cb||cb.checked);bt.textContent=n?'Importar '+n+' mudança'+(n>1?'s':''):'Nada para importar';bt.disabled=!n};
   if(cb)cb.addEventListener('change',conta);conta();
 }
+// Planilha com as linhas que ficaram de fora: as mesmas colunas do arquivo e uma coluna "Problema".
+function baixarErros(){
+  if(!IMP||!IMP.plano||!IMP.plano.erros.length)return;
+  var A=IMP.abas[IMP.aba],tit=A.cols.map(function(x){return x.titulo||x.letra});
+  var aoa=[['Linha no arquivo','Problema'].concat(tit)].concat(IMP.plano.erros.map(function(e){
+    return [e.linha,e.problemas.map(function(p){return (p.col?p.col+(p.ref?' ('+p.ref+')':'')+': ':'')+p.txt}).join(' | ')].concat(A.cols.map(function(x){var v=e.bruto[x.j];return v==null?'':v}))}));
+  baixarXlsx('linhas-com-problema-'+(slug(IMP.arquivo.replace(/\.[^.]+$/,''))||'planilha'),[{nome:'Com problema',aoa:aoa}]);
+}
+function baixarModelo(){
+  var tit=['Nome','Telefone','E-mail','Descrição','Valor','Vencimento','Pago em'];
+  baixarXlsx('modelo-importacao-celsopix',[{nome:'Contas',aoa:[tit]},{nome:'Como preencher',aoa:[['Coluna','Precisa?','O que colocar']].concat(CAMPOS.map(function(c){return [c.rotL,c.req==='sim'?'Sim':(c.req==='conta'?'Sim, para criar conta':'Não'),'Exemplo: '+c.ex+(c.dica?'. '+c.dica:'')]}))}],null,true);
+}
 function aplicarImport(){
   if(somenteLeitura()){toast(MSG_LEITURA);return}
-  var pl=planoAtual;if(!pl)return;
-  var cb=$('imp-atualizar'),atualizar=!cb||cb.checked,antes=JSON.stringify(S),n=totalMudancas(pl,atualizar);
-  var itens=itensDoPlano(pl,atualizar);
-  pl.clientesNovos.forEach(function(c){S.clientes.push(c)});
+  var pl=IMP&&IMP.plano;if(!pl)return;
+  var cb=$('imp-atualizar'),atualizar=!cb||cb.checked,n=totalMudancas(pl,atualizar);
+  var itens=itensDoPlano(pl,atualizar),dz={clientes:[],contas:[],campos:[]};
+  pl.clientesNovos.forEach(function(c){S.clientes.push(c);dz.clientes.push(c.id)});
   if(atualizar){
-    pl.clientesAtualizados.forEach(function(x){x.mud.forEach(function(m){x.cliente[m.campo]=m.v})});
-    pl.contasAtualizadas.forEach(function(x){x.mud.forEach(function(m){x.conta[m.campo]=m.v})});
+    pl.clientesAtualizados.forEach(function(x){x.mud.forEach(function(m){dz.campos.push({t:'cliente',id:x.cliente.id,campo:m.campo,antes:x.cliente[m.campo],depois:m.v});x.cliente[m.campo]=m.v})});
+    pl.contasAtualizadas.forEach(function(x){x.mud.forEach(function(m){dz.campos.push({t:'conta',id:x.conta.id,campo:m.campo,antes:x.conta[m.campo],depois:m.v});x.conta[m.campo]=m.v})});
   }
-  pl.contasNovas.forEach(function(c){S.contas.push({id:uid(),clienteId:c.cliente.id,descricao:c.descricao,valor:c.valor,venc:c.venc,pagoEm:c.pagoEm||null,comprovante:null})});
-  S.importacoes=[{quando:new Date().toISOString(),arquivo:pl.arquivo,resumo:{clientesNovos:pl.clientesNovos.length,contasNovas:pl.contasNovas.length,clientesAtualizados:atualizar?pl.clientesAtualizados.length:0,contasAtualizadas:atualizar?pl.contasAtualizadas.length:0,erros:pl.erros.length},itens:itens}].concat(S.importacoes||[]).slice(0,10);
-  planoAtual=null;save();closeSheet();render();
-  toast('Importação concluída: '+n+' mudança'+(n>1?'s':''),function(){S=JSON.parse(antes);save();render();toast('Importação desfeita')});
+  pl.contasNovas.forEach(function(c){var nc={id:uid(),clienteId:c.cliente.id,descricao:c.descricao,valor:c.valor,venc:c.venc,pagoEm:c.pagoEm||null,comprovante:null};S.contas.push(nc);dz.contas.push({id:nc.id,valor:nc.valor,venc:nc.venc,pagoEm:nc.pagoEm})});
+  S.importacoes=[{quando:new Date().toISOString(),arquivo:pl.arquivo,resumo:{clientesNovos:pl.clientesNovos.length,contasNovas:pl.contasNovas.length,clientesAtualizados:atualizar?pl.clientesAtualizados.length:0,contasAtualizadas:atualizar?pl.contasAtualizadas.length:0,erros:pl.erros.length},itens:itens,desfazer:dz}].concat(S.importacoes||[]).slice(0,10);
+  save();render();
+  var ne=pl.erros.length;
+  sheet('<div class="ok-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>Importação concluída</h2><p class="sub">'+n+' mudança'+(n>1?'s gravadas':' gravada')+': '+esc(resumoImport(Object.assign({},S.importacoes[0].resumo,{erros:0})))+'.</p>'
+   +(ne?'<div class="alerta">'+ne+' linha'+(ne>1?'s ficaram':' ficou')+' de fora. Baixe, corrija e importe de novo: o que já entrou não se repete.<div class="alerta-bt"><button class="btn sm" data-act="imp-erros">Baixar linhas com problema</button></div></div>':'')
+   +'<div class="actions"><button class="btn primary block" data-act="go" data-tab="contas">Ver contas</button><button class="btn block" data-act="imp-desfazer" data-i="0">Desfazer importação</button><button class="btn block" data-act="close">Fechar</button></div>');
+}
+function mantidosTxt(n){return n>1?n+' itens que você usou depois ficaram.':'1 item que você usou depois ficou.'}
+function podeDesfazer(i){var l=S.importacoes||[],x=l[i];return !!(x&&x.desfazer&&!x.desfeita&&l.slice(0,i).every(function(y){return y.desfeita}))}
+function sheetDesfazer(i){
+  var x=S.importacoes[i],d=x.desfazer,p=[];
+  if(d.contas.length)p.push(d.contas.length>1?'Saem as '+d.contas.length+' contas que entraram.':'Sai a conta que entrou.');
+  if(d.clientes.length)p.push(d.clientes.length>1?'Saem os '+d.clientes.length+' clientes novos.':'Sai o cliente novo.');
+  if(d.campos.length)p.push(d.campos.length+' dado'+(d.campos.length>1?'s voltam':' volta')+' ao que era antes.');
+  sheet('<h2>Desfazer a importação?</h2><p class="sub">'+esc(x.arquivo)+' · '+quandoTxt(x.quando)+'</p><ul class="lista-ok">'+p.map(function(t){return '<li>'+t+'</li>'}).join('')+'</ul>'
+   +'<p class="hint">O que você mudou depois da importação, como uma baixa ou um comprovante, fica como está.</p>'
+   +'<div class="actions"><button class="btn block danger" data-act="imp-desfazer-sim" data-i="'+i+'">Desfazer importação</button><button class="btn block" data-act="close">Manter como está</button></div>');
+}
+function desfazerImport(i){
+  if(somenteLeitura()){toast(MSG_LEITURA);return}
+  if(!podeDesfazer(i))return;
+  var x=S.importacoes[i],d=x.desfazer,mantidos=0,igual=function(a,b){return (a==null?'':String(a))===(b==null?'':String(b))};
+  d.campos.forEach(function(f){var o=(f.t==='cliente'?S.clientes:S.contas).find(function(y){return y.id===f.id});if(!o)return;if(igual(o[f.campo],f.depois)){if(f.antes===undefined)delete o[f.campo];else o[f.campo]=f.antes}else mantidos++});
+  d.contas.forEach(function(k){var j=S.contas.findIndex(function(c){return c.id===k.id});if(j<0)return;var c=S.contas[j];if(c.valor===k.valor&&c.venc===k.venc&&igual(c.pagoEm,k.pagoEm)&&!c.comprovante)S.contas.splice(j,1);else mantidos++});
+  d.clientes.forEach(function(id){if(S.contas.some(function(c){return c.clienteId===id})){mantidos++;return}var j=S.clientes.findIndex(function(c){return c.id===id});if(j>-1)S.clientes.splice(j,1)});
+  x.desfeita=new Date().toISOString();x.mantidos=mantidos;
+  save();closeSheet();render();
+  toast('Importação desfeita'+(mantidos?'. '+mantidosTxt(mantidos):''));
 }
 function quandoTxt(iso){var d=new Date(iso);return fmtD(iso2(d))+' às '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function iso2(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function historicoImport(){
   var l=S.importacoes||[];if(!l.length)return '';
-  return '<p class="lbl" style="margin-top:14px">Últimas importações</p>'+l.slice(0,5).map(function(x,i){
-    return '<button class="row" data-act="import-log" data-i="'+i+'"><span class="t">'+esc(x.arquivo)+'</span><span class="v" style="font-weight:500;font-size:13px">'+quandoTxt(x.quando)+'</span><span class="s">'+esc(resumoImport(x.resumo))+'</span></button>';
+  return '<h3>Últimas importações</h3>'+l.slice(0,5).map(function(x,i){
+    return '<button class="row" data-act="import-log" data-i="'+i+'"><span class="t">'+esc(x.arquivo)+'</span><span class="v" style="font-weight:500;font-size:13px">'+quandoTxt(x.quando)+'</span><span class="s">'+(x.desfeita?'Desfeita · ':'')+esc(resumoImport(x.resumo))+'</span></button>';
   }).join('');
 }
 function sheetLog(i){
   var x=(S.importacoes||[])[i];if(!x)return;
   var h='<h2>Registro da importação</h2><p class="sub">'+esc(x.arquivo)+' · '+quandoTxt(x.quando)+'<br>'+esc(resumoImport(x.resumo))+'</p>';
-  [['atualizado','O que mudou'],['novo','O que entrou'],['erro','Linhas que ficaram de fora']].forEach(function(t){if(x.itens.some(function(z){return z.tipo===t[0]}))h+='<h3>'+t[1]+'</h3>'+itensHtml(x.itens,t[0])});
+  if(x.desfeita)h+='<div class="alerta info">Desfeita em '+quandoTxt(x.desfeita)+(x.mantidos?'. '+mantidosTxt(x.mantidos):'.')+'</div>';
+  [['atualizado','O que mudou'],['novo','O que entrou'],['erro','Linhas que ficaram de fora'],['aviso','Para conferir']].forEach(function(t){if(x.itens.some(function(z){return z.tipo===t[0]}))h+='<h3>'+t[1]+'</h3>'+itensHtml(x.itens,t[0])});
   if(!x.itens.length)h+='<div class="empty">Nada mudou nesta importação.</div>';
-  sheet(h+'<div class="actions"><button class="btn block" data-act="close">Fechar</button></div>');
+  sheet(h+'<div class="actions">'+(podeDesfazer(i)&&!somenteLeitura()?'<button class="btn block" data-act="imp-desfazer" data-i="'+i+'">Desfazer esta importação</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>');
 }
-function readXlsx(file){
-  if(somenteLeitura()){toast(MSG_LEITURA);return}
-  if(typeof XLSX==='undefined'){toast('Leitor de Excel indisponível agora');return}
-  var r=new FileReader();
-  r.onload=function(){
-    try{var wb=XLSX.read(r.result,{type:'array',cellDates:true});var ws=wb.Sheets[wb.SheetNames[0]];sheetImport(planejarImport(XLSX.utils.sheet_to_json(ws,{defval:''}),file.name))}
-    catch(e){toast('Não consegui ler esse arquivo. Confira se é um Excel (.xlsx) ou CSV.')}
-  };
-  r.readAsArrayBuffer(file);
-}
-function sampleRows(){
-  return [['Joana Prado','(11) 97777-1111','joana@exemplo.com','Mensalidade',200,addDays(-8)],['Joana Prado','','','Mensalidade',200,addDays(22)],
+function planilhaExemplo(){
+  var aoa=[['Nome','Telefone','E-mail','Descrição','Valor','Vencimento']].concat([['Joana Prado','(11) 97777-1111','joana@exemplo.com','Mensalidade',200,addDays(-8)],['Joana Prado','','','Mensalidade',200,addDays(22)],
     ['Oficina Três Irmãos','(11) 4002-8922','','Revisão de frota',2300,addDays(-2)],['Tiago Moreira','(19) 98111-2020','','Parcela 1/3',350,addDays(5)]]
-   .map(function(x){return {'Nome':x[0],'Telefone':x[1],'E-mail':x[2],'Descrição':x[3],'Valor':x[4],'Vencimento':fmtD(x[5])}});
+   .map(function(x){return [x[0],x[1],x[2],x[3],x[4],fmtD(x[5])]}));
+  return {SheetNames:['Exemplo'],Sheets:{Exemplo:XLSX.utils.aoa_to_sheet(aoa)}};
+}
+// Gera e entrega um .xlsx (no Android, pela ponte; no artefato, pelo download do navegador).
+function baixarXlsx(nome,abas,depois,semData){
+  if(typeof XLSX==='undefined'){toast('Gerador de Excel indisponível agora');return}
+  var wb=XLSX.utils.book_new();
+  abas.forEach(function(a){var ws=XLSX.utils.aoa_to_sheet(a.aoa);ws['!cols']=a.aoa[0].map(function(h){return {wch:Math.max(String(h).length+2,16)}});XLSX.utils.book_append_sheet(wb,ws,a.nome.slice(0,31))});
+  var buf=XLSX.write(wb,{type:'array',bookType:'xlsx'}),arq=nome+(semData?'':'-'+today)+'.xlsx';
+  var useDl=(window.claude&&window.claude.use)?window.claude.use('downloads'):Promise.resolve(null);
+  useDl.then(function(dl){
+    if(!dl){toast('Download indisponível aqui. Use Copiar.');return}
+    return dl.save({filename:arq,data:buf}).then(function(){if(depois)depois();toast('Arquivo Excel salvo: '+arq)},function(err){if(!err||err.code!=='declined')toast('Não foi possível salvar o arquivo')});
+  });
 }
 
 var hostTheme=document.documentElement.getAttribute('data-theme'),themePref='light';
@@ -833,32 +1104,30 @@ document.addEventListener('click',function(e){
     if(eid){Object.assign(S.clientes.find(function(x){return x.id===eid}),dados);save();closeSheet();render();toast('Dados atualizados')}
     else{dados.id=uid();S.clientes.push(dados);save();closeSheet();render();toast('Cliente cadastrado')}
   }
-  else if(a==='import-sample')sheetImport(planejarImport(sampleRows(),'Planilha de exemplo'));
+  else if(a==='import-abrir')sheetImportar();
+  else if(a==='import-sample')abrirPlanilha(planilhaExemplo(),'Planilha de exemplo');
+  else if(a==='import-modelo')baixarModelo();
+  else if(a==='imp-colunas')sheetColunas();
+  else if(a==='imp-map-ok')confirmarColunas();
+  else if(a==='imp-ver-prob'){var pr=$('imp-prob');if(pr){pr.scrollIntoView({block:'start'});pr.focus({preventScroll:true})}}
+  else if(a==='imp-erros')baixarErros();
+  else if(a==='imp-desfazer')sheetDesfazer(+el.dataset.i);
+  else if(a==='imp-desfazer-sim')desfazerImport(+el.dataset.i);
+  else if(a==='export-abrir')sheetFiltros();
   else if(a==='import-confirm')aplicarImport();
   else if(a==='import-log')sheetLog(+el.dataset.i);
   else if(a==='export-custom')sheetExport('custom');
-  else if(a==='xf-status'){expF.status=el.dataset.v;render()}
-  else if(a==='xf-limpar'){expF=Object.assign({},expPadrao);render()}
+  else if(a==='xf-status'){expF.status=el.dataset.v;document.querySelectorAll('[data-act=xf-status]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.v===expF.status))});atualizaXf()}
+  else if(a==='xf-limpar'){expF=Object.assign({},expPadrao);sheetFiltros()}
   else if(a==='export-backup')sheetExport('backup');
   else if(a==='periodo'){statsPeriod=+el.dataset.p;render()}
   else if(a==='aparencia')sheetAparencia();
   else if(a==='theme'){themePref=el.dataset.t;try{localStorage.setItem('celso-pix-tema',themePref)}catch(err){}applyTheme();sheetAparencia()}
   else if(a==='export-filtrado')sheetExport('filtrado');
   else if(a==='xlsx-export'){
-    if(typeof XLSX==='undefined'){toast('Gerador de Excel indisponível agora');return}
     var ex=lastExport,num={'Valor':1,'Dias de atraso':1};
     var aoa=[ex.head].concat(ex.rows.map(function(r){return r.map(function(v,i){return num[ex.head[i]]&&v!==''?parseFloat(String(v).replace(',','.')):v})}));
-    var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=ex.head.map(function(h){return {wch:Math.max(h.length+2,16)}});
-    var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,ex.titulo.slice(0,31));
-    var buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
-    var useDl=(window.claude&&window.claude.use)?window.claude.use('downloads'):Promise.resolve(null);
-    useDl.then(function(dl){
-      if(!dl){toast('Download indisponível aqui. Use Copiar.');return}
-      return dl.save({filename:ex.file+'-'+today+'.xlsx',data:buf}).then(function(){
-        if(ex.kind==='backup'){S.ultimoBackup=today;save();render()}
-        toast('Arquivo Excel salvo');
-      },function(err){if(!err||err.code!=='declined')toast('Não foi possível salvar o arquivo')});
-    });
+    baixarXlsx(ex.file,[{nome:ex.titulo,aoa:aoa}],function(){if(ex.kind==='backup'){S.ultimoBackup=today;save();render()}});
   }
   else if(a==='copy-export'){
     var done=function(){if(lastExport.kind==='backup'){S.ultimoBackup=today;save();render()}toast('Copiado. Cole numa planilha do Excel.')};
@@ -883,6 +1152,7 @@ AV=(function(){
   try{localStorage.setItem(k,JSON.stringify(a))}catch(e){}
   return {inicio:a.inicio,fim:a.inicio+LIMITE_DIAS*864e5,relogio:!!a.relogio};
 })();
+$('xl').addEventListener('change',function(){var f=$('xl').files[0];$('xl').value='';if(f)lerArquivo(f)});
 applyTheme();
 render();
 })();

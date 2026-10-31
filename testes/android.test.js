@@ -36,6 +36,7 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
     });
     ok('Sem internet: app abre e funciona', (await p.locator('.crow').count()) > 0 && typeof (await p.evaluate(() => typeof XLSX)) === 'string' && (await p.evaluate(() => typeof XLSX)) === 'object');
     await p.click('button[data-tab=planilha]');
+    await p.click('[data-act=export-abrir]');
     await p.click('[data-act=export-custom]');
     await p.click('[data-act=xlsx-export]');
     await p.waitForFunction(() => window.__salvo);
