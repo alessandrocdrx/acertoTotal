@@ -57,9 +57,48 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R23. Em parâmetros de texto simples (como a descrição do artefato), escreva os acentos diretamente. Escapes como `ç` só funcionam dentro de JSON.
 - R24. Teste de acessibilidade (axe) espera a animação terminar (450 ms) antes de medir contraste. Medir durante a animação dá falso alarme.
 
+### App Android (APK)
+
+- R25. O protótipo é a única fonte da interface. O APK é montado a partir dele por `android/preparar-assets.sh`. Nunca edite `android/app/src/main/assets/` à mão. [android]
+- R26. O APK funciona sem internet: a página não pode ter nenhum endereço externo, e o leitor de Excel vai dentro do APK. [android]
+- R27. Foto de comprovante é reduzida para JPEG de no máximo 1280 px antes de guardar. O armazenamento do app tem cerca de 5 MB, e uma única foto de câmera pode lotá-lo. [android]
+- R28. Falha ao salvar nunca é silenciosa: com a memória cheia, o app avisa e diz o que fazer. [android]
+- R29. Um botão que depende de uma tarefa em andamento, como preparar um anexo, fica desativado até a tarefa terminar. Um botão desativado não usa `opacity`: troca de cor por tokens, conforme a regra R13. [android]
+- R30. A mesma chave assina todas as versões, para que o APK novo instale por cima do antigo sem apagar os dados. A chave e a senha nunca vão para o repositório: ficam em `android/celsopix.keystore` e `android/assinatura.properties`, os dois no .gitignore.
+- R31. Depois de compilar, confira se a compilação passou ("BUILD SUCCESSFUL" ou código de saída 0), e não só se o APK existe. Apague a saída antiga antes de compilar. Um APK velho na pasta parece sucesso. Ao mover ou renomear recursos (`res/`), compile com `clean`: o cache incremental acusa "resource not found" mesmo com o arquivo no lugar.
+
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-013 · 31/10/2026 · Primeiro APK (casca Android do protótipo)
+- **O que aconteceu:** O cliente pediu um APK para baixar. Ao preparar o protótipo para rodar no celular, encontrei dois riscos que no navegador passavam despercebidos:
+  - uma foto de comprovante, que tem de 3 a 5 MB, pode lotar o armazenamento do app, que é de cerca de 5 MB;
+  - quando o armazenamento lota, a função de salvar falhava calada, e os dados se perdiam ao fechar o app.
+- **Causa:** O protótipo guardava a foto original em base64 no `localStorage` e engolia o erro de cota.
+- **Correção:**
+  - as fotos são reduzidas para JPEG de até 1280 px;
+  - "Confirmar baixa" fica desativado enquanto a foto é preparada;
+  - um aviso aparece quando a memória enche;
+  - o APK é uma casca Kotlin com WebView que carrega o protótipo das próprias assets, funciona sem internet e não pede a permissão de internet;
+  - a ponte `CelsoPixAndroid.salvarArquivo` salva o Excel na pasta Downloads;
+  - o seletor de arquivos aceita fotos, PDF e Excel;
+  - o botão Voltar do celular fecha a janela aberta antes de sair do app.
+- **Problemas na compilação:**
+  - a conexão com o dl.google.com caiu no meio do download; resolvido retomando com `curl -C -`;
+  - o Maven Central respondeu 429 (limite de pedidos); resolvido com `--max-workers=1` e novas tentativas.
+- **Decisões:**
+  - A primeira ideia foi guardar a chave do protótipo no repositório, para as atualizações instalarem por cima. A trava de segurança bloqueou o commit por vazamento de credencial, e com razão: chave e senha são segredos. Agora as duas ficam fora do repositório (R30), e o Gradle lê os dados de `android/assinatura.properties`. A chave precisa ser guardada pelo responsável. Sem ela, a próxima versão só instala depois de desinstalar a anterior, o que apaga os dados.
+  - O minSdk é 29 (Android 10 ou superior), o que dispensa a permissão de armazenamento para salvar em Downloads.
+- **Limites conhecidos:**
+  - O ambiente de compilação não tem virtualização, então a casca nativa não foi executada num emulador. O que foi testado:
+    - a página do APK, no Chromium sem rede, com a ponte simulada;
+    - o lint do Android: 0 erros;
+    - a assinatura (apksigner);
+    - o manifesto (aapt2).
+  - Seletor de arquivos, Downloads e botão Voltar precisam de um teste num celular real.
+- **Erro meu na compilação:** Usei `java.util.Properties` dentro do bloco `android {}` do Gradle, onde `java` é outra coisa, e a compilação falhou. Por alguns minutos achei que tinha passado, porque o APK antigo continuava na pasta. Corrigi com `import java.util.Properties`. Depois, ao mover a pasta de ícones para atender o lint, o `git mv -k` não fez nada (o arquivo ainda não estava no git) e o cache do Gradle acusou recurso inexistente. Resolvido com `git mv` de verdade e `clean`.
+- **Como evitar:** Regras R25 a R31. Foi criada a suíte `testes/android.test.js`, com 12 verificações.
 
 ### A-012 · 31/10/2026 · Revisão de usabilidade tela por tela
 - **O que aconteceu:** Revisei as telas com as 10 heurísticas de Nielsen e as leis de Fitts e Hick. Encontrei:
@@ -153,5 +192,8 @@ As entradas mais recentes ficam no topo.
 ## Pendências conhecidas
 
 - A miniatura do link no WhatsApp é gerada pelo Claude e não pode ser trocada pelo app.
-- Os testes rodam no navegador (Chromium). O app Android nativo vai precisar da mesma bateria em Kotlin e Compose.
+- Os testes rodam no navegador (Chromium). A casca Android ainda não foi testada num aparelho: faltam o seletor de arquivos, o salvamento em Downloads e o botão Voltar.
+- Lint: três bibliotecas AndroidX têm versões mais novas (activity, core, webkit). Atualizar exige compileSdk 36 e uma versão nova do AGP.
+- O app guarda os dados no armazenamento da WebView. Se o app for desinstalado, os dados se perdem. A cópia de segurança em Excel é a proteção.
+- O APK abre com os dados de exemplo. Falta um botão "Começar do zero" para uso real.
 - Os dados de exemplo dos meses anteriores têm valores parecidos, então as barras do gráfico mensal saem quase iguais.

@@ -35,6 +35,7 @@ button{cursor:pointer}
 .pitch .note{font-size:13px;margin-top:16px}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;min-height:44px;padding:10px 16px;font-weight:500}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
+.btn:disabled{background:var(--surface2);border-color:var(--line);color:var(--muted);cursor:progress}
 .btn.danger{color:var(--bad)}
 .btn.block{width:100%;min-height:50px;font-size:16px}
 .phone{font-size:16px;position:relative;width:390px;height:min(800px,calc(100dvh - 32px));background:var(--surface);border:10px solid var(--frame);border-radius:38px;overflow:hidden;display:flex;flex-direction:column}
@@ -218,7 +219,27 @@ function sample(){
 }
 var S;
 function load(){try{var r=localStorage.getItem(KEY);if(r){S=JSON.parse(r);return}}catch(e){}S=sample()}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));return true}
+  catch(e){
+    // Memória cheia: avisa em vez de perder os dados calado. Outros erros (navegação privada) seguem sem aviso.
+    if(e&&(e.name==='QuotaExceededError'||e.code===22))setTimeout(function(){toast('Não foi possível salvar: a memória do app está cheia. Exporte a cópia de segurança e apague comprovantes antigos.')},60);
+    return false;
+  }
+}
+// Foto de comprovante vira JPEG de no máximo 1280 px: cabe no armazenamento e continua legível.
+function reduzirImagem(dataUrl,pronto){
+  var img=new Image();
+  img.onload=function(){
+    var k=Math.min(1,1280/Math.max(img.width,img.height)),cv=document.createElement('canvas');
+    cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);
+    var g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(img,0,0,cv.width,cv.height);
+    var menor=cv.toDataURL('image/jpeg',0.72);
+    pronto(menor.length<dataUrl.length?menor:dataUrl);
+  };
+  img.onerror=function(){pronto(dataUrl)};
+  img.src=dataUrl;
+}
 load();
 
 function status(c){return c.pagoEm?'paga':(c.venc<today?'atrasada':'pendente')}
@@ -414,8 +435,16 @@ function sheetConta(id){
   sheet(h);
   var f=$('fcomp');if(f)f.addEventListener('change',function(){
     var file=f.files[0];if(!file)return;
-    if(file.size>3*1024*1024){toast('Arquivo grande demais (máx. 3 MB)');return}
-    var r=new FileReader();r.onload=function(){pendingComp={nome:file.name,tipo:file.type||'',data:r.result};$('compname').textContent='Anexado: '+file.name};r.readAsDataURL(file);
+    var ehImg=(file.type||'').indexOf('image/')===0;
+    if(file.size>(ehImg?15:3)*1024*1024){toast(ehImg?'Foto grande demais (máx. 15 MB)':'PDF grande demais (máx. 3 MB)');return}
+    $('compname').textContent='Preparando '+file.name+'…';
+    var bt=document.querySelector('[data-act=baixa]');if(bt)bt.disabled=true; // não confirma antes do anexo ficar pronto
+    var r=new FileReader();
+    r.onload=function(){
+      var pronto=function(data){pendingComp={nome:file.name,tipo:data.indexOf('data:image/jpeg')===0?'image/jpeg':(file.type||''),data:data};$('compname').textContent='Anexado: '+file.name;if(bt)bt.disabled=false};
+      if(ehImg)reduzirImagem(r.result,pronto);else pronto(r.result);
+    };
+    r.readAsDataURL(file);
   });
 }
 function sheetNovaConta(clienteId){

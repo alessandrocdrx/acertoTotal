@@ -16,11 +16,14 @@ mkdir -p vendor .build capturas
   cat ../prototipo/celsopix.html
 } > .build/page.html
 
+# Monta as páginas do APK a partir do mesmo protótipo
+bash ../android/preparar-assets.sh >/dev/null
+
 # Playwright: usa a instalação local ou a global
 export NODE_PATH="${NODE_PATH:-}:$(npm root -g 2>/dev/null)"
 
 falhas=0
-for t in app estatisticas tema usabilidade; do
+for t in app estatisticas tema usabilidade android; do
   echo
   echo "==================== $t ===================="
   node "$t.test.js" || falhas=$((falhas+1))

@@ -5,3 +5,12 @@ node_modules/
 .env
 .env.*
 !.env.example
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/src/main/assets/
+entregas/
+android/*.keystore
+android/*.jks
+android/assinatura.properties

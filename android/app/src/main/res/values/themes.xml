@@ -1,0 +1,8 @@
+<resources>
+    <color name="verde_pix">#0A7C73</color>
+    <color name="fundo">#FFFFFF</color>
+    <style name="Tema.CelsoPix" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fundo</item>
+        <item name="android:colorAccent">@color/verde_pix</item>
+    </style>
+</resources>
