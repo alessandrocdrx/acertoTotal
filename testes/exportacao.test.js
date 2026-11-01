@@ -46,7 +46,7 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   const soma = l => l.reduce((a, c) => a + c.valor, 0);
   const reais = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  ok('Exportar abre uma janela própria só com os filtros', (await p.locator('.sheet h2').innerText()) === 'Exportar contas');
+  ok('Exportar abre uma janela própria só com os filtros', (await p.locator('.sheet h2').innerText()) === 'Exportar relatório');
   ok('Filtro padrão: Atrasadas', (await p.getAttribute('[data-act=xf-status][data-v=atrasadas]', 'aria-pressed')) === 'true');
   const e0 = esperado({ status: 'atrasadas' });
   ok('Contagem ao vivo mostra quantidade e total do filtro', (await contagem()) === `${e0.length} contas · ${reais(soma(e0))}`.replace(/ /g, ' ') || (await contagem()).replace(/ /g, ' ') === `${e0.length} contas · ${reais(soma(e0))}`.replace(/ /g, ' '), await contagem());
@@ -89,10 +89,10 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   await p.waitForFunction(() => window.__salvo);
   const arq = await p.evaluate(() => { const wb = XLSX.read(new Uint8Array(window.__salvo.bytes), { type: 'array' }); return { nome: window.__salvo.nome, aoa: XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' }) }; });
   ok('Nome do arquivo diz o filtro e o cliente', /^contas-todas-marina-alves-\d{4}-\d{2}-\d{2}\.xlsx$/.test(arq.nome), arq.nome);
-  ok('Arquivo tem as colunas Situação, Pago em e Dias de atraso', JSON.stringify(arq.aoa[0]) === JSON.stringify(['Cliente', 'Telefone', 'Descrição', 'Valor', 'Vencimento', 'Situação', 'Pago em', 'Dias de atraso']));
+  ok('Arquivo tem as colunas Situação, Pago em e Dias de atraso', JSON.stringify(arq.aoa[0]) === JSON.stringify(['Cliente', 'CPF/CNPJ', 'Telefone', 'Descrição', 'Valor', 'Vencimento', 'Situação', 'Pago em', 'Dias de atraso']));
   ok('Arquivo tem só as contas filtradas, todas da Marina', arq.aoa.length - 1 === exp.length && arq.aoa.slice(1).every(r => r[0] === 'Marina Alves'));
-  ok('Soma dos valores do arquivo bate com os dados', Math.abs(arq.aoa.slice(1).reduce((a, r) => a + r[3], 0) - soma(exp)) < 0.01);
-  await p.click('.sheet [data-act=export-abrir]');
+  ok('Soma dos valores do arquivo bate com os dados', Math.abs(arq.aoa.slice(1).reduce((a, r) => a + r[4], 0) - soma(exp)) < 0.01);
+  await p.click('.sheet [data-act=xf-voltar]');
   ok('"Voltar aos filtros" volta com os filtros que estavam escolhidos', (await p.inputValue('#xf-cli')) === marina.id && (await p.inputValue('#xf-de')) === de);
 
   // Limpar filtros

@@ -86,10 +86,62 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R49. CSV é lido como texto puro (`raw: true`). Se o leitor converter datas sozinho, "10/11/2026" vira 11 de outubro, no formato americano. [importacao]
 - R50. Desfazer uma importação funciona a qualquer momento, pelo histórico, mesmo depois de fechar o app. O app guarda o que entrou e o valor de antes de cada dado mudado. O que a pessoa usou depois (uma baixa, um comprovante, uma conta nova no cliente importado) fica, e o aviso diz quantos itens ficaram. [importacao]
 - R51. Linhas com problema podem ser baixadas numa planilha com as colunas originais e mais "Linha no arquivo" e "Problema". A pessoa corrige ali e importa de novo. O que já entrou não se repete, e as duas colunas extras são ignoradas. [importacao]
+- R52. O cliente é identificado pelo CPF ou CNPJ. O app confere o dígito verificador e guarda só os números. O CPF/CNPJ é obrigatório no cadastro e não pode repetir, mas dois clientes podem ter o mesmo nome. Na planilha, o CPF/CNPJ é o que liga cada linha ao cliente, com ou sem pontuação. Se o Excel tirou o zero da frente, o app completa e avisa. [importacao, tarefas, usabilidade]
+- R53. Nas planilhas, a conta é identificada pelo "Código da conta".
+  - **Linha com código:** atualiza aquela conta.
+  - **Linha sem código:** o par CPF/CNPJ + descrição + vencimento evita duplicar.
+  - **Código que não existe no app, com CPF/CNPJ válido:** cria a conta com o mesmo código. É o que faz a cópia restaurar tudo num celular novo.
+  - **Código que é de outro CPF:** a linha é barrada, com a explicação de quem é o dono.
+  - [importacao, tarefas]
+- R54. Exportar tem dois formatos, com nomes pelo uso:
+  - **"Relatório":** para ler ou mandar a alguém. Tem a situação e os dias de atraso.
+  - **"Para editar":** volta pela importação. Tem o código, o CPF/CNPJ e a aba "Como editar".
+  - **Cópia de segurança:** é a planilha para editar com tudo, inclusive clientes sem contas. [exportacao, importacao]
+- R55. A prévia da importação agrupa por cliente: o cliente e, embaixo dele, as contas que entram e as que mudam, com o antes e o depois. O botão diz o que vai gravar, como "Importar 1 cliente e 8 contas" ou "Importar 5 atualizações". Há duas escolhas independentes: cadastrar o que é novo e atualizar o que mudou. [importacao, tarefas]
+- R56. Telas de escolha são organizadas pelo objetivo da pessoa ("O que você quer fazer?"): Importar planilha, Atualizar pelo Excel, Exportar relatório e Cópia de segurança. As opções cabem na tela sem rolar. Os filtros abrem limpos e não herdam escolhas de outra tarefa. [importacao, tarefas]
+- R57. Toda pergunta do cliente do tipo "como faço X?" vira uma tarefa na suíte `tarefas`. A tarefa tem uma meta de toques, confere que o caminho aparece sem rolar e confere o resultado gravado. [tarefas]
+- R58. Depois de mudar o layout, olhe as capturas de tela. Exemplo: grid num `<li>` com negrito e texto solto quebra uma palavra por linha. Envolva o conteúdo num `<span>`. O teste mede a largura dos textos da janela. [importacao]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-018 · 01/11/2026 · Importar, atualizar e exportar ainda confusos; chave do cliente
+- **Relato do cliente:** "Não achei como importar clientes, atualizar e exportar. Como importar um cliente com 8 contas? E como atualizar 5 contas de um cliente? Qual a chave única do cliente? Vamos por CPF ou CNPJ."
+- **Análise de sistemas de importação e exportação por planilha:**
+  - **Sistemas de cobrança brasileiros:** identificam o cliente pelo CPF/CNPJ.
+  - **CRMs e lojas virtuais:** separam "criar novos" de "atualizar existentes", deixam a pessoa escolher, e usam um identificador do registro na planilha exportada para casar as linhas na volta.
+  - **Padrões comuns:**
+    - uma chave única por objeto;
+    - exportar para editar e importar de volta pela mesma chave;
+    - célula vazia não apaga;
+    - prévia do que muda;
+    - arquivo das linhas com erro;
+    - modelo para baixar.
+- **Causas de verdade no nosso app:**
+  - **Sem chave para o cliente:** o app reconhecia o cliente pelo nome. Um homônimo ou uma grafia diferente virava outro cliente.
+  - **Sem chave para a conta:** a conta era achada por descrição + vencimento. Por isso não dava para mudar o vencimento pela planilha, e "atualizar" não tinha caminho próprio.
+  - **Nomes técnicos nos cartões:** "Importar", "Exportar" e "Cópia" diziam o que o app faz, não o que a pessoa quer fazer. "Atualizar" nem existia como opção.
+  - **Prévia em lista solta:** mostrava as contas sem agrupar. 8 contas de um cliente pareciam 8 coisas sem relação.
+  - **Cópia incompleta:** não guardava clientes sem contas e não restaurava num celular novo.
+- **Feito:**
+  - **CPF/CNPJ** no cadastro, na lista, na busca, nas planilhas e na prévia (R52).
+  - **"Código da conta"** nas planilhas para editar (R53).
+  - **Aba Planilha:** virou "O que você quer fazer?", com 4 opções que cabem na tela (R56). "Atualizar pelo Excel" ensina os 3 passos.
+  - **Atalho na ficha do cliente:** "Atualizar pelo Excel" baixa só as contas daquele cliente.
+  - **Cabeçalho da aba Clientes:** ganhou o botão "Importar".
+  - **Exportar:** em dois formatos, Relatório e Para editar (R54).
+  - **Prévia:** agrupada por cliente, com o botão dizendo o que grava (R55).
+  - **Cópia de segurança:** passa a restaurar num app vazio, com os mesmos códigos.
+- **Achados dos testes de tarefa (R57):**
+  - "Exportar relatório" ficava abaixo da dobra.
+  - O filtro de cliente usado em "Atualizar pelo Excel" ficava preso no relatório seguinte.
+  - Os dois foram corrigidos (R56).
+- **Achado da revisão visual (R58):** os passos de "Atualizar pelo Excel" quebravam uma palavra por linha.
+- **Achado de acessibilidade:** a regra da descrição cinza também pegava o selo "Nunca feita", que ficava com contraste 4,18. A regra foi restringida.
+- **Como evitar:** regras R52 a R58.
+  - Suíte nova `testes/tarefas.test.js`: as perguntas do cliente como roteiros, com meta de toques.
+  - Suíte `importacao` refeita com CPF/CNPJ e código, incluindo a restauração num celular novo.
 
 ### A-017 · 31/10/2026 · Planilha confusa e erros de importação sem explicação
 - **Relato do cliente:** "Essa área é muito sensível e está confusa. Também é difícil importar a planilha, e se há erro não diz qual linha, coluna ou por quê."
@@ -286,7 +338,7 @@ As entradas mais recentes ficam no topo.
 | **Clientes** | Valor em aberto ou "Em dia" à direita (R7). Selo de atrasadas. Busca quando há mais de 5 clientes. |
 | **Ficha do cliente** | Contas pela descrição, sem repetir o nome. "Nova conta para este cliente" já com o cliente preenchido. "Editar dados". |
 | **Números** | Período em 3 opções. Cada gráfico tem o valor escrito ao lado. Frase simples explicando a taxa. Tocar no devedor abre o cliente. Mensagens sem divisão por zero quando não há dados. |
-| **Planilha** | Uma tarefa por cartão (lei de Hick), etapas visíveis (status do sistema), modelo e exemplo (reconhecer em vez de lembrar), prévia antes de gravar (prevenção de erros), erro com linha, coluna, célula e solução (ajudar a corrigir), desfazer a qualquer momento (controle e liberdade), botão principal fixo embaixo (lei de Fitts). |
+| **Planilha** | "O que você quer fazer?" com 4 opções pelo objetivo, todas visíveis sem rolar (lei de Hick, reconhecer em vez de lembrar), prévia agrupada por cliente e botão que diz o que grava (status do sistema), chaves CPF/CNPJ e código da conta (prevenção de erros), uma tarefa por cartão (lei de Hick), etapas visíveis (status do sistema), modelo e exemplo (reconhecer em vez de lembrar), prévia antes de gravar (prevenção de erros), erro com linha, coluna, célula e solução (ajudar a corrigir), desfazer a qualquer momento (controle e liberdade), botão principal fixo embaixo (lei de Fitts). |
 | **Tema e paleta** | Claro como padrão (R18). Amostras com contraste numérico. |
 
 ## Pendências conhecidas
@@ -295,5 +347,7 @@ As entradas mais recentes ficam no topo.
 - Os testes rodam no navegador (Chromium). A casca Android ainda não foi testada num aparelho: faltam o seletor de arquivos, o salvamento em Downloads e o botão Voltar.
 - Lint: três bibliotecas AndroidX têm versões mais novas (activity, core, webkit). Atualizar exige compileSdk 36 e uma versão nova do AGP.
 - O app guarda os dados no armazenamento da WebView. Se o app for desinstalado, os dados se perdem. A cópia de segurança em Excel é a proteção.
+- Os comprovantes (fotos e PDFs) não vão na cópia de segurança em Excel, porque a planilha não guarda arquivos. Restaurar num celular novo traz as baixas, mas não os comprovantes.
+- Clientes cadastrados antes do CPF/CNPJ aparecem como "Sem CPF/CNPJ". Na planilha, ainda são achados pelo nome, com um aviso, até que o cadastro seja completado.
 - O APK abre com os dados de exemplo. Falta um botão "Começar do zero" para uso real.
 - Os dados de exemplo dos meses anteriores têm valores parecidos, então as barras do gráfico mensal saem quase iguais.

@@ -87,6 +87,12 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
     await page.fill('#n-nome', 'Cliente <img src=x onerror="window.__xss=1"> Teste');
     await page.fill('#n-tel', '(11) 90000-0000');
     await page.click('[data-act=salvar-cliente]');
+    rec('Código', 'Cliente sem CPF/CNPJ é recusado com mensagem no campo', /Informe o CPF ou o CNPJ/.test(await page.locator('#n-doc-err').innerText()));
+    await page.fill('#n-doc', '123.456.789-00');
+    await page.click('[data-act=salvar-cliente]');
+    rec('Código', 'CPF com dígito errado é recusado e explica', /CPF inválido\. Confira os números/.test(await page.locator('#n-doc-err').innerText()));
+    await page.fill('#n-doc', '52998224725');
+    await page.click('[data-act=salvar-cliente]');
     await page.waitForTimeout(100);
     rec('Código', 'Nome com HTML aparece como texto e não executa script (XSS)', (await page.evaluate(() => window.__xss)) === undefined && /<img src=x/.test(await page.locator('#screen').innerText()));
     await page.locator('.row', { hasText: 'Cliente <img' }).click();
@@ -112,7 +118,7 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
     await page.click('[data-act=import-confirm]');
     await page.click('.sheet [data-act=close]');
     const after = await st(page);
-    rec('Código', 'Planilha de exemplo cria 3 clientes e 4 contas', after.clientes.length - before.clientes.length === 3 && after.contas.length - before.contas.length === 4, `+${after.clientes.length - before.clientes.length} clientes, +${after.contas.length - before.contas.length} contas`);
+    rec('Código', 'Planilha de exemplo cria 3 clientes e 5 contas (um cliente com 3)', after.clientes.length - before.clientes.length === 3 && after.contas.length - before.contas.length === 5, `+${after.clientes.length - before.clientes.length} clientes, +${after.contas.length - before.contas.length} contas`);
     await page.click('[data-act=import-abrir]');
     await page.click('[data-act=import-sample]');
     rec('Código', 'Reimportar a mesma planilha: "Nada para importar"', await page.locator('[data-act=import-confirm]').isDisabled() && /Nada para importar/.test(await page.locator('[data-act=import-confirm]').innerText()));
@@ -122,18 +128,18 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
 
     // Import de .xlsx real, com formatos mistos
     const bytes = await page.evaluate(() => {
-      const ws = XLSX.utils.aoa_to_sheet([['Nome', 'Telefone', 'E-mail', 'Descrição', 'Valor', 'Vencimento'],
-        ['Teste Um', '11', '', 'Mensal', '1.250,50', '05/11/2026'],
-        ['Teste Dois', '', '', 'Parcela', 300, new Date(2026, 10, 10)],
-        ['', '', '', 'Sem nome', 1, '01/01/2026'],
-        ['Teste Três', '', '', 'Sem data', 50, '']], { cellDates: true });
+      const ws = XLSX.utils.aoa_to_sheet([['Nome', 'Telefone', 'E-mail', 'Descrição', 'Valor', 'Vencimento', 'CPF'],
+        ['Teste Um', '11', '', 'Mensal', '1.250,50', '05/11/2026', '321.654.987-91'],
+        ['Teste Dois', '', '', 'Parcela', 300, new Date(2026, 10, 10), '147.258.369-82'],
+        ['', '', '', 'Sem nome', 1, '01/01/2026', '258.147.369-09'],
+        ['Teste Três', '', '', 'Sem data', 50, '', '258.147.369-09']], { cellDates: true });
       const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'S');
       return Array.from(new Uint8Array(XLSX.write(wb, { type: 'array', bookType: 'xlsx' })));
     });
     await page.setInputFiles('#xl', { name: 'clientes.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: Buffer.from(bytes) });
     await page.waitForSelector('.sheet h2:has-text("Prévia da importação")');
     const rel = await page.locator('.sheet').innerText();
-    rec('Código', 'Prévia lista as linhas com problema e o motivo', /Linha 4\s+Nome \(A4\): está vazio/.test(rel) && /Linha 5 · Teste Três\s+Vencimento \(F5\): está vazio/.test(rel), rel.slice(0, 400));
+    rec('Código', 'Prévia lista as linhas com problema e o motivo', /Linha 4\s+Nome \(A4\): está vazio\. Cliente novo precisa de nome/.test(rel) && /Linha 5 · Teste Três\s+Vencimento \(F5\): está vazio/.test(rel), rel.slice(0, 400));
     await page.click('[data-act=import-confirm]');
     await page.click('.sheet [data-act=close]');
     const imp = await st(page);
@@ -153,7 +159,7 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
     const atrCount = imp.contas.filter(c => !c.pagoEm && c.venc < exp.fn.slice(-15, -5)).length;
     rec('Código', 'Excel de atrasados: nome do arquivo com filtro, data e extensão .xlsx', /^contas-atrasadas-\d{4}-\d{2}-\d{2}\.xlsx$/.test(exp.fn), exp.fn);
     rec('Código', 'Excel de atrasados: linhas do arquivo = linhas da prévia', exp.aoa.length - 1 === nLinhasPrev, `${exp.aoa.length - 1} vs ${nLinhasPrev}`);
-    rec('Código', 'Excel: coluna Valor e Dias de atraso saem como número', typeof exp.aoa[1][3] === 'number' && typeof exp.aoa[1][7] === 'number', JSON.stringify(exp.aoa[1]));
+    rec('Código', 'Excel: coluna Valor e Dias de atraso saem como número', typeof exp.aoa[1][4] === 'number' && typeof exp.aoa[1][8] === 'number', JSON.stringify(exp.aoa[1]));
     await page.click('[data-act=close]');
     rec('Código', 'Baixar atrasados não zera aviso de backup', !(await st(page)).ultimoBackup);
     await page.evaluate(() => { window.__saved = null; });

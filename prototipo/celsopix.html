@@ -217,6 +217,32 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .ok-ico svg{width:28px;height:28px;stroke-width:2.4}
 .lista-ok{margin:0 0 10px;padding-left:20px}
 .lista-ok li{margin-bottom:4px}
+.seg.dois{grid-template-columns:1fr 1fr;margin:8px 0 10px}
+.mini-passos{margin:10px 0 0;padding-left:20px;font-size:14px;color:var(--fg)}
+.mini-passos li{margin-bottom:4px}
+.task .mini-passos{color:var(--muted)}
+.ajuda{border:1px solid var(--line);border-radius:12px;margin:0 0 8px;padding:0 12px;font-size:14px}
+.ajuda summary{min-height:48px;display:flex;align-items:center;font-weight:600;cursor:pointer}
+.ajuda[open]{padding-bottom:12px}
+.ajuda p{margin:0 0 6px;color:var(--muted)}
+.lado{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lado .btn{min-height:48px;font-size:15px}
+.it-sub{font-weight:600;margin-top:6px}
+.intro{color:var(--muted);font-size:14px;margin:4px 0 8px}
+.opcoes{display:grid;gap:8px;margin-bottom:8px}
+.opcao{display:grid;grid-template-columns:40px minmax(0,1fr) 20px;gap:12px;align-items:center;width:100%;text-align:left;background:var(--surface2);border:1px solid transparent;border-radius:14px;padding:12px;min-height:72px}
+.opcao:hover{border-color:var(--line)}
+.opcao .ic{width:40px;height:40px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.opcao .ic svg,.opcao .chev{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.opcao .chev{color:var(--muted)}
+.opcao .ot{display:grid;gap:2px;justify-items:start;min-width:0}
+.opcao .ot b{font-size:16px}
+.opcao .ot>span:not(.pill){color:var(--muted);font-size:14px}
+.opcao .pill{margin-top:4px}
+.passo-a-passo{margin:0 0 10px;padding:0;list-style:none;counter-reset:p;display:grid;gap:10px}
+.passo-a-passo li{counter-increment:p;display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:15px}
+.passo-a-passo li::before{content:counter(p);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:14px}
+.semdoc{color:var(--warn);font-weight:600}
 @media (max-width:860px){
   .stage{display:block;min-height:0}.pitch{display:none}
   body{padding-block:0;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
@@ -235,7 +261,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
       <li><b>1</b><span>Na aba <strong>Contas</strong>, toque em <strong>Dar baixa</strong> numa conta em aberto e informe a data do pagamento.</span></li>
       <li><b>2</b><span>Anexe um comprovante Pix (foto ou PDF). O app guarda o arquivo, sem conferir.</span></li>
       <li><b>3</b><span>Na aba <strong>Planilha</strong>, toque em <strong>Importar planilha</strong>. Antes de gravar, o app mostra o que entra, o que muda e cada erro com a linha e a coluna.</span></li>
-      <li><b>4</b><span>Exporte em Excel (.xlsx) com filtros por situação, cliente e período de vencimento.</span></li>
+      <li><b>4</b><span>Para mudar várias contas, use <strong>Atualizar pelo Excel</strong>: baixe a planilha, edite e envie de volta. O CPF/CNPJ identifica cada cliente.</span></li>
     </ol>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="reset">Restaurar dados de exemplo</button><button class="btn" data-act="aparencia">Tema e paleta</button></div>
     <p class="note">Os dados deste protótipo ficam só neste navegador. No app real, ficam no celular, e o Excel exportado serve de backup.</p>
@@ -262,9 +288,28 @@ var today=addDays(0);
 function fmtD(s){if(!s)return '';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function uid(){return Math.random().toString(36).slice(2,9)}
+// ---------- CPF/CNPJ: a chave do cliente. Guardado só com números; mostrado com pontuação.
+function soDig(s){return String(s==null?'':s).replace(/\D/g,'')}
+function cpfOk(d){if(!/^\d{11}$/.test(d)||/^(\d)\1+$/.test(d))return false;for(var n=9;n<11;n++){var s=0;for(var i=0;i<n;i++)s+=+d[i]*(n+1-i);if(s*10%11%10!==+d[n])return false}return true}
+function cnpjOk(d){if(!/^\d{14}$/.test(d)||/^(\d)\1+$/.test(d))return false;var w=[6,5,4,3,2,9,8,7,6,5,4,3,2];for(var n=12;n<14;n++){var s=0;for(var i=0;i<n;i++)s+=+d[i]*w[i+13-n];var r=s%11;if((r<2?0:11-r)!==+d[n])return false}return true}
+function docOk(d){return d.length===11?cpfOk(d):(d.length===14?cnpjOk(d):false)}
+function fmtDoc(d){d=soDig(d);return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):(d.length===14?d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5'):d)}
+function tipoDoc(d){return soDig(d).length===14?'CNPJ':'CPF'}
+// Lê o CPF/CNPJ de uma célula. O Excel apaga o zero da frente de números (01234567890 vira 1234567890):
+// quando completar com zeros dá um documento válido, aceita e avisa.
+function lerDoc(v){
+  var raw=fmtCel(v),d=soDig(v);
+  if(!d)return {d:'',ok:false,raw:raw};
+  if(docOk(d))return {d:d,ok:true,raw:raw};
+  if(/^\d+$/.test(raw.trim())&&d.length<14){
+    var t=d.length<11?[11,14]:[14];
+    for(var i=0;i<t.length;i++){var p=d.padStart(t[i],'0');if(docOk(p))return {d:p,ok:true,raw:raw,zeros:true}}
+  }
+  return {d:d,ok:false,raw:raw};
+}
 
 function sample(){
-  var c=[['Marina Alves','(11) 98765-4321','marina@exemplo.com'],['Padaria Bom Pão','(11) 3456-7890',''],['Carlos Eduardo Lima','(21) 99876-5432','carlos.lima@exemplo.com'],['Studio Fênix Pilates','(31) 98888-1212','contato@fenix.exemplo.com'],['Rafaela Nunes','(41) 99123-4567','']].map(function(x){return {id:uid(),nome:x[0],telefone:x[1],email:x[2],obs:''}});
+  var c=[['Marina Alves','(11) 98765-4321','marina@exemplo.com','63712926170'],['Padaria Bom Pão','(11) 3456-7890','','71296668000176'],['Carlos Eduardo Lima','(21) 99876-5432','carlos.lima@exemplo.com','94127724242'],['Studio Fênix Pilates','(31) 98888-1212','contato@fenix.exemplo.com','82258215000171'],['Rafaela Nunes','(41) 99123-4567','','97124171407']].map(function(x){return {id:uid(),nome:x[0],doc:x[3],telefone:x[1],email:x[2],obs:''}});
   var k=[[0,'Mensalidade',180,-35,-33],[0,'Mensalidade',180,-5,null],[0,'Mensalidade',180,25,null],
     [1,'Fornecimento de pães',1250,-40,-38],[1,'Fornecimento de pães',1250,-10,null],
     [2,'Parcela 2/6',420,-3,null],[2,'Parcela 3/6',420,27,null],
@@ -315,7 +360,7 @@ var LIMITE_DIAS=0,AV={inicio:0,fim:0,relogio:false};
 function somenteLeitura(){return LIMITE_DIAS>0&&(AV.relogio||Date.now()>=AV.fim)}
 function diasRestantes(){return Math.max(0,Math.ceil((AV.fim-Date.now())/864e5))}
 var MSG_LEITURA='Avaliação encerrada: o app está só para consulta.';
-var ACOES_ESCRITA=['baixa','desfazer','excluir-conta','salvar-conta','salvar-cliente','nova-conta','nova-conta-cli','novo-cliente','editar-cliente','pick-comp','pick-xl','import-sample','import-confirm','export-custom','export-backup','export-filtrado','xlsx-export','copy-export','import-abrir','import-modelo','imp-colunas','imp-map-ok','imp-erros','imp-desfazer','imp-desfazer-sim','export-abrir'];
+var ACOES_ESCRITA=['baixa','desfazer','excluir-conta','salvar-conta','salvar-cliente','nova-conta','nova-conta-cli','novo-cliente','editar-cliente','pick-comp','pick-xl','import-sample','import-confirm','export-custom','export-backup','export-filtrado','xlsx-export','copy-export','import-abrir','import-modelo','imp-colunas','imp-map-ok','imp-erros','imp-desfazer','imp-desfazer-sim','export-abrir','editar-xl','editar-xl-cli','enviar-editada','xf-voltar','xf-formato','atualizar-abrir'];
 var tab='contas',filter='abertas',query='',queryC='',pendingComp=null,toastT;
 var $=function(id){return document.getElementById(id)};
 function toast(m,undo){
@@ -398,21 +443,24 @@ function viewContas(){
    +(somenteLeitura()?'':'<button class="fab" data-act="nova-conta" aria-label="Nova conta">+ Nova conta</button>');
 }
 function viewClientes(){
-  var q=queryC.trim().toLowerCase();
-  var l=S.clientes.filter(function(c){return !q||(c.nome+' '+(c.telefone||'')).toLowerCase().indexOf(q)>-1}).sort(function(a,b){return a.nome.localeCompare(b.nome)});
-  var h=S.clientes.length>5?'<div class="field"><input id="qc" type="search" placeholder="Buscar cliente" value="'+esc(queryC)+'" aria-label="Buscar cliente"></div>':'';
+  var q=queryC.trim().toLowerCase(),qd=soDig(q);
+  var l=S.clientes.filter(function(c){return !q||(c.nome+' '+(c.telefone||'')).toLowerCase().indexOf(q)>-1||(qd.length>=3&&(c.doc||'').indexOf(qd)>-1)}).sort(function(a,b){return a.nome.localeCompare(b.nome)});
+  var h=S.clientes.length>5?'<div class="field"><input id="qc" type="search" placeholder="Buscar por nome, CPF ou CNPJ" value="'+esc(queryC)+'" aria-label="Buscar cliente por nome, CPF ou CNPJ"></div>':'';
   h+=l.length?l.map(function(c){
     var cs=S.contas.filter(function(x){return x.clienteId===c.id});
     var ab=sum(cs.filter(function(x){return !x.pagoEm}));
     var atr=cs.filter(function(x){return status(x)==='atrasada'}).length;
-    return '<button class="row" data-act="cliente" data-id="'+c.id+'"><span class="t">'+esc(c.nome)+'</span><span class="v"'+(ab?'':' style="color:var(--ok)"')+'>'+(ab?brl.format(ab):'Em dia')+'</span><span class="s">'+esc(c.telefone||'sem telefone')+' · '+cs.length+' conta'+(cs.length===1?'':'s')+'</span><span class="p">'+(atr?'<span class="pill atrasada">'+atr+' atrasada'+(atr>1?'s':'')+'</span>':'')+'</span></button>';
-  }).join(''):(q?'<div class="empty">Nenhum cliente encontrado para “'+esc(queryC.trim())+'”.<br><button class="btn" data-act="limpar-busca-c">Limpar busca</button></div>':'<div class="empty">Nenhum cliente ainda. Toque em “+ Novo cliente”.</div>');
+    return '<button class="row" data-act="cliente" data-id="'+c.id+'"><span class="t">'+esc(c.nome)+'</span><span class="v"'+(ab?'':' style="color:var(--ok)"')+'>'+(ab?brl.format(ab):'Em dia')+'</span><span class="s">'+(c.doc?tipoDoc(c.doc)+' '+fmtDoc(c.doc):'<span class="semdoc">Sem CPF/CNPJ</span>')+' · '+cs.length+' conta'+(cs.length===1?'':'s')+'</span><span class="p">'+(atr?'<span class="pill atrasada">'+atr+' atrasada'+(atr>1?'s':'')+'</span>':'')+'</span></button>';
+  }).join(''):(q?'<div class="empty">Nenhum cliente encontrado para “'+esc(queryC.trim())+'”.<br><button class="btn" data-act="limpar-busca-c">Limpar busca</button></div>':'<div class="empty">Nenhum cliente ainda. Toque em “+ Novo cliente” ou importe uma planilha.</div>');
   return h+(somenteLeitura()?'':'<button class="fab" data-act="novo-cliente" aria-label="Novo cliente">+ Novo cliente</button>');
 }
-var expPadrao={status:'atrasadas',cliente:'',de:'',ate:''},expF=Object.assign({},expPadrao);
+// Exportar tem dois formatos: relatório (para ler ou enviar) e planilha para editar (volta pela importação).
+var expPadrao={formato:'relatorio',status:'atrasadas',cliente:'',de:'',ate:''},expF=Object.assign({},expPadrao);
 var XF_LABEL={todas:'Todas',abertas:'Em aberto',atrasadas:'Atrasadas',pagas:'Pagas'};
+var EDIT_HEAD=['Código da conta','CPF/CNPJ','Nome','Telefone','E-mail','Descrição','Valor','Vencimento','Pago em'];
+function filtrosPadrao(){return expF.status===expPadrao.status&&!expF.cliente&&!expF.de&&!expF.ate}
 function contasExport(){
-  return S.contas.filter(function(c){
+  var l=S.contas.filter(function(c){
     var s=status(c);
     if(expF.status==='abertas'&&s==='paga')return false;
     if(expF.status==='atrasadas'&&s!=='atrasada')return false;
@@ -421,19 +469,24 @@ function contasExport(){
     if(expF.de&&c.venc<expF.de)return false;
     if(expF.ate&&c.venc>expF.ate)return false;
     return true;
-  }).sort(function(a,b){return a.venc<b.venc?-1:1});
+  });
+  // Para editar, as contas de cada cliente ficam juntas: fica fácil achar "as 5 contas da Marina".
+  return l.sort(expF.formato==='editar'?function(a,b){return cli(a.clienteId).nome.localeCompare(cli(b.clienteId).nome)||(a.venc<b.venc?-1:1)}:function(a,b){return a.venc<b.venc?-1:1});
 }
+function linhaEditar(c){var cl=cli(c.clienteId);return [c.id,fmtDoc(cl.doc||''),cl.nome,cl.telefone||'',cl.email||'',c.descricao,String(c.valor).replace('.',','),fmtD(c.venc),fmtD(c.pagoEm)]}
+function linhaRelatorio(c,dias){var cl=cli(c.clienteId),s=status(c);var r=[cl.nome,fmtDoc(cl.doc||''),cl.telefone||'',c.descricao,String(c.valor).replace('.',','),fmtD(c.venc),LABEL[s],fmtD(c.pagoEm)];if(dias)r.push(s==='atrasada'?String(daysBetween(c.venc,today)):'');return r}
+var COMO_EDITAR=[['Como atualizar pela planilha'],['1. Na aba anterior, mude o valor, o vencimento, a descrição ou o “Pago em” (data do pagamento, para dar baixa).'],['2. Não mude a coluna “Código da conta”: ela liga cada linha à conta no app.'],['3. Para incluir uma conta nova, use uma linha com o código vazio e o CPF/CNPJ preenchido.'],['4. Célula vazia não apaga nada no app.'],['5. No app, abra Planilha › Enviar planilha editada. Você vê o antes e o depois de cada mudança antes de gravar.']];
 function resumoFiltros(){
   var p=[XF_LABEL[expF.status]];
   if(expF.cliente)p.push(cli(expF.cliente).nome);
   if(expF.de||expF.ate)p.push('vencimento'+(expF.de?' de '+fmtD(expF.de):'')+(expF.ate?' até '+fmtD(expF.ate):''));
   return p.join(' · ');
 }
-function slug(t){return t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+function slug(t){return t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
 // Atualiza só a contagem e o botão, sem redesenhar a tela (o foco fica no campo).
 function atualizaXf(){
   var el=$('xf-count'),bt=document.querySelector('[data-act=export-custom]');if(!el||!bt)return;
-  var lp=document.querySelector('[data-act=xf-limpar]');if(lp)lp.hidden=JSON.stringify(expF)===JSON.stringify(expPadrao);
+  var lp=document.querySelector('[data-act=xf-limpar]');if(lp)lp.hidden=filtrosPadrao();
   if(expF.de&&expF.ate&&expF.de>expF.ate){
     if($('xf-ate').getAttribute('aria-invalid')!=='true')fieldError('xf-ate','A data final é antes da inicial');
     el.textContent='Corrija o período para exportar.';bt.disabled=true;return;
@@ -443,32 +496,40 @@ function atualizaXf(){
   el.textContent=l.length?l.length+' conta'+(l.length===1?'':'s')+' · '+brl.format(sum(l)):'Nenhuma conta com esses filtros.';
   bt.disabled=!l.length;bt.textContent=l.length?'Ver prévia ('+l.length+')':'Ver prévia';
 }
-// ---------- Aba Planilha: três tarefas separadas, cada uma abre o seu próprio fluxo.
+// ---------- Aba Planilha: uma tarefa por cartão, com o nome do objetivo da pessoa.
 ICON.importar='<svg viewBox="0 0 24 24"><path d="M12 3v11M7.5 9.5L12 14l4.5-4.5"/><path d="M4 16v4h16v-4"/></svg>';
 ICON.exportar='<svg viewBox="0 0 24 24"><path d="M12 14V3M7.5 7.5L12 3l4.5 4.5"/><path d="M4 16v4h16v-4"/></svg>';
+ICON.editar='<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
 ICON.backup='<svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.6-3.4 7.9-8 9-4.6-1.1-8-4.4-8-9V6z"/><path d="M8.8 12.2l2.2 2.2 4.3-4.6"/></svg>';
 function backupInfo(){
   if(!S.ultimoBackup)return {cls:'atrasada',txt:'Nunca feita',dica:'Faça agora: é o que salva seus dados se o celular for trocado ou perdido.'};
   var d=daysBetween(S.ultimoBackup,today);
   return {cls:d>7?'pendente':'paga',txt:d<=0?'Feita hoje':(d===1?'Feita ontem':'Feita há '+d+' dias'),dica:d>7?'Já faz mais de uma semana. Faça uma nova cópia.':'Última cópia em '+fmtD(S.ultimoBackup)+'.'};
 }
-function tarefa(ic,titulo,texto){return '<div class="task-h"><span class="ic" aria-hidden="true">'+ICON[ic]+'</span><div><h3>'+titulo+'</h3><p>'+texto+'</p></div></div>'}
+function opcao(act,ic,titulo,texto,extra){return '<button class="opcao" data-act="'+act+'"><span class="ic" aria-hidden="true">'+ICON[ic]+'</span><span class="ot"><b>'+titulo+'</b><span>'+texto+'</span>'+(extra||'')+'</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
 function viewPlanilha(){
   if(somenteLeitura())return '<div class="card"><h3 class="ct">Só consulta</h3><p>A avaliação terminou em '+fimTxt()+'. Importar e exportar planilhas fica disponível na versão completa. Você ainda pode consultar contas, clientes, números e o histórico abaixo.</p></div>'+historicoImport();
   var b=backupInfo();
-  return '<section class="task" aria-label="Importar">'+tarefa('importar','Importar planilha','Traga clientes e contas de um Excel. Você confere tudo antes de gravar e pode desfazer depois.')
-   +'<div class="actions"><button class="btn primary block" data-act="import-abrir">Importar planilha</button><button class="btn block quiet" data-act="import-modelo">Baixar planilha modelo</button></div></section>'
-   +'<section class="task" aria-label="Exportar">'+tarefa('exportar','Exportar contas','Escolha situação, cliente e período. Sai um arquivo Excel (.xlsx).')
-   +'<div class="actions"><button class="btn block" data-act="export-abrir">Exportar contas</button></div></section>'
-   +'<section class="task" aria-label="Cópia de segurança">'+tarefa('backup','Cópia de segurança','Todos os clientes e contas numa planilha. Guarde fora do celular.')
-   +'<p class="bk"><span class="pill '+b.cls+'">'+b.txt+'</span><span>'+b.dica+'</span></p>'
-   +'<div class="actions"><button class="btn block" data-act="export-backup">Fazer cópia de segurança</button></div></section>'
-   +historicoImport();
+  return '<p class="intro">O que você quer fazer?</p><nav class="opcoes" aria-label="Tarefas com planilha">'
+   +opcao('import-abrir','importar','Importar planilha','Cadastrar clientes e contas de uma vez')
+   +opcao('atualizar-abrir','editar','Atualizar pelo Excel','Mudar valores, vencimentos e baixas de várias contas')
+   +opcao('export-abrir','exportar','Exportar relatório','Contas em Excel para ler ou mandar a alguém')
+   +opcao('export-backup','backup','Cópia de segurança','Tudo numa planilha, para guardar ou trocar de celular','<span class="pill '+b.cls+'">'+b.txt+'</span>')
+   +'</nav>'+historicoImport();
 }
-// Filtros da exportação ficam numa janela própria: escolher, ver quantas contas saem e seguir para a prévia.
+// Atualizar pelo Excel: os 3 passos numa janela, com os 2 botões na ordem em que são usados.
+function sheetAtualizar(){
+  sheet('<h2>Atualizar pelo Excel</h2><p class="sub">Para mudar várias contas de uma vez: valor, vencimento, descrição ou baixa.</p>'
+   +'<ol class="passo-a-passo"><li><span><b>Baixe a planilha para editar.</b> Ela tem o código de cada conta e o CPF/CNPJ do cliente.</span></li><li><span><b>Mude no Excel</b> o que quiser. Não mexa na coluna “Código da conta”. Célula vazia não apaga nada.</span></li><li><span><b>Envie a planilha de volta.</b> Você vê o antes e o depois de cada conta antes de gravar.</span></li></ol>'
+   +'<p class="hint">Só um cliente? Abra o cliente e toque em “Atualizar pelo Excel”.</p>'
+   +'<div class="actions"><button class="btn primary block" data-act="editar-xl">Baixar planilha para editar</button><button class="btn block" data-act="enviar-editada">Enviar planilha editada</button><button class="btn block" data-act="close">Fechar</button></div>');
+}
 function sheetFiltros(){
+  var ed=expF.formato==='editar';
   var opts=S.clientes.slice().sort(function(a,b){return a.nome.localeCompare(b.nome)}).map(function(c){return '<option value="'+c.id+'"'+(c.id===expF.cliente?' selected':'')+'>'+esc(c.nome)+'</option>'}).join('');
-  sheet('<h2>Exportar contas</h2><p class="sub">Escolha o que vai para a planilha.</p>'
+  sheet('<h2>'+(ed?'Planilha para editar':'Exportar relatório')+'</h2>'
+   +'<div class="seg dois" role="radiogroup" aria-label="Tipo de planilha"><button role="radio" data-act="xf-formato" data-v="relatorio" aria-checked="'+!ed+'">Relatório</button><button role="radio" data-act="xf-formato" data-v="editar" aria-checked="'+ed+'">Para editar</button></div>'
+   +'<p class="sub">'+(ed?'Para mudar contas no Excel e enviar de volta. Tem o código de cada conta e o CPF/CNPJ do cliente.':'Para ler, imprimir ou mandar a alguém. Tem a situação e os dias de atraso.')+'</p>'
    +'<p class="lbl" id="xf-st-l">Situação</p><div class="chips four" role="group" aria-labelledby="xf-st-l">'+['todas','abertas','atrasadas','pagas'].map(function(v){return '<button class="chip" data-act="xf-status" data-v="'+v+'" aria-pressed="'+(expF.status===v)+'"><span>'+XF_LABEL[v]+'</span></button>'}).join('')+'</div>'
    +'<div class="field"><label for="xf-cli">Cliente</label><select id="xf-cli"><option value="">Todos os clientes</option>'+opts+'</select></div>'
    +'<div class="dates"><div class="field"><label for="xf-de">Vencimento de</label><input id="xf-de" type="date" value="'+expF.de+'"></div><div class="field"><label for="xf-ate">Até</label><input id="xf-ate" type="date" value="'+expF.ate+'"></div></div>'
@@ -476,6 +537,36 @@ function sheetFiltros(){
    +'<div class="actions fixo"><p class="xf-count" id="xf-count" aria-live="polite"></p><button class="btn primary block" data-act="export-custom">Ver prévia</button><button class="btn block quiet" data-act="xf-limpar">Limpar filtros</button><button class="btn block" data-act="close">Cancelar</button></div>');
   [['xf-cli','cliente'],['xf-de','de'],['xf-ate','ate']].forEach(function(x){var el=$(x[0]);['change','input'].forEach(function(ev){el.addEventListener(ev,function(){expF[x[1]]=el.value;atualizaXf()})})});
   atualizaXf();
+}
+function tableOf(head,rows){
+  return '<div class="tbl" tabindex="0" role="region" aria-label="Prévia da planilha"><table><thead><tr>'+head.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'
+   +rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+esc(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>';
+}
+var lastExport=null;
+function sheetExport(kind){
+  if(somenteLeitura()){toast(MSG_LEITURA);return}
+  var head,rows,titulo,filtros='',file,extra=null,ed=false;
+  if(kind==='custom'){
+    ed=expF.formato==='editar';filtros=resumoFiltros();
+    var base=slug(XF_LABEL[expF.status])+(expF.cliente?'-'+slug(cli(expF.cliente).nome):'');
+    if(ed){head=EDIT_HEAD;titulo='Planilha para editar';rows=contasExport().map(linhaEditar);file='editar-contas-'+base;extra=[{nome:'Como editar',aoa:COMO_EDITAR}]}
+    else{head=['Cliente','CPF/CNPJ','Telefone','Descrição','Valor','Vencimento','Situação','Pago em','Dias de atraso'];titulo='Relatório de contas';rows=contasExport().map(function(c){return linhaRelatorio(c,true)});file='contas-'+base}
+  }else if(kind==='filtrado'){
+    head=['Cliente','CPF/CNPJ','Telefone','Descrição','Valor','Vencimento','Situação','Pago em'];titulo='Contas';file='contas';
+    rows=filteredContas().map(function(c){return linhaRelatorio(c,false)});
+  }else{
+    // Cópia de segurança = planilha para editar com tudo, inclusive clientes sem contas. Importar de volta restaura.
+    head=EDIT_HEAD;titulo='Cópia de segurança';file='backup-celsopix';extra=[{nome:'Como editar',aoa:COMO_EDITAR}];ed=true;rows=[];
+    S.clientes.slice().sort(function(a,b){return a.nome.localeCompare(b.nome)}).forEach(function(cl){
+      var cs=S.contas.filter(function(c){return c.clienteId===cl.id}).sort(function(a,b){return a.venc<b.venc?-1:1});
+      if(cs.length)cs.forEach(function(c){rows.push(linhaEditar(c))});else rows.push(['',fmtDoc(cl.doc||''),cl.nome,cl.telefone||'',cl.email||'','','','','']);
+    });
+  }
+  lastExport={kind:kind,head:head,rows:rows,titulo:titulo,file:file,extra:extra,tsv:[head].concat(rows).map(function(r){return r.join('\t')}).join('\n')};
+  var guia=kind==='custom'&&ed?'<div class="alerta info"><b>Depois de baixar:</b><ol class="mini-passos"><li>Mude no Excel o valor, o vencimento, a descrição ou o “Pago em”.</li><li>Não mexa na coluna “Código da conta”.</li><li>Volte em Planilha › <b>Enviar planilha editada</b>.</li></ol></div>':'';
+  sheet('<h2>'+titulo+'</h2><p class="sub">'+(filtros?'Filtros: '+esc(filtros)+'. ':'')+rows.length+' linha'+(rows.length===1?'':'s')+'. Baixe como Excel (.xlsx) ou copie e cole numa planilha.</p>'+guia
+   +(rows.length?tableOf(head,rows):'<div class="empty">Nenhuma conta com esses filtros.</div>')
+   +'<div class="actions"><button class="btn primary block" data-act="xlsx-export">Baixar Excel (.xlsx)</button><button class="btn block" data-act="copy-export">Copiar para colar no Excel</button>'+(kind==='custom'?'<button class="btn block" data-act="xf-voltar">Voltar aos filtros</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>');
 }
 
 ICON.numeros='<svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>';
@@ -545,7 +636,7 @@ function render(){
   atualizaFaixa();
   TITLES.contas[1]='Hoje, '+fmtD(today);TITLES.clientes[1]=S.clientes.length+' cadastrados';TITLES.numeros[1]=PERIODOS[statsPeriod];
   $('title').textContent=TITLES[tab][0];$('subtitle').textContent=TITLES[tab][1];
-  $('headAction').innerHTML=(tab==='contas'&&!somenteLeitura()?'<button class="btn" data-act="export-filtrado" aria-label="Exportar contas em Excel">Exportar</button>':'')+'<button class="iconbtn" data-act="aparencia" aria-label="Tema e paleta"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>';
+  $('headAction').innerHTML=(tab==='contas'&&!somenteLeitura()?'<button class="btn" data-act="export-filtrado" aria-label="Exportar contas em Excel">Exportar</button>':'')+(tab==='clientes'&&!somenteLeitura()?'<button class="btn" data-act="import-abrir" aria-label="Importar clientes de uma planilha">Importar</button>':'')+'<button class="iconbtn" data-act="aparencia" aria-label="Tema e paleta"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>';
   var v={contas:viewContas,clientes:viewClientes,numeros:viewNumeros,planilha:viewPlanilha}[tab]();
   var sc=$('screen'),pos=sc.scrollTop;sc.innerHTML=v;sc.scrollTop=pos;
   $('tabs').innerHTML=TABS.map(function(t){return '<button data-act="go" data-tab="'+t[0]+'" aria-current="'+(tab===t[0])+'">'+ICON[t[0]]+t[1]+'</button>'}).join('');
@@ -602,43 +693,23 @@ function sheetNovaConta(clienteId){
 function sheetNovoCliente(id){
   if(somenteLeitura()){toast(MSG_LEITURA);return}
   var c=(id&&S.clientes.find(function(x){return x.id===id}))||{};
-  sheet('<h2>'+(id?'Editar cliente':'Novo cliente')+'</h2><p class="sub">Só o nome é obrigatório.</p>'
+  sheet('<h2>'+(id?'Editar cliente':'Novo cliente')+'</h2><p class="sub">Nome e CPF ou CNPJ são obrigatórios.</p>'
    +'<div class="field"><label for="n-nome">Nome</label><input id="n-nome" autocomplete="off" value="'+esc(c.nome||'')+'"></div>'
+   +'<div class="field"><label for="n-doc">CPF ou CNPJ</label><span class="hint" id="n-doc-h">Identifica o cliente nas planilhas. Pode digitar com ou sem pontos.</span><input id="n-doc" inputmode="numeric" autocomplete="off" aria-describedby="n-doc-h" value="'+esc(c.doc?fmtDoc(c.doc):'')+'"></div>'
    +'<div class="field"><label for="n-tel">Telefone</label><input id="n-tel" type="tel" inputmode="tel" autocomplete="off" value="'+esc(c.telefone||'')+'"></div>'
    +'<div class="field"><label for="n-mail">E-mail</label><input id="n-mail" type="email" value="'+esc(c.email||'')+'"></div>'
    +'<div class="field"><label for="n-obs">Observações</label><textarea id="n-obs" rows="2">'+esc(c.obs||'')+'</textarea></div>'
    +'<div class="actions"><button class="btn primary block" data-act="salvar-cliente"'+(id?' data-id="'+id+'"':'')+'>'+(id?'Salvar alterações':'Salvar cliente')+'</button><button class="btn block" data-act="close">Cancelar</button></div>');
+  var dc=$('n-doc');dc.addEventListener('blur',function(){var d=soDig(dc.value);if(docOk(d))dc.value=fmtDoc(d)});
 }
 function sheetCliente(id){
   var c=S.clientes.find(function(x){return x.id===id});if(!c)return;
-  var cs=S.contas.filter(function(x){return x.clienteId===id}).sort(function(a,b){return a.venc<b.venc?-1:1});
-  sheet('<h2>'+esc(c.nome)+'</h2><p class="sub">'+esc([c.telefone,c.email].filter(Boolean).join(' · ')||'Sem contato')+'</p>'
-   +'<h3>Contas</h3>'+(cs.length?cs.map(function(x){return contaRow(x,true)}).join(''):'<div class="empty">Sem contas ainda.</div>')
-   +'<div class="actions">'+(somenteLeitura()?'<p class="leitura">'+esc(MSG_LEITURA)+'</p>':'<button class="btn primary block" data-act="nova-conta-cli" data-id="'+id+'">Nova conta para este cliente</button><button class="btn block" data-act="editar-cliente" data-id="'+id+'">Editar dados</button>')+'<button class="btn block" data-act="close">Fechar</button></div>');
-}
-
-function tableOf(head,rows){
-  return '<div class="tbl"><table><thead><tr>'+head.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody>'
-   +rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+esc(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>';
-}
-var lastExport=null;
-function sheetExport(kind){
-  if(somenteLeitura()){toast(MSG_LEITURA);return}
-  var head,rows,titulo,filtros='';
-  if(kind==='custom'){
-    head=['Cliente','Telefone','Descrição','Valor','Vencimento','Situação','Pago em','Dias de atraso'];titulo='Exportar contas';filtros=resumoFiltros();
-    rows=contasExport().map(function(c){var cl=cli(c.clienteId),s=status(c);return [cl.nome,cl.telefone||'',c.descricao,String(c.valor).replace('.',','),fmtD(c.venc),LABEL[s],fmtD(c.pagoEm),s==='atrasada'?String(daysBetween(c.venc,today)):'']});
-  }else if(kind==='filtrado'){
-    head=['Cliente','Telefone','Descrição','Valor','Vencimento','Situação','Pago em'];titulo='Contas';
-    rows=filteredContas().map(function(c){var cl=cli(c.clienteId);return [cl.nome,cl.telefone||'',c.descricao,String(c.valor).replace('.',','),fmtD(c.venc),LABEL[status(c)],fmtD(c.pagoEm)]});
-  }else{
-    head=['Nome','Telefone','E-mail','Descrição','Valor','Vencimento','Pago em'];titulo='Cópia de segurança';
-    rows=S.contas.map(function(c){var cl=cli(c.clienteId);return [cl.nome,cl.telefone||'',cl.email||'',c.descricao,String(c.valor).replace('.',','),fmtD(c.venc),fmtD(c.pagoEm)]});
-  }
-  lastExport={kind:kind,head:head,rows:rows,titulo:titulo,file:kind==='custom'?'contas-'+slug(XF_LABEL[expF.status])+(expF.cliente?'-'+slug(cli(expF.cliente).nome):''):{backup:'backup-celsopix',filtrado:'contas'}[kind],tsv:[head].concat(rows).map(function(r){return r.join('\t')}).join('\n')};
-  sheet('<h2>'+titulo+'</h2><p class="sub">'+(filtros?'Filtros: '+esc(filtros)+'. ':'')+rows.length+' linha'+(rows.length===1?'':'s')+'. Baixe como Excel (.xlsx) ou copie e cole numa planilha.</p>'
-   +(rows.length?tableOf(head,rows):'<div class="empty">Nenhuma conta com esses filtros.</div>')
-   +'<div class="actions"><button class="btn primary block" data-act="xlsx-export">Baixar Excel (.xlsx)</button><button class="btn block" data-act="copy-export">Copiar para colar no Excel</button>'+(kind==='custom'?'<button class="btn block" data-act="export-abrir">Voltar aos filtros</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>');
+  var cs=S.contas.filter(function(x){return x.clienteId===id}).sort(function(a,b){return a.venc<b.venc?-1:1}),rl=somenteLeitura();
+  sheet('<h2>'+esc(c.nome)+'</h2><p class="sub">'+(c.doc?tipoDoc(c.doc)+' '+fmtDoc(c.doc)+'<br>':'')+esc([c.telefone,c.email].filter(Boolean).join(' · ')||'Sem contato')+'</p>'
+   +(!c.doc&&!rl?'<div class="alerta info">Falta o CPF ou CNPJ. Sem ele, as planilhas não reconhecem este cliente. <button class="btn sm" data-act="editar-cliente" data-id="'+id+'">Completar cadastro</button></div>':'')
+   +(rl?'<p class="leitura">'+esc(MSG_LEITURA)+'</p>':'<div class="actions"><button class="btn primary block" data-act="nova-conta-cli" data-id="'+id+'">Nova conta para este cliente</button><div class="lado"><button class="btn" data-act="editar-cliente" data-id="'+id+'">Editar dados</button>'+(cs.length?'<button class="btn" data-act="editar-xl-cli" data-id="'+id+'">Atualizar pelo Excel</button>':'')+'</div></div>')
+   +'<h3>Contas ('+cs.length+')</h3>'+(cs.length?cs.map(function(x){return contaRow(x,true)}).join(''):'<div class="empty">Sem contas ainda.</div>')
+   +'<div class="actions"><button class="btn block" data-act="close">Fechar</button></div>');
 }
 
 // Só aceita datas que existem: 32/13/2026 ou 30/02/2026 viram null em vez de uma data inventada.
@@ -673,20 +744,26 @@ function str(v){return vazio(v)?'':String(v).trim().replace(/\s+/g,' ')}
 function fmtCel(v){if(v instanceof Date)return isNaN(v)?'':fmtD(iso(new Date(v.getTime()+12*36e5)));if(typeof v==='number')return String(v).replace('.',',');return String(v==null?'':v).trim()}
 var EX_DATA='10/11/2026';
 // Campos do app e os nomes de coluna que cada um reconhece (sem acento, minúsculo).
+// req: sim = obrigatória · novo = para cliente novo · conta = para criar conta · editar = só na planilha para editar.
 var CAMPOS=[
- {k:'nome',rot:'Nome',rotL:'Nome do cliente',req:'sim',ex:'Marina Alves',sin:['nome','cliente','nome do cliente','nome completo','razao social','devedor','pagador'],tem:['nome','cliente']},
+ {k:'doc',rot:'CPF/CNPJ',rotL:'CPF ou CNPJ',req:'sim',ex:'123.456.789-09',dica:'Identifica o cliente. Repita em cada linha do mesmo cliente.',sin:['cpf/cnpj','cpf cnpj','cpf','cnpj','cpf ou cnpj','cpf/cnpj do cliente','documento','doc'],tem:['cpf','cnpj']},
+ {k:'nome',rot:'Nome',rotL:'Nome do cliente',req:'novo',ex:'Marina Alves',sin:['nome','cliente','nome do cliente','nome completo','razao social','devedor','pagador'],tem:['nome','cliente']},
  {k:'telefone',rot:'Telefone',rotL:'Telefone',ex:'(11) 98888-7777',sin:['telefone','celular','whatsapp','fone','tel','contato'],tem:['telefone','fone','celular','whats']},
  {k:'email',rot:'E-mail',rotL:'E-mail',ex:'marina@exemplo.com',sin:['e-mail','email','e mail'],tem:['mail']},
  {k:'descricao',rot:'Descrição',rotL:'Descrição',ex:'Mensalidade',dica:'Se ficar vazia, a conta entra como “Conta”.',sin:['descricao','referencia','servico','produto','historico','detalhe','item'],tem:['descri','referen','servi']},
  {k:'valor',rot:'Valor',rotL:'Valor',req:'conta',ex:'150,00',sin:['valor','total','preco','quantia'],tem:['valor','preco']},
  {k:'venc',rot:'Vencimento',rotL:'Vencimento',req:'conta',ex:EX_DATA,dica:'Dia/mês/ano.',sin:['vencimento','data de vencimento','vence','venc','vencto','data venc'],tem:['venc']},
- {k:'pago',rot:'Pago em',rotL:'Pago em',ex:'05/11/2026',dica:'Só se já foi paga. Vazio = em aberto.',sin:['pago em','data de pagamento','data do pagamento','pagamento','pago','quitado em','data pagamento'],tem:['pago','pagamento','quitad']}];
-var ORDEM_TEM=['venc','valor','pago','email','telefone','descricao','nome'];
+ {k:'pago',rot:'Pago em',rotL:'Pago em',ex:'05/11/2026',dica:'Data do pagamento. Preencher dá baixa; vazio não muda nada.',sin:['pago em','data de pagamento','data do pagamento','pagamento','pago','quitado em','data pagamento'],tem:['pago','pagamento','quitad']},
+ {k:'codigo',rot:'Código da conta',rotL:'Código da conta',req:'editar',ex:'k3f9a2b',dica:'Vem na planilha para editar. Não altere.',sin:['codigo da conta','codigo','cod','id','id da conta'],tem:['codigo']}];
+var ORDEM_TEM=['codigo','doc','venc','valor','pago','email','telefone','descricao','nome'];
+var REQ_TXT={sim:'obrigatória',novo:'cliente novo',conta:'para contas',editar:'para atualizar'};
+function reqTag(c){return c.req?' <em class="obr">'+REQ_TXT[c.req]+'</em>':''}
 function campoK(k){return CAMPOS.filter(function(c){return c.k===k})[0]}
 function normCab(t){return norm(t).replace(/[^a-z0-9 \-]/g,' ').replace(/\s+/g,' ').trim()}
 function campoDoTitulo(t){
   var n=normCab(t);if(!n)return null;
   var c=CAMPOS.filter(function(x){return x.sin.some(function(s){return normCab(s)===n})})[0];if(c)return c.k;
+  if(n.length>40)return null; // frase longa não é título de coluna
   for(var i=0;i<ORDEM_TEM.length;i++){var x=campoK(ORDEM_TEM[i]);if(x.tem.some(function(s){return n.indexOf(s)>-1}))return x.k}
   return null;
 }
@@ -711,8 +788,9 @@ function analisarAba(ws,nome){
 }
 function autoMapa(cols){var m={};cols.forEach(function(c){if(c.campo&&m[c.campo]==null)m[c.campo]=c.j});return m}
 function faltaColuna(m){
-  if(m.nome==null)return 'Não achei a coluna com o nome do cliente. Escolha abaixo qual é.';
-  if((m.valor==null)!==(m.venc==null))return 'Achei a coluna '+(m.valor==null?'do vencimento, mas não a do valor':'do valor, mas não a do vencimento')+'. Escolha abaixo. Para importar só clientes, marque “Não usar” nas duas.';
+  if(m.doc==null&&m.codigo==null)return 'Não achei a coluna de CPF/CNPJ. É ela que diz de qual cliente é cada linha. Escolha abaixo qual é.';
+  if(m.nome==null&&m.codigo==null)return 'Não achei a coluna com o nome do cliente. Escolha abaixo qual é.';
+  if(m.codigo==null&&(m.valor==null)!==(m.venc==null))return 'Achei a coluna '+(m.valor==null?'do vencimento, mas não a do valor':'do valor, mas não a do vencimento')+'. Escolha abaixo. Para importar só clientes, marque “Não usar” nas duas.';
   return '';
 }
 var IMP=null;
@@ -723,9 +801,13 @@ function passos(n){
 function sheetImportar(){
   IMP=null;
   var b=backupInfo(),dica=b.cls!=='paga'?'<div class="alerta info"><b>Dica:</b> faça uma cópia de segurança antes de importar. <button class="btn sm" data-act="export-backup">Fazer cópia agora</button></div>':'';
+  var ex=[['123.456.789-09','Marina Alves','Mensalidade','180,00','10/11/2026'],['123.456.789-09','Marina Alves','Mensalidade','180,00','10/12/2026'],['123.456.789-09','Marina Alves','Taxa extra','75,00','15/12/2026']];
   sheet('<h2>Importar planilha</h2>'+passos(1)
-   +'<p class="sub">A planilha precisa ter os títulos das colunas na primeira linha e uma conta por linha.</p>'
-   +'<ul class="colmod">'+CAMPOS.map(function(c){return '<li><span><b>'+c.rotL+'</b>'+(c.req==='sim'?' <em class="obr">obrigatória</em>':(c.req==='conta'?' <em class="obr">para contas</em>':''))+(c.dica?'<small>'+c.dica+'</small>':'')+'</span><span class="ex">'+esc(c.ex)+'</span></li>'}).join('')+'</ul>'
+   +'<p class="sub">Cada linha da planilha é uma conta, e o CPF/CNPJ diz de quem ela é: um cliente com 8 contas ocupa 8 linhas com o mesmo CPF/CNPJ. Antes de gravar, você confere tudo.</p>'
+   +'<details class="ajuda"><summary>Um cliente com várias contas</summary><p>Repita o CPF/CNPJ (e o nome) em cada linha. Três linhas com o mesmo CPF viram 1 cliente com 3 contas:</p>'+tableOf(['CPF/CNPJ','Nome','Descrição','Valor','Vencimento'],ex)+'</details>'
+   +'<details class="ajuda"><summary>Atualizar contas que já existem</summary><ol class="mini-passos"><li>Baixe a planilha para editar. Ela tem o código de cada conta.</li><li>No Excel, mude o valor, o vencimento, a descrição ou o “Pago em”. Não mexa no código.</li><li>Envie a planilha aqui. Você vê o antes e o depois de cada mudança.</li></ol><button class="btn sm" data-act="editar-xl">Baixar planilha para editar</button></details>'
+   +'<details class="ajuda"><summary>Só cadastrar clientes, sem contas</summary><p>Preencha CPF/CNPJ, nome e contato, e deixe valor e vencimento vazios.</p></details>'
+   +'<h3>Colunas da planilha</h3><ul class="colmod">'+CAMPOS.map(function(c){return '<li><span><b>'+c.rotL+'</b>'+reqTag(c)+(c.dica?'<small>'+c.dica+'</small>':'')+'</span><span class="ex">'+esc(c.ex)+'</span></li>'}).join('')+'</ul>'
    +'<p class="hint">Os títulos podem variar: “Cliente” em vez de “Nome”, “Data de vencimento” em vez de “Vencimento”. Se o app não reconhecer alguma coluna, você escolhe no passo seguinte. Aceita Excel (.xlsx, .xls) e CSV.</p>'
    +dica
    +'<div class="actions fixo"><button class="btn primary block" data-act="pick-xl">Escolher arquivo</button><button class="btn block" data-act="import-modelo">Baixar planilha modelo</button><button class="btn block quiet" data-act="import-sample">Testar com a planilha de exemplo</button></div>');
@@ -771,8 +853,8 @@ function lerArquivo(file){
 }
 function abrirPlanilha(wb,arquivo){
   var abas=wb.SheetNames.map(function(n){return analisarAba(wb.Sheets[n],n)}).filter(function(a){return a.cab>-1});
-  if(!abas.length)return erroArquivo(arquivo,'Não achei os títulos das colunas','A primeira linha da planilha precisa ter os nomes das colunas, como Nome, Valor e Vencimento. Baixe a planilha modelo para ver como fica.',true);
-  abas.sort(function(a,b){return (b.linhas.length>0)-(a.linhas.length>0)||b.score-a.score});
+  if(!abas.length)return erroArquivo(arquivo,'Não achei os títulos das colunas','A primeira linha da planilha precisa ter os nomes das colunas, como CPF/CNPJ, Nome, Valor e Vencimento. Baixe a planilha modelo para ver como fica.',true);
+  abas.sort(function(a,b){return b.score-a.score||(b.linhas.length>0)-(a.linhas.length>0)});
   IMP={arquivo:arquivo,abas:abas,aba:0,map:autoMapa(abas[0].cols),totalAbas:wb.SheetNames.length};
   seguirImport();
 }
@@ -789,7 +871,7 @@ function sheetColunas(){
   if(IMP.abas.length>1)h+='<div class="field"><label for="map-aba">Aba da planilha</label><select id="map-aba">'+IMP.abas.map(function(a,i){return '<option value="'+i+'"'+(i===IMP.aba?' selected':'')+'>'+esc(a.nome)+' ('+a.linhas.length+' linha'+(a.linhas.length===1?'':'s')+')</option>'}).join('')+'</select></div>';
   h+='<p class="hint">Títulos na linha '+A.linhaCab+' · '+A.linhas.length+' linha'+(A.linhas.length===1?'':'s')+' com dados.</p>';
   CAMPOS.forEach(function(c){
-    h+='<div class="field"><label for="map-'+c.k+'">'+c.rotL+(c.req==='sim'?' <em class="obr">obrigatória</em>':(c.req==='conta'?' <em class="obr">para contas</em>':''))+'</label><select id="map-'+c.k+'"><option value="">Não usar</option>'
+    h+='<div class="field"><label for="map-'+c.k+'">'+c.rotL+reqTag(c)+'</label><select id="map-'+c.k+'"><option value="">Não usar</option>'
      +A.cols.map(function(x){return '<option value="'+x.j+'"'+(m[c.k]===x.j?' selected':'')+'>'+x.letra+' · '+esc(x.titulo||'(sem título)')+(x.ex?' — ex.: '+esc(x.ex.slice(0,24)):'')+'</option>'}).join('')+'</select></div>';
   });
   var usados={};CAMPOS.forEach(function(c){if(m[c.k]!=null)usados[m[c.k]]=1});
@@ -806,77 +888,124 @@ function confirmarColunas(){
     if(visto[v]){fieldError('map-'+c.k,'Essa coluna já está em “'+visto[v]+'”. Escolha outra ou “Não usar”.');return}
     visto[v]=c.rotL;m[c.k]=+v;
   }
-  if(m.nome==null){fieldError('map-nome','Escolha a coluna com o nome do cliente');return}
-  if(m.valor==null&&m.venc!=null){fieldError('map-valor','Para importar contas, escolha também a coluna do valor');return}
-  if(m.venc==null&&m.valor!=null){fieldError('map-venc','Para importar contas, escolha também a coluna do vencimento');return}
+  if(m.doc==null&&m.codigo==null){fieldError('map-doc','Escolha a coluna com o CPF ou CNPJ do cliente');return}
+  if(m.nome==null&&m.codigo==null){fieldError('map-nome','Escolha a coluna com o nome do cliente');return}
+  if(m.codigo==null&&m.valor==null&&m.venc!=null){fieldError('map-valor','Para importar contas, escolha também a coluna do valor');return}
+  if(m.codigo==null&&m.venc==null&&m.valor!=null){fieldError('map-venc','Para importar contas, escolha também a coluna do vencimento');return}
   IMP.map=m;IMP.ajustado=true;gerarPrevia();
 }
 function linhasDoMapa(){
   var A=IMP.abas[IMP.aba],m=IMP.map,letra={};A.cols.forEach(function(x){letra[x.j]=x.letra});
   return A.linhas.map(function(L){var g={},ref={};CAMPOS.forEach(function(c){if(m[c.k]!=null){g[c.k]=L.v[m[c.k]];ref[c.k]=letra[m[c.k]]+L.linha}});return {linha:L.linha,g:g,ref:ref,bruto:L.v}});
 }
-function gerarPrevia(){IMP.plano=planejarImport(linhasDoMapa(),IMP.arquivo,IMP.map.valor==null);sheetImport(IMP.plano)}
+function gerarPrevia(){IMP.plano=planejarImport(linhasDoMapa(),IMP.arquivo,IMP.map.valor==null&&IMP.map.venc==null&&IMP.map.pago==null);sheetImport(IMP.plano)}
+// Monta o plano da importação sem gravar nada.
+// Linha com "Código da conta" atualiza aquela conta. Sem código, o CPF/CNPJ acha (ou cria) o cliente,
+// e a conta é achada por cliente + descrição + vencimento (assim reimportar não duplica).
 function planejarImport(linhas,arquivo,soClientes){
-  var plano={arquivo:arquivo,soClientes:!!soClientes,clientesNovos:[],clientesAtualizados:[],contasNovas:[],contasAtualizadas:[],semMudanca:[],erros:[],avisos:[]};
-  var porNome={},novos={},vistas={};
-  S.clientes.forEach(function(c){porNome[norm(c.nome)]=c});
+  var pl={arquivo:arquivo,soClientes:!!soClientes,clientesNovos:[],clientesAtualizados:[],contasNovas:[],contasAtualizadas:[],semMudanca:[],erros:[],avisos:[],grupos:[]};
+  var porDoc={},semDoc={},novos={},vistas={},vistosCod={},G={},cliAt={};
+  S.clientes.forEach(function(c){if(c.doc)porDoc[c.doc]=c;else semDoc[norm(c.nome)]=c});
+  var grupo=function(cl,novo){var g=G[cl.id];if(!g){g=G[cl.id]={cliente:cl,novo:!!novo,mudCliente:[],contasNovas:[],contasMud:[]};pl.grupos.push(g)}return g};
+  var mudarCliente=function(cl,campo,rot,v,deTxt,paraTxt){
+    if(vazio(v))return;var atual=cl[campo]||'';
+    if(String(v)===String(atual)||(campo==='nome'&&norm(v)===norm(atual)))return;
+    var at=cliAt[cl.id];if(at&&at.mud.some(function(m){return m.campo===campo}))return;
+    if(!at){at=cliAt[cl.id]={cliente:cl,mud:[]};pl.clientesAtualizados.push(at)}
+    var m={campo:campo,rot:rot,de:deTxt||atual||'(vazio)',para:paraTxt||v,v:v};at.mud.push(m);grupo(cl).mudCliente.push(m);
+  };
+  var baixaMud=function(ct,pg){return {campo:'pagoEm',rot:'Baixa',de:ct.pagoEm?'paga em '+fmtD(ct.pagoEm):'em aberto',para:'paga em '+fmtD(pg),v:pg}};
   linhas.forEach(function(L){
     var g=L.g,probs=[],avs=[];
     var P=function(lista,k,txt){lista.push({col:campoK(k).rot,ref:L.ref[k]||'',txt:txt})};
-    var nome=str(g.nome),tel=str(g.telefone),mail=str(g.email);
-    var tv=!vazio(g.valor),tvc=!vazio(g.venc),tp=!vazio(g.pago),temConta=!soClientes&&(tv||tvc||tp);
-    var val=null,venc=null,pg=null;
-    if(!nome)P(probs,'nome','está vazio. Preencha o nome do cliente.');
-    if(temConta){
-      if(!tv)P(probs,'valor','está vazio. Preencha o valor, por exemplo 150,00.');
-      else{val=parseMoney(g.valor);if(val==null)P(probs,'valor','“'+fmtCel(g.valor)+'” não é um valor. Use só números, por exemplo 150,00.');else if(val<=0)P(probs,'valor','“'+fmtCel(g.valor)+'” precisa ser maior que zero.')}
-      if(!tvc)P(probs,'venc','está vazio. Preencha a data, por exemplo '+EX_DATA+'.');
-      else{venc=parseDate(g.venc);if(!venc)P(probs,'venc','“'+fmtCel(g.venc)+'” não é uma data válida. Use dia/mês/ano, por exemplo '+EX_DATA+'.')}
-      if(tp){pg=parseDate(g.pago);if(!pg)P(probs,'pago','“'+fmtCel(g.pago)+'” não é uma data válida. Use dia/mês/ano ou deixe vazio se não foi paga.');else if(pg>today)P(probs,'pago',fmtD(pg)+' é depois de hoje. Se ainda não foi paga, deixe vazio.')}
-    }
-    if(probs.length){plano.erros.push({linha:L.linha,nome:nome,problemas:probs,bruto:L.bruto});return}
-    if(mail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){P(avs,'email','“'+mail+'” não parece um e-mail. O cliente entra sem e-mail.');mail=''}
+    var nome=str(g.nome),tel=str(g.telefone),mail=str(g.email),cod=str(g.codigo),dr=vazio(g.doc)?null:lerDoc(g.doc);
+    var tv=!vazio(g.valor),tvc=!vazio(g.venc),tp=!vazio(g.pago),val=null,venc=null,pg=null;
+    var lerValor=function(){val=parseMoney(g.valor);if(val==null)P(probs,'valor','“'+fmtCel(g.valor)+'” não é um valor. Use só números, por exemplo 150,00.');else if(val<=0)P(probs,'valor','“'+fmtCel(g.valor)+'” precisa ser maior que zero.')};
+    var lerVenc=function(){venc=parseDate(g.venc);if(!venc)P(probs,'venc','“'+fmtCel(g.venc)+'” não é uma data válida. Use dia/mês/ano, por exemplo '+EX_DATA+'.')};
+    var lerPago=function(){pg=parseDate(g.pago);if(!pg)P(probs,'pago','“'+fmtCel(g.pago)+'” não é uma data válida. Use dia/mês/ano ou deixe vazio se não foi paga.');else if(pg>today)P(probs,'pago',fmtD(pg)+' é depois de hoje. Se ainda não foi paga, deixe vazio.')};
+    if(dr&&!dr.ok)P(probs,'doc','“'+dr.raw+'” não é um CPF nem um CNPJ válido. Confira os números: CPF tem 11, CNPJ tem 14.');
+    if(dr&&dr.zeros)P(avs,'doc','o Excel tirou o zero da frente (“'+dr.raw+'”). Usamos '+fmtDoc(dr.d)+'. Para não acontecer de novo, formate a coluna como Texto.');
+    if(mail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){P(avs,'email','“'+mail+'” não parece um e-mail. O cliente fica sem esse e-mail.');mail=''}
     if(tel&&tel.replace(/\D/g,'').length<8)P(avs,'telefone','“'+tel+'” tem poucos dígitos. Entra assim mesmo; confira depois.');
-    var k=norm(nome),cl=porNome[k],nv=novos[k],desc=str(g.descricao)||'Conta',chave=k+'|'+norm(desc)+'|'+venc;
-    if(temConta&&vistas[chave]){plano.erros.push({linha:L.linha,nome:nome,problemas:[{col:null,ref:'',txt:'Conta repetida: igual à linha '+vistas[chave]+' (mesmo cliente, descrição e vencimento). Apague uma das duas.'}],bruto:L.bruto});return}
-    if(avs.length)plano.avisos.push({linha:L.linha,nome:nome,problemas:avs});
-    if(!cl&&!nv){nv=novos[k]={id:uid(),nome:nome,telefone:tel,email:mail,obs:''};plano.clientesNovos.push(nv)}
+    var fimErro=function(nm){pl.erros.push({linha:L.linha,nome:nm||nome,problemas:probs,bruto:L.bruto})};
+    // 1) Linha com código: atualiza a conta que já existe.
+    var ct=cod?S.contas.find(function(c){return c.id===cod}):null;
+    // Código que não existe no app (ex.: restaurar a cópia num celular novo): com CPF/CNPJ, a conta é criada com o mesmo código.
+    if(cod&&!ct&&!(dr&&dr.ok)){P(probs,'codigo','“'+cod+'” não existe no app e a linha não tem CPF/CNPJ para criar a conta. Se é uma conta nova, apague o código e preencha o CPF/CNPJ.');return fimErro()}
+    if(ct){
+      var dono=cli(ct.clienteId);
+      if(vistosCod[cod])probs.push({col:null,ref:'',txt:'Código repetido: esta conta já está na linha '+vistosCod[cod]+'. Deixe só uma.'});
+      if(ct&&dr&&dr.ok&&dono.doc&&dono.doc!==dr.d)P(probs,'doc','não é do dono desta conta. A conta '+cod+' é de '+dono.nome+' ('+fmtDoc(dono.doc)+'). Para trocar o cliente de uma conta, use o app.');
+      if(tv)lerValor();if(tvc)lerVenc();if(tp)lerPago();
+      if(probs.length)return fimErro(dono&&dono.nome);
+      vistosCod[cod]=L.linha;
+      if(avs.length)pl.avisos.push({linha:L.linha,nome:dono.nome,problemas:avs});
+      if(dr&&dr.ok&&!dono.doc&&!porDoc[dr.d]){mudarCliente(dono,'doc','CPF/CNPJ',dr.d,'(vazio)',fmtDoc(dr.d));porDoc[dr.d]=dono}
+      mudarCliente(dono,'nome','Nome',nome);mudarCliente(dono,'telefone','Telefone',tel);mudarCliente(dono,'email','E-mail',mail);
+      var mud=[],dsc=str(g.descricao);
+      if(dsc&&dsc!==ct.descricao)mud.push({campo:'descricao',rot:'Descrição',de:ct.descricao,para:dsc,v:dsc});
+      if(val!=null&&Math.abs(ct.valor-val)>0.004)mud.push({campo:'valor',rot:'Valor',de:brl.format(ct.valor),para:brl.format(val),v:val});
+      if(venc&&venc!==ct.venc)mud.push({campo:'venc',rot:'Vencimento',de:fmtD(ct.venc),para:fmtD(venc),v:venc});
+      if(pg&&pg!==ct.pagoEm)mud.push(baixaMud(ct,pg));
+      if(mud.length){pl.contasAtualizadas.push({conta:ct,mud:mud});grupo(dono).contasMud.push({conta:ct,mud:mud})}else pl.semMudanca.push(ct);
+      return;
+    }
+    // 2) Sem código: o CPF/CNPJ diz quem é o cliente.
+    var cl=null,nv=null,legado=false;
+    if(!dr){var lg=nome&&semDoc[norm(nome)];if(lg){cl=lg;legado=true}else P(probs,'doc','está vazio. Cada cliente precisa do CPF ou do CNPJ: é assim que o app reconhece quem é quem.')}
+    else if(dr.ok){cl=porDoc[dr.d]||null;nv=novos[dr.d]||null;if(!cl&&!nv&&nome&&semDoc[norm(nome)])cl=semDoc[norm(nome)]}
+    if(dr&&dr.ok&&!cl&&!nv&&!nome)P(probs,'nome','está vazio. Cliente novo precisa de nome.');
+    var temConta=!soClientes&&(tv||tvc||tp);
+    if(temConta){if(!tv)P(probs,'valor','está vazio. Preencha o valor, por exemplo 150,00.');else lerValor();if(!tvc)P(probs,'venc','está vazio. Preencha a data, por exemplo '+EX_DATA+'.');else lerVenc();if(tp)lerPago()}
+    if(probs.length)return fimErro();
+    var docN=dr&&dr.ok?dr.d:'',desc=str(g.descricao)||'Conta',chave=(docN||'n:'+norm(nome))+'|'+norm(desc)+'|'+venc;
+    if(temConta&&vistas[chave]){probs.push({col:null,ref:'',txt:'Conta repetida: igual à linha '+vistas[chave]+' (mesmo cliente, descrição e vencimento). Apague uma das duas.'});return fimErro()}
+    if(legado)P(avs,'doc','está vazio. Achamos “'+cl.nome+'” pelo nome. Complete o CPF/CNPJ no cadastro para não depender do nome.');
+    if(cl&&nome&&norm(nome)!==norm(cl.nome))P(avs,'nome','este '+tipoDoc(docN)+' é de “'+cl.nome+'” no app. Se você atualizar, o nome muda para “'+nome+'”. Confira se o número está certo.');
+    if(avs.length)pl.avisos.push({linha:L.linha,nome:nome||(cl&&cl.nome)||'',problemas:avs});
+    if(!cl&&!nv){nv=novos[docN]={id:uid(),nome:nome,doc:docN,telefone:tel,email:mail,obs:''};pl.clientesNovos.push(nv);grupo(nv,true)}
     else if(nv){if(tel&&!nv.telefone)nv.telefone=tel;if(mail&&!nv.email)nv.email=mail}
     else{
-      var at=plano.clientesAtualizados.find(function(x){return x.cliente===cl});
-      [['telefone','Telefone',tel],['email','E-mail',mail]].forEach(function(f){
-        if(!f[2]||f[2]===(cl[f[0]]||'')||(at&&at.mud.some(function(m){return m.campo===f[0]})))return;
-        if(!at){at={cliente:cl,mud:[]};plano.clientesAtualizados.push(at)}
-        at.mud.push({campo:f[0],rot:f[1],de:cl[f[0]]||'(vazio)',para:f[2],v:f[2]});
-      });
+      if(docN&&!cl.doc){mudarCliente(cl,'doc','CPF/CNPJ',docN,'(vazio)',fmtDoc(docN));porDoc[docN]=cl}
+      mudarCliente(cl,'nome','Nome',nome);mudarCliente(cl,'telefone','Telefone',tel);mudarCliente(cl,'email','E-mail',mail);
     }
     if(!temConta)return;
     vistas[chave]=L.linha;
-    var ex=cl&&S.contas.find(function(c){return c.clienteId===cl.id&&norm(c.descricao)===norm(desc)&&c.venc===venc});
-    if(!ex){plano.contasNovas.push({cliente:cl||nv,descricao:desc,valor:val,venc:venc,pagoEm:pg});return}
-    var mud=[];
-    if(Math.abs(ex.valor-val)>0.004)mud.push({campo:'valor',rot:'Valor',de:brl.format(ex.valor),para:brl.format(val),v:val});
-    if(pg&&pg!==ex.pagoEm)mud.push({campo:'pagoEm',rot:'Baixa',de:ex.pagoEm?'paga em '+fmtD(ex.pagoEm):'em aberto',para:'paga em '+fmtD(pg),v:pg});
-    if(mud.length)plano.contasAtualizadas.push({conta:ex,mud:mud});else plano.semMudanca.push(ex);
+    var dn=cl||nv,ex=cl&&S.contas.find(function(c){return c.clienteId===cl.id&&norm(c.descricao)===norm(desc)&&c.venc===venc});
+    if(!ex){var cn={cliente:dn,descricao:desc,valor:val,venc:venc,pagoEm:pg,id:cod&&!vistosCod[cod]?cod:null};if(cod)vistosCod[cod]=L.linha;pl.contasNovas.push(cn);grupo(dn,!cl).contasNovas.push(cn);return}
+    var md=[];
+    if(Math.abs(ex.valor-val)>0.004)md.push({campo:'valor',rot:'Valor',de:brl.format(ex.valor),para:brl.format(val),v:val});
+    if(pg&&pg!==ex.pagoEm)md.push(baixaMud(ex,pg));
+    if(md.length){pl.contasAtualizadas.push({conta:ex,mud:md});grupo(cl).contasMud.push({conta:ex,mud:md})}else pl.semMudanca.push(ex);
   });
-  return plano;
+  return pl;
 }
-// Transforma o plano em itens de texto: os mesmos na prévia e no histórico.
-function itensDoPlano(pl,atualizar){
-  var it=[],cn=function(c){return cli(c.clienteId).nome+' · '+c.descricao+' · vence '+fmtD(c.venc)};
+// Transforma o plano em itens de texto, agrupados por cliente: os mesmos na prévia e no histórico.
+function itensDoPlano(pl,novos,atualizar){
+  var it=[],dc=function(c){return c.doc?' · '+fmtDoc(c.doc):''};
   var pb=function(x){return x.problemas.map(function(p){return ['!',p.col?p.col+(p.ref?' ('+p.ref+')':'')+':':'',p.txt]})};
-  if(atualizar){
-    pl.clientesAtualizados.forEach(function(x){it.push({tipo:'atualizado',titulo:x.cliente.nome,linhas:x.mud.map(function(m){return [m.rot,m.de,m.para]})})});
-    pl.contasAtualizadas.forEach(function(x){it.push({tipo:'atualizado',titulo:cn(x.conta),linhas:x.mud.map(function(m){return [m.rot,m.de,m.para]})})});
-  }
-  pl.clientesNovos.forEach(function(c){it.push({tipo:'novo',titulo:'Cliente: '+c.nome,linhas:[[null,[c.telefone,c.email].filter(Boolean).join(' · ')||'sem contato']]})});
-  pl.contasNovas.forEach(function(c){it.push({tipo:'novo',titulo:'Conta: '+c.cliente.nome+' · '+c.descricao,linhas:[[null,brl.format(c.valor)+' · vence '+fmtD(c.venc)+(c.pagoEm?' · paga em '+fmtD(c.pagoEm):'')]]})});
+  (pl.grupos||[]).forEach(function(g){
+    var cl=g.cliente;
+    if(atualizar&&(g.mudCliente.length||g.contasMud.length)){
+      var l=g.mudCliente.map(function(m){return [m.rot,m.de,m.para]});
+      g.contasMud.forEach(function(x){l.push(['#','Conta: '+x.conta.descricao+' · vence '+fmtD(x.conta.venc)]);x.mud.forEach(function(m){l.push([m.rot,m.de,m.para])})});
+      it.push({tipo:'atualizado',titulo:cl.nome+dc(cl),linhas:l});
+    }
+    if(novos&&(g.novo||g.contasNovas.length)){
+      var l2=[];
+      if(g.novo)l2.push([null,'Cliente novo · '+([cl.telefone,cl.email].filter(Boolean).join(' · ')||'sem contato')]);
+      if(g.contasNovas.length)l2.push([null,g.contasNovas.length+(g.contasNovas.length>1?' contas novas:':' conta nova:')]);
+      g.contasNovas.forEach(function(c){l2.push([null,'+ '+c.descricao+' · '+brl.format(c.valor)+' · vence '+fmtD(c.venc)+(c.pagoEm?' · paga em '+fmtD(c.pagoEm):'')])});
+      it.push({tipo:'novo',titulo:(g.novo?'Cliente novo: ':'')+cl.nome+dc(cl),linhas:l2});
+    }
+  });
   pl.erros.forEach(function(e){it.push({tipo:'erro',titulo:'Linha '+e.linha+(e.nome?' · '+e.nome:''),linhas:pb(e)})});
-  (pl.avisos||[]).forEach(function(e){it.push({tipo:'aviso',titulo:'Linha '+e.linha+' · '+e.nome,linhas:pb(e)})});
+  (pl.avisos||[]).forEach(function(e){it.push({tipo:'aviso',titulo:'Linha '+e.linha+(e.nome?' · '+e.nome:''),linhas:pb(e)})});
   return it;
 }
 function itemHtml(x){
   return '<li class="imp-it '+x.tipo+'"><strong>'+esc(x.titulo)+'</strong>'+x.linhas.map(function(z){
+    if(z[0]==='#')return '<span class="it-sub">'+esc(z[1])+'</span>';
     if(z[0]==='!')return '<span>'+(z[1]?'<b>'+esc(z[1])+'</b> ':'')+esc(z[2])+'</span>';
     return z[0]===null?'<span>'+esc(z[1])+'</span>':'<span>'+esc(z[0])+': <del>'+esc(z[1])+'</del> <span aria-hidden="true">→</span><span class="sr"> para </span> <ins>'+esc(z[2])+'</ins></span>';
   }).join('')+'</li>';
@@ -888,7 +1017,34 @@ function itensHtml(itens,tipo){
   if(l.length>max)h+='<details class="imp-iguais"><summary>Mostrar mais '+(l.length-max)+'</summary><ul class="imp-lista">'+l.slice(max).map(itemHtml).join('')+'</ul></details>';
   return h;
 }
-function totalMudancas(pl,atualizar){return pl.clientesNovos.length+pl.contasNovas.length+(atualizar?pl.clientesAtualizados.length+pl.contasAtualizadas.length:0)}
+// Texto do botão: diz o que vai ser gravado ("1 cliente e 8 contas", "5 atualizações").
+function textoMudancas(pl,novos,atualizar){
+  var p=[],c=novos?pl.clientesNovos.length:0,k=novos?pl.contasNovas.length:0,a=atualizar?pl.clientesAtualizados.length+pl.contasAtualizadas.length:0;
+  if(c)p.push(c+' cliente'+(c>1?'s':''));if(k)p.push(k+' conta'+(k>1?'s':''));if(a)p.push(a+' atualizaç'+(a>1?'ões':'ão'));
+  return p.length>1?p.slice(0,-1).join(', ')+' e '+p[p.length-1]:p[0]||'';
+}
+function totalMudancas(pl,novos,atualizar){return (novos?pl.clientesNovos.length+pl.contasNovas.length:0)+(atualizar?pl.clientesAtualizados.length+pl.contasAtualizadas.length:0)}
+function sheetImport(pl){
+  var nAt=pl.clientesAtualizados.length+pl.contasAtualizadas.length,nNv=pl.clientesNovos.length+pl.contasNovas.length,itens=itensDoPlano(pl,true,true),ne=pl.erros.length;
+  var res=[['Clientes novos',pl.clientesNovos.length],['Contas novas',pl.contasNovas.length],['Atualizações',nAt],['Sem mudança',pl.semMudanca.length],['Com problema',ne]];
+  var h='<h2>Prévia da importação</h2>'+passos(3)+'<p class="sub">'+esc(pl.arquivo)+'. Nada muda até você confirmar.</p>'
+   +'<ul class="imp-res">'+res.map(function(x){return '<li'+(x[0]==='Com problema'&&x[1]?' class="bad"':'')+'><b>'+x[1]+'</b><span>'+x[0]+'</span></li>'}).join('')+'</ul>';
+  if(ne)h+='<div class="alerta" role="alert"><b>'+ne+' linha'+(ne>1?'s':'')+' com problema '+(ne>1?'ficam':'fica')+' de fora.</b> Você pode importar o resto agora e corrigir essas depois.<div class="alerta-bt"><button class="btn sm" data-act="imp-ver-prob">Ver problemas</button><button class="btn sm" data-act="imp-erros">Baixar linhas com problema</button></div></div>';
+  h+=colunasHtml();
+  if(pl.soClientes)h+='<div class="alerta info">A planilha não tem colunas de valor e vencimento: só os clientes serão importados.</div>';
+  if(nAt)h+='<h3>O que vai mudar</h3><p class="hint">Dados que já existem no app e estão diferentes na planilha, por cliente. Riscado é como está; em negrito é como vai ficar.</p>'+itensHtml(itens,'atualizado')
+   +'<label class="toggle"><input type="checkbox" id="imp-atualizar" checked> Atualizar estes dados</label>';
+  if(nNv)h+='<h3>O que vai entrar</h3><p class="hint">Por cliente.</p>'+itensHtml(itens,'novo')
+   +(nAt?'<label class="toggle"><input type="checkbox" id="imp-novos" checked> Cadastrar o que é novo</label>':'');
+  if(ne)h+='<h3 id="imp-prob" tabindex="-1">Linhas com problema</h3><p class="hint">Não serão importadas. Corrija na planilha e importe de novo: o que já entrou não se repete.</p>'+itensHtml(itens,'erro');
+  if(pl.avisos.length)h+='<h3>Para conferir</h3><p class="hint">Estas linhas entram, mas vale olhar.</p>'+itensHtml(itens,'aviso');
+  if(pl.semMudanca.length)h+='<details class="imp-iguais"><summary>'+pl.semMudanca.length+' conta'+(pl.semMudanca.length>1?'s já estão iguais':' já está igual')+' no app</summary><ul class="imp-lista">'+pl.semMudanca.map(function(c){return '<li class="imp-it"><span>'+esc(cli(c.clienteId).nome+' · '+c.descricao+' · vence '+fmtD(c.venc))+'</span></li>'}).join('')+'</ul></details>';
+  h+='<div class="actions fixo"><button class="btn primary block" data-act="import-confirm"></button><button class="btn block" data-act="close">Cancelar</button></div>';
+  sheet(h);
+  var ca=$('imp-atualizar'),cn=$('imp-novos'),bt=document.querySelector('[data-act=import-confirm]');
+  var conta=function(){var nv=!cn||cn.checked,at=!ca||ca.checked,n=totalMudancas(pl,nv,at);bt.textContent=n?'Importar '+textoMudancas(pl,nv,at):'Nada para importar';bt.disabled=!n};
+  if(ca)ca.addEventListener('change',conta);if(cn)cn.addEventListener('change',conta);conta();
+}
 function resumoImport(r){
   var p=[];
   if(r.clientesNovos)p.push(r.clientesNovos+' cliente'+(r.clientesNovos>1?'s novos':' novo'));
@@ -903,27 +1059,6 @@ function colunasHtml(){
   var usadas=CAMPOS.filter(function(c){return m[c.k]!=null}).map(function(c){return c.rot+' ('+letra[m[c.k]]+')'});
   return '<div class="imp-cols"><span>'+(IMP.totalAbas>1?'Aba “'+esc(A.nome)+'” · ':'')+'Títulos na linha '+A.linhaCab+'. Colunas usadas: '+esc(usadas.join(', '))+'.</span><button class="btn sm" data-act="imp-colunas">Ajustar colunas</button></div>';
 }
-function sheetImport(pl){
-  var nAt=pl.clientesAtualizados.length+pl.contasAtualizadas.length,itens=itensDoPlano(pl,true),ne=pl.erros.length;
-  var res=[['Clientes novos',pl.clientesNovos.length],['Contas novas',pl.contasNovas.length],['Atualizações',nAt],['Sem mudança',pl.semMudanca.length],['Com problema',ne]];
-  var h='<h2>Prévia da importação</h2>'+passos(3)+'<p class="sub">'+esc(pl.arquivo)+'. Nada muda até você confirmar.</p>'
-   +'<ul class="imp-res">'+res.map(function(x){return '<li'+(x[0]==='Com problema'&&x[1]?' class="bad"':'')+'><b>'+x[1]+'</b><span>'+x[0]+'</span></li>'}).join('')+'</ul>'
-   ;
-  if(ne)h+='<div class="alerta" role="alert"><b>'+ne+' linha'+(ne>1?'s':'')+' com problema '+(ne>1?'ficam':'fica')+' de fora.</b> Você pode importar o resto agora e corrigir essas depois.<div class="alerta-bt"><button class="btn sm" data-act="imp-ver-prob">Ver problemas</button><button class="btn sm" data-act="imp-erros">Baixar linhas com problema</button></div></div>';
-  h+=colunasHtml();
-  if(pl.soClientes)h+='<div class="alerta info">A planilha não tem colunas de valor e vencimento: só os clientes serão importados.</div>';
-  if(nAt)h+='<h3>O que vai mudar</h3><p class="hint">Dados que já existem no app e estão diferentes na planilha.</p>'+itensHtml(itens,'atualizado')
-   +'<label class="toggle"><input type="checkbox" id="imp-atualizar" checked> Atualizar estes dados</label>';
-  if(pl.clientesNovos.length+pl.contasNovas.length)h+='<h3>O que vai entrar</h3>'+itensHtml(itens,'novo');
-  if(ne)h+='<h3 id="imp-prob" tabindex="-1">Linhas com problema</h3><p class="hint">Não serão importadas. Corrija na planilha e importe de novo: o que já entrou não se repete.</p>'+itensHtml(itens,'erro');
-  if(pl.avisos.length)h+='<h3>Para conferir</h3><p class="hint">Estas linhas entram, mas vale olhar.</p>'+itensHtml(itens,'aviso');
-  if(pl.semMudanca.length)h+='<details class="imp-iguais"><summary>'+pl.semMudanca.length+' conta'+(pl.semMudanca.length>1?'s já estão iguais':' já está igual')+' no app</summary><ul class="imp-lista">'+pl.semMudanca.map(function(c){return '<li class="imp-it"><span>'+esc(cli(c.clienteId).nome+' · '+c.descricao+' · vence '+fmtD(c.venc))+'</span></li>'}).join('')+'</ul></details>';
-  h+='<div class="actions fixo"><button class="btn primary block" data-act="import-confirm"></button><button class="btn block" data-act="close">Cancelar</button></div>';
-  sheet(h);
-  var cb=$('imp-atualizar'),bt=document.querySelector('[data-act=import-confirm]');
-  var conta=function(){var n=totalMudancas(pl,!cb||cb.checked);bt.textContent=n?'Importar '+n+' mudança'+(n>1?'s':''):'Nada para importar';bt.disabled=!n};
-  if(cb)cb.addEventListener('change',conta);conta();
-}
 // Planilha com as linhas que ficaram de fora: as mesmas colunas do arquivo e uma coluna "Problema".
 function baixarErros(){
   if(!IMP||!IMP.plano||!IMP.plano.erros.length)return;
@@ -933,26 +1068,28 @@ function baixarErros(){
   baixarXlsx('linhas-com-problema-'+(slug(IMP.arquivo.replace(/\.[^.]+$/,''))||'planilha'),[{nome:'Com problema',aoa:aoa}]);
 }
 function baixarModelo(){
-  var tit=['Nome','Telefone','E-mail','Descrição','Valor','Vencimento','Pago em'];
-  baixarXlsx('modelo-importacao-celsopix',[{nome:'Contas',aoa:[tit]},{nome:'Como preencher',aoa:[['Coluna','Precisa?','O que colocar']].concat(CAMPOS.map(function(c){return [c.rotL,c.req==='sim'?'Sim':(c.req==='conta'?'Sim, para criar conta':'Não'),'Exemplo: '+c.ex+(c.dica?'. '+c.dica:'')]}))}],null,true);
+  var tit=['CPF/CNPJ','Nome','Telefone','E-mail','Descrição','Valor','Vencimento','Pago em'];
+  var como=[['Coluna','Precisa?','O que colocar']].concat(CAMPOS.filter(function(c){return c.k!=='codigo'}).map(function(c){return [c.rotL,{sim:'Sim',novo:'Sim, para cliente novo',conta:'Sim, para criar conta'}[c.req]||'Não','Exemplo: '+c.ex+(c.dica?'. '+c.dica:'')]}))
+    .concat([[''],['Cada linha é uma conta. Um cliente com várias contas ocupa várias linhas com o mesmo CPF/CNPJ.'],['Para mudar contas que já existem, use no app: Planilha › Baixar planilha para editar.']]);
+  baixarXlsx('modelo-importacao-celsopix',[{nome:'Contas',aoa:[tit]},{nome:'Como preencher',aoa:como}],null,true);
 }
 function aplicarImport(){
   if(somenteLeitura()){toast(MSG_LEITURA);return}
   var pl=IMP&&IMP.plano;if(!pl)return;
-  var cb=$('imp-atualizar'),atualizar=!cb||cb.checked,n=totalMudancas(pl,atualizar);
-  var itens=itensDoPlano(pl,atualizar),dz={clientes:[],contas:[],campos:[]};
-  pl.clientesNovos.forEach(function(c){S.clientes.push(c);dz.clientes.push(c.id)});
+  var ca=$('imp-atualizar'),cn=$('imp-novos'),atualizar=!ca||ca.checked,novos=!cn||cn.checked,n=totalMudancas(pl,novos,atualizar);
+  var itens=itensDoPlano(pl,novos,atualizar),dz={clientes:[],contas:[],campos:[]};
+  if(novos)pl.clientesNovos.forEach(function(c){S.clientes.push(c);dz.clientes.push(c.id)});
   if(atualizar){
     pl.clientesAtualizados.forEach(function(x){x.mud.forEach(function(m){dz.campos.push({t:'cliente',id:x.cliente.id,campo:m.campo,antes:x.cliente[m.campo],depois:m.v});x.cliente[m.campo]=m.v})});
     pl.contasAtualizadas.forEach(function(x){x.mud.forEach(function(m){dz.campos.push({t:'conta',id:x.conta.id,campo:m.campo,antes:x.conta[m.campo],depois:m.v});x.conta[m.campo]=m.v})});
   }
-  pl.contasNovas.forEach(function(c){var nc={id:uid(),clienteId:c.cliente.id,descricao:c.descricao,valor:c.valor,venc:c.venc,pagoEm:c.pagoEm||null,comprovante:null};S.contas.push(nc);dz.contas.push({id:nc.id,valor:nc.valor,venc:nc.venc,pagoEm:nc.pagoEm})});
-  S.importacoes=[{quando:new Date().toISOString(),arquivo:pl.arquivo,resumo:{clientesNovos:pl.clientesNovos.length,contasNovas:pl.contasNovas.length,clientesAtualizados:atualizar?pl.clientesAtualizados.length:0,contasAtualizadas:atualizar?pl.contasAtualizadas.length:0,erros:pl.erros.length},itens:itens,desfazer:dz}].concat(S.importacoes||[]).slice(0,10);
+  if(novos)pl.contasNovas.forEach(function(c){var nc={id:c.id&&!S.contas.some(function(x){return x.id===c.id})?c.id:uid(),clienteId:c.cliente.id,descricao:c.descricao,valor:c.valor,venc:c.venc,pagoEm:c.pagoEm||null,comprovante:null};S.contas.push(nc);dz.contas.push({id:nc.id,valor:nc.valor,venc:nc.venc,pagoEm:nc.pagoEm})});
+  S.importacoes=[{quando:new Date().toISOString(),arquivo:pl.arquivo,resumo:{clientesNovos:novos?pl.clientesNovos.length:0,contasNovas:novos?pl.contasNovas.length:0,clientesAtualizados:atualizar?pl.clientesAtualizados.length:0,contasAtualizadas:atualizar?pl.contasAtualizadas.length:0,erros:pl.erros.length},itens:itens,desfazer:dz}].concat(S.importacoes||[]).slice(0,10);
   save();render();
   var ne=pl.erros.length;
-  sheet('<div class="ok-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>Importação concluída</h2><p class="sub">'+n+' mudança'+(n>1?'s gravadas':' gravada')+': '+esc(resumoImport(Object.assign({},S.importacoes[0].resumo,{erros:0})))+'.</p>'
+  sheet('<div class="ok-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h2>Importação concluída</h2><p class="sub">Gravado: '+esc(resumoImport(Object.assign({},S.importacoes[0].resumo,{erros:0})))+'.</p>'
    +(ne?'<div class="alerta">'+ne+' linha'+(ne>1?'s ficaram':' ficou')+' de fora. Baixe, corrija e importe de novo: o que já entrou não se repete.<div class="alerta-bt"><button class="btn sm" data-act="imp-erros">Baixar linhas com problema</button></div></div>':'')
-   +'<div class="actions"><button class="btn primary block" data-act="go" data-tab="contas">Ver contas</button><button class="btn block" data-act="imp-desfazer" data-i="0">Desfazer importação</button><button class="btn block" data-act="close">Fechar</button></div>');
+   +'<div class="actions"><button class="btn primary block" data-act="go" data-tab="'+(pl.contasNovas.length+pl.contasAtualizadas.length?'contas':'clientes')+'">'+(pl.contasNovas.length+pl.contasAtualizadas.length?'Ver contas':'Ver clientes')+'</button><button class="btn block" data-act="imp-desfazer" data-i="0">Desfazer importação</button><button class="btn block" data-act="close">Fechar</button></div>');
 }
 function mantidosTxt(n){return n>1?n+' itens que você usou depois ficaram.':'1 item que você usou depois ficou.'}
 function podeDesfazer(i){var l=S.importacoes||[],x=l[i];return !!(x&&x.desfazer&&!x.desfeita&&l.slice(0,i).every(function(y){return y.desfeita}))}
@@ -993,9 +1130,13 @@ function sheetLog(i){
   sheet(h+'<div class="actions">'+(podeDesfazer(i)&&!somenteLeitura()?'<button class="btn block" data-act="imp-desfazer" data-i="'+i+'">Desfazer esta importação</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>');
 }
 function planilhaExemplo(){
-  var aoa=[['Nome','Telefone','E-mail','Descrição','Valor','Vencimento']].concat([['Joana Prado','(11) 97777-1111','joana@exemplo.com','Mensalidade',200,addDays(-8)],['Joana Prado','','','Mensalidade',200,addDays(22)],
-    ['Oficina Três Irmãos','(11) 4002-8922','','Revisão de frota',2300,addDays(-2)],['Tiago Moreira','(19) 98111-2020','','Parcela 1/3',350,addDays(5)]]
-   .map(function(x){return [x[0],x[1],x[2],x[3],x[4],fmtD(x[5])]}));
+  var aoa=[['CPF/CNPJ','Nome','Telefone','E-mail','Descrição','Valor','Vencimento']].concat([
+    ['193.573.925-56','Joana Prado','(11) 97777-1111','joana@exemplo.com','Mensalidade',200,addDays(-8)],
+    ['193.573.925-56','Joana Prado','','','Mensalidade',200,addDays(22)],
+    ['193.573.925-56','Joana Prado','','','Mensalidade',200,addDays(52)],
+    ['85.761.863/0001-34','Oficina Três Irmãos','(11) 4002-8922','','Revisão de frota',2300,addDays(-2)],
+    ['932.462.921-24','Tiago Moreira','(19) 98111-2020','','Parcela 1/3',350,addDays(5)]]
+   .map(function(x){return [x[0],x[1],x[2],x[3],x[4],x[5],fmtD(x[6])]}));
   return {SheetNames:['Exemplo'],Sheets:{Exemplo:XLSX.utils.aoa_to_sheet(aoa)}};
 }
 // Gera e entrega um .xlsx (no Android, pela ponte; no artefato, pelo download do navegador).
@@ -1099,8 +1240,12 @@ document.addEventListener('click',function(e){
   else if(a==='salvar-cliente'){
     var nome=$('n-nome').value.trim(),eid=el.dataset.id;
     if(!nome){fieldError('n-nome','Informe o nome do cliente');return}
-    if(S.clientes.some(function(x){return x.id!==eid&&x.nome.toLowerCase()===nome.toLowerCase()})){fieldError('n-nome','Já existe um cliente com esse nome');return}
-    var dados={nome:nome,telefone:$('n-tel').value.trim(),email:$('n-mail').value.trim(),obs:$('n-obs').value.trim()};
+    var dd=soDig($('n-doc').value);
+    if(!dd){fieldError('n-doc','Informe o CPF ou o CNPJ');return}
+    if(!docOk(dd)){fieldError('n-doc',(dd.length===11||dd.length===14?tipoDoc(dd)+' inválido':'CPF tem 11 números e CNPJ tem 14')+'. Confira os números.');return}
+    var dono=S.clientes.find(function(x){return x.id!==eid&&x.doc===dd});
+    if(dono){fieldError('n-doc','Esse '+tipoDoc(dd)+' já é de '+dono.nome+'.');return}
+    var dados={nome:nome,doc:dd,telefone:$('n-tel').value.trim(),email:$('n-mail').value.trim(),obs:$('n-obs').value.trim()};
     if(eid){Object.assign(S.clientes.find(function(x){return x.id===eid}),dados);save();closeSheet();render();toast('Dados atualizados')}
     else{dados.id=uid();S.clientes.push(dados);save();closeSheet();render();toast('Cliente cadastrado')}
   }
@@ -1113,12 +1258,18 @@ document.addEventListener('click',function(e){
   else if(a==='imp-erros')baixarErros();
   else if(a==='imp-desfazer')sheetDesfazer(+el.dataset.i);
   else if(a==='imp-desfazer-sim')desfazerImport(+el.dataset.i);
-  else if(a==='export-abrir')sheetFiltros();
+  else if(a==='export-abrir'){expF=Object.assign({},expPadrao);sheetFiltros()}
+  else if(a==='editar-xl'){expF=Object.assign({},expPadrao,{formato:'editar',status:'abertas'});sheetFiltros()}
+  else if(a==='atualizar-abrir')sheetAtualizar();
+  else if(a==='editar-xl-cli'){expF={formato:'editar',status:'todas',cliente:el.dataset.id,de:'',ate:''};sheetExport('custom')}
+  else if(a==='enviar-editada')sheetImportar();
+  else if(a==='xf-voltar')sheetFiltros();
+  else if(a==='xf-formato'){expF.formato=el.dataset.v;sheetFiltros()}
   else if(a==='import-confirm')aplicarImport();
   else if(a==='import-log')sheetLog(+el.dataset.i);
   else if(a==='export-custom')sheetExport('custom');
   else if(a==='xf-status'){expF.status=el.dataset.v;document.querySelectorAll('[data-act=xf-status]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.v===expF.status))});atualizaXf()}
-  else if(a==='xf-limpar'){expF=Object.assign({},expPadrao);sheetFiltros()}
+  else if(a==='xf-limpar'){expF=Object.assign({},expPadrao,{formato:expF.formato});sheetFiltros()}
   else if(a==='export-backup')sheetExport('backup');
   else if(a==='periodo'){statsPeriod=+el.dataset.p;render()}
   else if(a==='aparencia')sheetAparencia();
@@ -1127,7 +1278,7 @@ document.addEventListener('click',function(e){
   else if(a==='xlsx-export'){
     var ex=lastExport,num={'Valor':1,'Dias de atraso':1};
     var aoa=[ex.head].concat(ex.rows.map(function(r){return r.map(function(v,i){return num[ex.head[i]]&&v!==''?parseFloat(String(v).replace(',','.')):v})}));
-    baixarXlsx(ex.file,[{nome:ex.titulo,aoa:aoa}],function(){if(ex.kind==='backup'){S.ultimoBackup=today;save();render()}});
+    baixarXlsx(ex.file,[{nome:ex.titulo,aoa:aoa}].concat(ex.extra||[]),function(){if(ex.kind==='backup'){S.ultimoBackup=today;save();render()}});
   }
   else if(a==='copy-export'){
     var done=function(){if(lastExport.kind==='backup'){S.ultimoBackup=today;save();render()}toast('Copiado. Cole numa planilha do Excel.')};

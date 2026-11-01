@@ -99,11 +99,17 @@ const ok = (tecnica, nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} 
   ok('Controle e liberdade', 'Ficha do cliente permite editar os dados, já preenchidos', (await p.inputValue('#n-nome')) === primeiro);
   await p.fill('#n-tel', '(11) 91234-5678');
   await p.click('[data-act=salvar-cliente]');
-  ok('Visibilidade do status', 'Editar salva e mostra o telefone novo na lista', /Dados atualizados/.test(await p.locator('.toast').innerText()) && (await p.locator('#screen').innerText()).includes('(11) 91234-5678'));
+  ok('Visibilidade do status', 'Editar salva e avisa', /Dados atualizados/.test(await p.locator('.toast').innerText()));
+  await p.locator('#screen .row').first().click();
+  ok('Visibilidade do status', 'A ficha mostra o telefone novo', (await p.locator('.sheet .sub').innerText()).includes('(11) 91234-5678'));
+  ok('Informação útil primeiro', 'Ações do cliente ficam no topo da ficha, antes da lista de contas', await p.evaluate(() => { const a = document.querySelector('.sheet [data-act=editar-xl-cli]'), h = [...document.querySelectorAll('.sheet h3')].find(x => /Contas/.test(x.textContent)); return !!a && !!h && (a.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING) > 0; }));
+  await p.keyboard.press('Escape');
+  const docPrimeiro = await p.evaluate(n => JSON.parse(localStorage.getItem('baixa-pix-v2')).clientes.find(c => c.nome === n).doc, primeiro);
   await p.click('[data-act=novo-cliente]');
-  await p.fill('#n-nome', primeiro.toUpperCase());
+  await p.fill('#n-nome', 'Outro nome');
+  await p.fill('#n-doc', docPrimeiro);
   await p.click('[data-act=salvar-cliente]');
-  ok('Prevenção de erros', 'Não deixa cadastrar dois clientes com o mesmo nome', /Já existe um cliente/.test(await p.locator('.sheet .ferr').innerText()));
+  ok('Prevenção de erros', 'Não deixa cadastrar dois clientes com o mesmo CPF/CNPJ e diz de quem é', new RegExp('já é de ' + primeiro).test(await p.locator('#n-doc-err').innerText()));
   await p.keyboard.press('Escape');
 
   // Rótulos e tamanho de toque em todas as telas e formulários
