@@ -17,9 +17,10 @@ IFS=: read -r VARIANTE AMB DIAS <<< "$PAR"
 DEST=app/src/$VARIANTE/assets
 mkdir -p "$DEST"
 cp "$XLSX" "$DEST/xlsx.full.min.js"
-python3 - ../prototipo/acertototal.html "$DEST/index.html" "$AMB" "$DIAS" <<'PY'
+VERSAO=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
+python3 - ../prototipo/acertototal.html "$DEST/index.html" "$AMB" "$DIAS" "$VERSAO" <<'PY'
 import re, sys
-src, dst, amb, dias = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+src, dst, amb, dias, versao = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5]
 s = open(src, encoding='utf-8').read()
 s, n1 = re.subn(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com[^>]*>\n?', '', s)
 s, n2 = re.subn(r'https://cdnjs\.cloudflare\.com/ajax/libs/xlsx/[^"]+', 'xlsx.full.min.js', s)
@@ -27,6 +28,7 @@ assert n1 == 1 and n2 == 1, f'protótipo mudou: fontes={n1} xlsx={n2}'
 ponte = """<script>
 window.ACERTO_AMBIENTE = '""" + amb + """';
 window.ACERTO_LIMITE_DIAS = """ + str(dias) + """;
+window.ACERTO_VERSAO = '""" + versao + ("-teste" if amb != "producao" else "") + """';
 // Ponte Android: substitui a permissão de download do artefato.
 window.claude = { use: function (nome) {
   if (nome !== 'downloads' || !window.acertoTotalAndroid) return Promise.resolve(null);

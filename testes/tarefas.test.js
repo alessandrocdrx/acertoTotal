@@ -229,6 +229,23 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   ok('T3 · Produção: planilha com CPF de dígito errado é recusada', await pp.locator('[data-act=import-confirm]').isDisabled() && /não é um CPF nem um CNPJ válido/.test(await pp.locator('.sheet').innerText()));
   await pp.close();
 
+  // ===== Tarefa 9: "Quem fez o app?" e o Menu (padrão do geoTotal)
+  await inicio();
+  ok('T9 · Rodapé com 5 ícones, o último é o Menu', (await p.locator('.tabs button').count()) === 5 && await visivelSemRolar('button[data-tab=menu]'));
+  await tocar('button[data-tab=menu]');
+  const menu = await p.locator('#screen').innerText();
+  ok('T9 · O Menu mostra a marca, o autor (@alessandrocdrx) e a versão logo no topo', /acertoTotal/.test(menu) && /Criado por @alessandrocdrx · versão protótipo/.test(menu));
+  ok('T9 · O Menu tem Assinatura, Tema, Cópia de segurança, Avaliar, Relatar problema, Privacidade e Sobre', ['Assinatura', 'Tema e paleta', 'Cópia de segurança', 'Restaurar uma cópia', 'Avaliar o acertoTotal', 'Relatar problema ou sugestão', 'Política de privacidade', 'Sobre o acertoTotal'].every(t => menu.includes(t)), menu);
+  ok('T9 · Links: Play, GitHub e a política certa', await p.locator('a.opcao[href="https://play.google.com/store/apps/details?id=io.github.alessandrocdrx.acertototal"]').count() === 1 && await p.locator('a.opcao[href="https://github.com/alessandrocdrx/acertoTotal/issues/new"]').count() === 1 && await p.locator('a.opcao[href="https://github.com/alessandrocdrx/acertoTotal/blob/main/PRIVACIDADE.md"]').count() === 1);
+  await tocar('.menu-marca');
+  const sobre = await p.locator('.sheet').innerText();
+  ok('T9 · "Sobre": nome, assinatura da marca, versão e "Criado por @alessandrocdrx" com link', /Contas a receber, acertadas\./.test(sobre) && /Versão protótipo/.test(sobre) && /Criado por @alessandrocdrx/.test(sobre) && await p.locator('.sheet a[href="https://github.com/alessandrocdrx"]').count() === 1, sobre);
+  ok(`T9 · Achar o autor em ${toques} toques (meta: até 2)`, toques <= 2, `${toques}`);
+  await p.keyboard.press('Escape');
+  await tocar('#screen [data-act=aparencia]');
+  ok('T9 · Tema e paleta abre pelo Menu', /Tema e paleta/.test(await p.locator('.sheet h2').innerText()));
+  await p.keyboard.press('Escape');
+
   ok('Sem erros de JavaScript', errs.length === 0, errs.join(' | '));
   await b.close();
   console.log(out.join('\n'));

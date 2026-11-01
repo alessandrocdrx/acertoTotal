@@ -24,7 +24,7 @@ const ok = (tecnica, nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} 
   const espera = () => p.waitForTimeout(80);
 
   // Lei de Hick e de Jakob: poucas escolhas, padrões do Android
-  ok('Lei de Hick', 'Menu inferior com 4 abas', (await p.locator('.tabs button').count()) === 4);
+  ok('Lei de Hick', 'Menu inferior com 4 tarefas e o Menu (5 ícones, decisão do cliente)', (await p.locator('.tabs button').count()) === 5 && (await p.locator('.tabs button').last().innerText()).trim() === 'Menu');
   ok('Lei de Hick', 'Filtros de contas em 4 botões numa linha só', await p.evaluate(() => { const t = [...document.querySelectorAll('.four .chip')].map(c => c.getBoundingClientRect().top); return t.length === 4 && new Set(t).size === 1; }));
   ok('Lei de Jakob', 'Botão flutuante, menu inferior e janela de baixo, como nos apps Android', (await p.locator('.fab').count()) === 1 && (await p.locator('nav.tabs').count()) === 1);
   ok('Identidade', 'Nome acertoTotal aparece dentro do app', (await p.locator('.brand').innerText()).includes('acertoTotal'));

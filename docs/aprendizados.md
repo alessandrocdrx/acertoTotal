@@ -23,7 +23,7 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R1. Cada tela tem uma tarefa só. Duas telas que mostram a mesma coisa confundem. Exemplo: o Início repetia a lista de Contas. [usabilidade]
 - R2. A ação principal fica visível na lista. Exemplo: "Dar baixa" aparece em cada conta em aberto, e não escondido num menu. [app]
 - R3. A situação vem sempre escrita, e a cor só reforça. Exemplo: "Atrasada há 5 dias", e não apenas uma bolinha vermelha. [app]
-- R4. No máximo 4 abas e 4 filtros, numa linha só (Lei de Hick). [usabilidade]
+- R4. No rodapé, 4 tarefas mais o **Menu** (5 ícones, como no geoTotal, por decisão do cliente em 01/11/2026). Ajustes, ajuda e o "Sobre" ficam no Menu, e não em mais abas. No máximo 4 filtros, numa linha só (Lei de Hick). [usabilidade, tarefas]
 - R5. Desfazer é melhor que perguntar "tem certeza?". Baixa, desfazer baixa e exclusão mostram um aviso com o botão "Desfazer" por 6 segundos. [usabilidade]
 - R6. Tela vazia sempre oferece uma saída: "Limpar busca", "Ver todas" ou "Toque em + Nova conta". [usabilidade]
 - R7. Mostrar primeiro o que importa para a decisão. Exemplo: a lista de clientes mostra quanto cada um deve, ou "Em dia". [usabilidade]
@@ -114,6 +114,13 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-028 · 01/11/2026 · Rodapé com 4 ícones, sem menu e sem autor
+- **Relato do cliente:** "Me incomoda os ícones do rodapé não serem 5, não ter menu e, nos moldes do geoTotal, não ter meu @ e quem sou."
+- **Causa:** o rodapé tinha 4 abas numa grade de 5 colunas (sobrava um espaço vazio à direita), e a regra R4 limitava a 4 abas. Ajustes estavam espalhados (tema no cabeçalho, cópia na aba Planilha), e o app não dizia quem o fez.
+- **O que foi feito:** 5ª aba **Menu**, no padrão do geoTotal: no topo, a marca com "Criado por @alessandrocdrx · versão", e grupos Conta (assinatura), Aparência (tema), Seus dados (cópia e restaurar), Ajuda (avaliar na Play, relatar problema no GitHub, política de privacidade) e **Sobre** (símbolo, assinatura da marca, versão, autor com link e créditos). A versão vem do `versionName` do Gradle, injetada por `preparar-assets.sh`.
+- **Problemas achados nos testes:** a regra "nenhum endereço externo no APK" acusou os links do Menu. Eles só abrem quando a pessoa toca, no navegador, e não são baixados. O teste passou a separar links de recursos, e confere que nenhum script, estilo ou imagem vem de fora.
+- **Como evitar:** regra R4 revista; tarefa T9 na suíte `tarefas` (achar o autor em até 2 toques).
 
 ### A-027 · 01/11/2026 · Marca nova: símbolo, cores pela teoria da luz e manual
 - **Pedido do cliente:** reformular a marca inteira, com cores pela teoria da luz e da cor, logo, símbolo e documentação.
