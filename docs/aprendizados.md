@@ -371,6 +371,12 @@ As entradas mais recentes ficam no topo.
 
 ## Pendências conhecidas
 
+- **Play Store** (decisão do cliente em 01/11/2026): publicar pela conta de desenvolvedor pessoal (CPF) alessandrocdrx, a mesma do geoTotal. Ainda faltam:
+  - decidir o limite de avaliação na versão da Play (tirar ou passar para 30 dias);
+  - gerar o AAB, porque a Play não aceita APK;
+  - fixar a chave de envio, porque a troca de chave entre versões (R30) deixa de valer na Play;
+  - confirmar no Play Console se esta conta precisa do teste fechado com 12 testadores por 14 dias antes da produção.
+
 - A miniatura do link no WhatsApp é gerada pelo Claude e não pode ser trocada pelo app.
 - Os testes rodam no navegador (Chromium). A casca Android ainda não foi testada num aparelho: faltam o seletor de arquivos, o salvamento em Downloads e o botão Voltar.
 - Lint: três bibliotecas AndroidX têm versões mais novas (activity, core, webkit). Atualizar exige compileSdk 36 e uma versão nova do AGP.
