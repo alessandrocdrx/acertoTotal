@@ -103,10 +103,21 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R58. Depois de mudar o layout, olhe as capturas de tela. Exemplo: grid num `<li>` com negrito e texto solto quebra uma palavra por linha. Envolva o conteúdo num `<span>`. O teste mede a largura dos textos da janela. [importacao]
 - R59. Nenhum cliente fica sem CPF/CNPJ. Cadastro, edição e planilha exigem o número. Cliente antigo sem ele aparece num aviso no topo de Clientes com "Completar agora", que abre um por um, e cliente sem contas pode ser excluído ali mesmo. Enquanto não for completado, não recebe conta nova (fica desativado na lista) e a planilha recusa a linha dele sem CPF/CNPJ, explicando que preencher o número completa o cadastro. [tarefas]
 - R60. Ação que apaga tudo pede uma confirmação digitada, como o GitHub pede o nome do repositório: a pessoa digita o próprio CPF/CNPJ, cadastrado na primeira vez, e o botão só ativa quando confere. Antes, a tela diz quantos clientes, contas, comprovantes e importações serão apagados e oferece a cópia de segurança. Só existe na versão de teste, fica separado das tarefas comuns e não reinicia a avaliação. [tarefas]
+- R61. Na versão de teste, CPF/CNPJ com dígito errado é aceito (desde que tenha 11 ou 14 números), sempre com aviso: no formulário enquanto digita, no aviso ao salvar, na linha da planilha e com o rótulo "inválido (teste)" na lista. Repetido continua barrado. A produção só aceita número válido. [tarefas, importacao, app]
+- R62. Um aviso que aparece ou some embaixo de um campo não pode mudar no `blur`. O `blur` acontece no mesmo toque do botão Salvar: a janela muda de altura, o botão sai do lugar e o toque se perde. Atualize o aviso enquanto a pessoa digita. [app, tarefas]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-020 · 01/11/2026 · Aceitar CPF/CNPJ inválido na versão de teste
+- **Pedido do cliente:** "Na versão teste deixa colocar CPF e CNPJ não válido, mas dê o aviso que é teste."
+- **O que foi feito:**
+  - `docAceito()`: na versão de teste aceita 11 ou 14 números mesmo com o dígito errado. A produção continua só com `docOk()`.
+  - O aviso aparece em quatro lugares: embaixo do campo enquanto digita, no aviso ao salvar, como aviso na linha da prévia da planilha e com o rótulo "inválido (teste)" na lista e na ficha do cliente.
+  - Os testes que esperavam recusa passaram a usar um número com dígitos faltando. A recusa de número inválido agora é testada numa página de produção.
+- **Problema achado no caminho:** o aviso sumia no `blur` do campo. Ao tocar em Salvar, a janela encolhia antes do clique, o botão saía do lugar e o toque se perdia. O teste pegou porque o cadastro não acontecia. Agora o aviso muda só enquanto a pessoa digita (regra R62).
+
 
 ### A-019 · 01/11/2026 · Clientes sem CPF/CNPJ no aparelho; falta "Apagar tudo"
 - **Relato do cliente** (captura do APK 0.6.0): a lista de Clientes mostrava 14 clientes "Sem CPF/CNPJ", entre eles "Descrição", "E-mail" e "Pago em", com 0 contas. "Não deve ser possível cadastrar alguém sem CPF ou CNPJ. Como a versão é de teste, deve haver um botão de apagar tudo, estilo GitHub: para limpar todo o sistema, o usuário coloca seu CPF ou CNPJ para confirmar."

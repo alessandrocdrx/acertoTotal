@@ -112,7 +112,7 @@ const CPF_MARINA = '637.129.261-70', CPF_BRUNO = cpf('434259868'), CPF_LIA = cpf
     [CPF_BRUNO, 'Bruno Costa', '', '', 'Errada 2', 10, '32/13/2026', ''],                               // 7: data
     [CPF_BRUNO, 'Bruno Costa', '', '', 'Futuro', 10, '01/12/2026', amanha],                             // 8: pago no futuro
     [CPF_BRUNO, '', '', '', 'Mensalidade', 99.9, '20/12/2026', ''],                                     // 9: repetida (sem nome: acha pelo CPF)
-    ['111.111.111-11', 'Fulano', '', '', 'Conta', 10, '01/12/2026', ''],                               // 10: CPF inválido
+    ['111.111.111', 'Fulano', '', '', 'Conta', 10, '01/12/2026', ''],                                  // 10: CPF incompleto
     ['', '', '', '', '', '', '', ''],                                                                   // 11: em branco
   ]);
   ok('Planilha com títulos certos vai direto para a prévia', /Prévia da importação/.test(await enviar('clientes-novembro.xlsx', arq)));
@@ -131,7 +131,7 @@ const CPF_MARINA = '637.129.261-70', CPF_BRUNO = cpf('434259868'), CPF_LIA = cpf
     [7, 'Linha 7 · Bruno Costa\\s+Vencimento \\(G7\\): “32/13/2026” não é uma data válida'],
     [8, 'Linha 8 · Bruno Costa\\s+Pago em \\(H8\\): \\d\\d/\\d\\d/\\d{4} é depois de hoje'],
     [9, 'Linha 9\\s+Conta repetida: igual à linha 4'],
-    [10, 'Linha 10 · Fulano\\s+CPF/CNPJ \\(A10\\): “111\\.111\\.111-11” não é um CPF nem um CNPJ válido\\. Confira os números']]) {
+    [10, 'Linha 10 · Fulano\\s+CPF/CNPJ \\(A10\\): “111\\.111\\.111” não é um CPF nem um CNPJ válido\\. Confira os números']]) {
     ok(`Linha ${linha}: diz a linha, a coluna, a célula, o porquê e como corrigir`, new RegExp(motivo).test(txt), motivo);
   }
   ok('Linha em branco é ignorada sem virar erro', !/Linha 11/.test(txt));
@@ -189,6 +189,12 @@ const CPF_MARINA = '637.129.261-70', CPF_BRUNO = cpf('434259868'), CPF_LIA = cpf
   await abrirImport(); await enviar('corrigido.xlsx', await xlsx(cor));
   const r3 = await resumo();
   ok('Arquivo de problemas corrigido: 2 clientes e 6 contas, 0 problemas', r3['Com problema'] === 0 && r3['Contas novas'] === 6 && r3['Clientes novos'] === 2, JSON.stringify(r3));
+  await fechar();
+
+  // ---------- Versão de teste: CPF com dígito errado entra, com aviso
+  await abrirImport(); await enviar('cpf-teste.xlsx', await xlsx([['CPF/CNPJ', 'Nome', 'Descrição', 'Valor', 'Vencimento'], ['111.111.111-11', 'Teste Inválido', 'Conta', 10, '01/12/2026']]));
+  const rT = await resumo(), tT = await texto();
+  ok('Versão de teste: CPF com dígito errado entra, com aviso de teste na linha', rT['Clientes novos'] === 1 && rT['Com problema'] === 0 && /CPF\/CNPJ \(A2\): “111\.111\.111-11” não é um número válido\. Foi aceito só porque esta é a versão de teste/.test(tT), JSON.stringify(rT) + tT.slice(0, 600));
   await fechar();
 
   // ---------- Atualizar pelo código da conta (planilha para editar)

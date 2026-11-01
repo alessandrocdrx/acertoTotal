@@ -100,8 +100,8 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   await tocar('[data-act=salvar-cliente]');
   ok('T3 · CPF repetido é barrado dizendo de quem é', /Esse CPF já é de Lucas Pereira/.test(await p.locator('#n-doc-err').innerText()));
   await p.fill('#n-doc', '48976886551');
-  await tocar('[data-act=salvar-cliente]');
-  ok('T3 · CPF com dígito errado é barrado', /CPF inválido/.test(await p.locator('#n-doc-err').innerText()));
+  ok('T3 · Versão de teste: CPF com dígito errado avisa que só é aceito no teste', /só porque esta é a versão de teste/.test(await p.locator('#n-doc-t').innerText()));
+  ok('T3 · O aviso de teste não aparece para CPF válido', await (async () => { await p.fill('#n-doc', cpf('987654321')); return await p.locator('#n-doc-t').count() === 0; })());
   await p.fill('#n-doc', cpf('987654321'));
   await tocar('[data-act=salvar-cliente]');
   ok('T3 · Dois clientes podem ter o mesmo nome; o que não pode é o mesmo CPF/CNPJ', (await estado()).clientes.some(c => c.nome === 'Homônimo Lucas'));
@@ -189,8 +189,8 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   ok('T8 · Versão de teste: "Apagar tudo…" fica no fim da aba Planilha, separado das tarefas', await p.locator('.perigo [data-act=apagar-abrir]').count() === 1 && await p.locator('.opcoes [data-act=apagar-abrir]').count() === 0);
   await tocar('[data-act=apagar-abrir]');
   ok('T8 · Na primeira vez, pede o CPF/CNPJ do dono do app', await p.locator('#dono-doc').count() === 1);
-  await p.fill('#dono-doc', '111.111.111-11'); await p.click('[data-act=apagar-dono]');
-  ok('T8 · CPF inválido do dono é recusado no campo', /CPF inválido/.test(await p.locator('#dono-doc-err').innerText()));
+  await p.fill('#dono-doc', '111.111.111'); await p.click('[data-act=apagar-dono]');
+  ok('T8 · CPF incompleto do dono é recusado no campo', /CPF tem 11 números/.test(await p.locator('#dono-doc-err').innerText()));
   const DONO = cpf('987654321');
   await p.fill('#dono-doc', DONO); await tocar('[data-act=apagar-dono]');
   const tela8 = await p.locator('.sheet').innerText();
@@ -215,10 +215,18 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   // Produção não tem "Apagar tudo"
   const pp = await ctx.newPage();
   await pp.addInitScript(() => { window.CELSOPIX_AMBIENTE = 'producao'; window.CELSOPIX_LIMITE_DIAS = 0; });
-  await pp.route('**/*', r => r.request().url().startsWith('file://') ? r.continue() : r.fulfill({ status: 200, body: '' }));
+  await pp.route('**/*', r => { const u = r.request().url(); if (u.includes('xlsx')) return r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(__dirname + '/vendor/xlsx.js', 'utf8') }); return u.startsWith('file://') ? r.continue() : r.fulfill({ status: 200, body: '' }); });
   await pp.goto('file://' + __dirname + '/.build/page.html'); await pp.waitForSelector('#screen');
   await pp.click('button[data-tab=planilha]');
   ok('T8 · Produção: não existe "Apagar tudo"', await pp.locator('[data-act=apagar-abrir]').count() === 0);
+  await pp.click('button[data-tab=clientes]'); await pp.click('[data-act=novo-cliente]');
+  await pp.fill('#n-nome', 'Teste Produção'); await pp.fill('#n-doc', '111.111.111-11'); await pp.click('[data-act=salvar-cliente]');
+  ok('T3 · Produção: CPF com dígito errado é recusado', /CPF inválido\. Confira os números/.test(await pp.locator('#n-doc-err').innerText()));
+  await pp.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })));
+  await pp.click('button[data-tab=planilha]'); await pp.click('[data-act=import-abrir]');
+  await pp.setInputFiles('#xl', { name: 'p.xlsx', mimeType: 'application/octet-stream', buffer: Buffer.from(await xlsx([['CPF/CNPJ', 'Nome', 'Valor', 'Vencimento'], ['111.111.111-11', 'X', 10, '10/12/2026']])) });
+  await pp.waitForSelector('.sheet h2:has-text("Prévia")');
+  ok('T3 · Produção: planilha com CPF de dígito errado é recusada', await pp.locator('[data-act=import-confirm]').isDisabled() && /não é um CPF nem um CNPJ válido/.test(await pp.locator('.sheet').innerText()));
   await pp.close();
 
   ok('Sem erros de JavaScript', errs.length === 0, errs.join(' | '));

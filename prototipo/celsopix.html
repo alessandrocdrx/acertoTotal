@@ -243,6 +243,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .passo-a-passo li{counter-increment:p;display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:15px}
 .passo-a-passo li::before{content:counter(p);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:14px}
 .semdoc{color:var(--warn);font-weight:600}
+.aviso-teste{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:14px;font-weight:500;margin:6px 0 0}
 .perigo{border:1px solid var(--bad);border-radius:14px;padding:14px;margin:20px 0 8px}
 .perigo h3{color:var(--bad);margin-top:0}
 .perigo p{margin:4px 0 12px;font-size:14px}
@@ -300,6 +301,9 @@ function soDig(s){return String(s==null?'':s).replace(/\D/g,'')}
 function cpfOk(d){if(!/^\d{11}$/.test(d)||/^(\d)\1+$/.test(d))return false;for(var n=9;n<11;n++){var s=0;for(var i=0;i<n;i++)s+=+d[i]*(n+1-i);if(s*10%11%10!==+d[n])return false}return true}
 function cnpjOk(d){if(!/^\d{14}$/.test(d)||/^(\d)\1+$/.test(d))return false;var w=[6,5,4,3,2,9,8,7,6,5,4,3,2];for(var n=12;n<14;n++){var s=0;for(var i=0;i<n;i++)s+=+d[i]*w[i+13-n];var r=s%11;if((r<2?0:11-r)!==+d[n])return false}return true}
 function docOk(d){return d.length===11?cpfOk(d):(d.length===14?cnpjOk(d):false)}
+// Versão de teste: aceita CPF/CNPJ com dígito errado (11 ou 14 números), sempre avisando. Produção só aceita válido.
+function docAceito(d){return docOk(d)||(window.CELSOPIX_AMBIENTE!=='producao'&&(d.length===11||d.length===14))}
+var AVISO_TESTE='não é um número válido. Foi aceito só porque esta é a versão de teste; na versão oficial seria recusado.';
 function fmtDoc(d){d=soDig(d);return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):(d.length===14?d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5'):d)}
 function tipoDoc(d){return soDig(d).length===14?'CNPJ':'CPF'}
 // Lê o CPF/CNPJ de uma célula. O Excel apaga o zero da frente de números (01234567890 vira 1234567890):
@@ -312,6 +316,7 @@ function lerDoc(v){
     var t=d.length<11?[11,14]:[14];
     for(var i=0;i<t.length;i++){var p=d.padStart(t[i],'0');if(docOk(p))return {d:p,ok:true,raw:raw,zeros:true}}
   }
+  if(docAceito(d))return {d:d,ok:true,raw:raw,teste:true};
   return {d:d,ok:false,raw:raw};
 }
 
@@ -459,7 +464,7 @@ function viewClientes(){
     var cs=S.contas.filter(function(x){return x.clienteId===c.id});
     var ab=sum(cs.filter(function(x){return !x.pagoEm}));
     var atr=cs.filter(function(x){return status(x)==='atrasada'}).length;
-    return '<button class="row" data-act="cliente" data-id="'+c.id+'"><span class="t">'+esc(c.nome)+'</span><span class="v"'+(ab?'':' style="color:var(--ok)"')+'>'+(ab?brl.format(ab):'Em dia')+'</span><span class="s">'+(c.doc?tipoDoc(c.doc)+' '+fmtDoc(c.doc):'<span class="semdoc">Sem CPF/CNPJ</span>')+' · '+cs.length+' conta'+(cs.length===1?'':'s')+'</span><span class="p">'+(atr?'<span class="pill atrasada">'+atr+' atrasada'+(atr>1?'s':'')+'</span>':'')+'</span></button>';
+    return '<button class="row" data-act="cliente" data-id="'+c.id+'"><span class="t">'+esc(c.nome)+'</span><span class="v"'+(ab?'':' style="color:var(--ok)"')+'>'+(ab?brl.format(ab):'Em dia')+'</span><span class="s">'+(c.doc?tipoDoc(c.doc)+' '+fmtDoc(c.doc)+(docOk(c.doc)?'':' <span class="semdoc">inválido (teste)</span>'):'<span class="semdoc">Sem CPF/CNPJ</span>')+' · '+cs.length+' conta'+(cs.length===1?'':'s')+'</span><span class="p">'+(atr?'<span class="pill atrasada">'+atr+' atrasada'+(atr>1?'s':'')+'</span>':'')+'</span></button>';
   }).join(''):(q?'<div class="empty">Nenhum cliente encontrado para “'+esc(queryC.trim())+'”.<br><button class="btn" data-act="limpar-busca-c">Limpar busca</button></div>':'<div class="empty">Nenhum cliente ainda. Toque em “+ Novo cliente” ou importe uma planilha.</div>');
   return h+(somenteLeitura()?'':'<button class="fab" data-act="novo-cliente" aria-label="Novo cliente">+ Novo cliente</button>');
 }
@@ -750,12 +755,17 @@ function sheetNovoCliente(id){
    +'<div class="field"><label for="n-mail">E-mail</label><input id="n-mail" type="email" value="'+esc(c.email||'')+'"></div>'
    +'<div class="field"><label for="n-obs">Observações</label><textarea id="n-obs" rows="2">'+esc(c.obs||'')+'</textarea></div>'
    +'<div class="actions"><button class="btn primary block" data-act="salvar-cliente"'+(id?' data-id="'+id+'"':'')+'>'+(id?'Salvar alterações':'Salvar cliente')+'</button>'+(falta&&!nct?'<button class="btn block danger" data-act="excluir-cliente" data-id="'+id+'">Excluir este cliente (não tem contas)</button>':'')+'<button class="btn block" data-act="close">'+(filaDoc?'Parar por agora':'Cancelar')+'</button></div>');
-  var dc=$('n-doc');if(falta)dc.focus();dc.addEventListener('blur',function(){var d=soDig(dc.value);if(docOk(d))dc.value=fmtDoc(d)});
+  var dc=$('n-doc');if(falta)dc.focus();dc.addEventListener('blur',function(){var d=soDig(dc.value);if(docAceito(d))dc.value=fmtDoc(d)});
+  // O aviso de teste muda enquanto digita, nunca no blur: mudar a altura no blur desloca o botão Salvar no meio do toque.
+  var avisoDoc=function(){var d=soDig(dc.value),t=$('n-doc-t');
+    if(docAceito(d)&&!docOk(d)){if(!t){t=document.createElement('p');t.id='n-doc-t';t.className='aviso-teste';t.setAttribute('role','status');dc.closest('.field').appendChild(t)}t.textContent='Atenção: este '+tipoDoc(d)+' '+AVISO_TESTE}
+    else if(t)t.remove()};
+  dc.addEventListener('input',avisoDoc);avisoDoc();
 }
 function sheetCliente(id){
   var c=S.clientes.find(function(x){return x.id===id});if(!c)return;
   var cs=S.contas.filter(function(x){return x.clienteId===id}).sort(function(a,b){return a.venc<b.venc?-1:1}),rl=somenteLeitura();
-  sheet('<h2>'+esc(c.nome)+'</h2><p class="sub">'+(c.doc?tipoDoc(c.doc)+' '+fmtDoc(c.doc)+'<br>':'')+esc([c.telefone,c.email].filter(Boolean).join(' · ')||'Sem contato')+'</p>'
+  sheet('<h2>'+esc(c.nome)+'</h2><p class="sub">'+(c.doc?tipoDoc(c.doc)+' '+fmtDoc(c.doc)+(docOk(c.doc)?'':' · <span class="semdoc">não é válido (aceito na versão de teste)</span>')+'<br>':'')+esc([c.telefone,c.email].filter(Boolean).join(' · ')||'Sem contato')+'</p>'
    +(rl?'<p class="leitura">'+esc(MSG_LEITURA)+'</p>':(!c.doc?'<div class="alerta info">Falta o CPF ou CNPJ. Sem ele não dá para lançar contas nem usar planilhas com este cliente.</div><div class="actions"><button class="btn primary block" data-act="editar-cliente" data-id="'+id+'">Completar cadastro</button>'+(cs.length?'':'<button class="btn block danger" data-act="excluir-cliente" data-id="'+id+'">Excluir cliente</button>')+'</div>'
      :'<div class="actions"><button class="btn primary block" data-act="nova-conta-cli" data-id="'+id+'">Nova conta para este cliente</button><div class="lado"><button class="btn" data-act="editar-cliente" data-id="'+id+'">Editar dados</button>'+(cs.length?'<button class="btn" data-act="editar-xl-cli" data-id="'+id+'">Atualizar pelo Excel</button>':'<button class="btn danger" data-act="excluir-cliente" data-id="'+id+'">Excluir cliente</button>')+'</div></div>'))
    +'<h3>Contas ('+cs.length+')</h3>'+(cs.length?cs.map(function(x){return contaRow(x,true)}).join(''):'<div class="empty">Sem contas ainda.</div>')
@@ -974,6 +984,7 @@ function planejarImport(linhas,arquivo,soClientes){
     var lerVenc=function(){venc=parseDate(g.venc);if(!venc)P(probs,'venc','“'+fmtCel(g.venc)+'” não é uma data válida. Use dia/mês/ano, por exemplo '+EX_DATA+'.')};
     var lerPago=function(){pg=parseDate(g.pago);if(!pg)P(probs,'pago','“'+fmtCel(g.pago)+'” não é uma data válida. Use dia/mês/ano ou deixe vazio se não foi paga.');else if(pg>today)P(probs,'pago',fmtD(pg)+' é depois de hoje. Se ainda não foi paga, deixe vazio.')};
     if(dr&&!dr.ok)P(probs,'doc','“'+dr.raw+'” não é um CPF nem um CNPJ válido. Confira os números: CPF tem 11, CNPJ tem 14.');
+    if(dr&&dr.teste)P(avs,'doc','“'+dr.raw+'” '+AVISO_TESTE);
     if(dr&&dr.zeros)P(avs,'doc','o Excel tirou o zero da frente (“'+dr.raw+'”). Usamos '+fmtDoc(dr.d)+'. Para não acontecer de novo, formate a coluna como Texto.');
     if(mail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)){P(avs,'email','“'+mail+'” não parece um e-mail. O cliente fica sem esse e-mail.');mail=''}
     if(tel&&tel.replace(/\D/g,'').length<8)P(avs,'telefone','“'+tel+'” tem poucos dígitos. Entra assim mesmo; confira depois.');
@@ -1289,7 +1300,7 @@ document.addEventListener('click',function(e){
   else if(a==='apagar-dono'){
     var od=soDig($('dono-doc').value);
     if(!od){fieldError('dono-doc','Informe o seu CPF ou CNPJ');return}
-    if(!docOk(od)){fieldError('dono-doc',(od.length===11||od.length===14?tipoDoc(od)+' inválido':'CPF tem 11 números e CNPJ tem 14')+'. Confira os números.');return}
+    if(!docAceito(od)){fieldError('dono-doc',(od.length===11||od.length===14?tipoDoc(od)+' inválido':'CPF tem 11 números e CNPJ tem 14')+'. Confira os números.');return}
     try{localStorage.setItem(DONO_KEY,od)}catch(e){}
     sheetApagar();
   }
@@ -1312,12 +1323,12 @@ document.addEventListener('click',function(e){
     if(!nome){fieldError('n-nome','Informe o nome do cliente');return}
     var dd=soDig($('n-doc').value);
     if(!dd){fieldError('n-doc','Informe o CPF ou o CNPJ');return}
-    if(!docOk(dd)){fieldError('n-doc',(dd.length===11||dd.length===14?tipoDoc(dd)+' inválido':'CPF tem 11 números e CNPJ tem 14')+'. Confira os números.');return}
+    if(!docAceito(dd)){fieldError('n-doc',(dd.length===11||dd.length===14?tipoDoc(dd)+' inválido':'CPF tem 11 números e CNPJ tem 14')+'. Confira os números.');return}
     var dono=S.clientes.find(function(x){return x.id!==eid&&x.doc===dd});
     if(dono){fieldError('n-doc','Esse '+tipoDoc(dd)+' já é de '+dono.nome+'.');return}
     var dados={nome:nome,doc:dd,telefone:$('n-tel').value.trim(),email:$('n-mail').value.trim(),obs:$('n-obs').value.trim()};
-    if(eid){Object.assign(S.clientes.find(function(x){return x.id===eid}),dados);save();closeSheet();render();if(!proximoSemDoc())toast('Dados atualizados')}
-    else{dados.id=uid();S.clientes.push(dados);save();closeSheet();render();toast('Cliente cadastrado')}
+    if(eid){Object.assign(S.clientes.find(function(x){return x.id===eid}),dados);save();closeSheet();render();if(!proximoSemDoc())toast(docOk(dd)?'Dados atualizados':'Dados atualizados. Atenção: o '+tipoDoc(dd)+' não é válido (aceito só na versão de teste).')}
+    else{dados.id=uid();S.clientes.push(dados);save();closeSheet();render();toast(docOk(dd)?'Cliente cadastrado':'Cliente cadastrado. Atenção: o '+tipoDoc(dd)+' não é válido (aceito só na versão de teste).')}
   }
   else if(a==='import-abrir')sheetImportar();
   else if(a==='import-sample')abrirPlanilha(planilhaExemplo(),'Planilha de exemplo');
