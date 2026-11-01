@@ -139,8 +139,9 @@ const CPF_MARINA = '637.129.261-70', CPF_BRUNO = cpf('434259868'), CPF_LIA = cpf
   ok('Há as duas escolhas: atualizar o que mudou e cadastrar o que é novo', (await p.locator('#imp-atualizar').count()) === 1 && (await p.locator('#imp-novos').count()) === 1);
   await p.click('[data-act=imp-ver-prob]'); await p.waitForTimeout(150);
   ok('"Ver problemas" leva até a lista e põe o foco nela', await p.evaluate(() => document.activeElement.id === 'imp-prob'));
-  const fixo = await botao().boundingBox();
-  ok('Botão de importar fica fixo embaixo, mesmo com a lista rolada', fixo && fixo.y + fixo.height <= 844 && fixo.y > 600, JSON.stringify(fixo));
+  // A régua é a própria janela, e não um número fixo de pixels: a altura do texto muda com as fontes de cada máquina.
+  const fixo = await p.evaluate(() => { const j = document.querySelector('.sheet'), r = j.getBoundingClientRect(), b = document.querySelector('[data-act=import-confirm]').getBoundingClientRect(), barra = document.querySelector('.actions.fixo').getBoundingClientRect(); return { fundoJanela: r.bottom, fundoBarra: barra.bottom, topoBotao: b.top, fundoBotao: b.bottom, rolada: j.scrollTop > 0, altura: innerHeight }; });
+  ok('Botão de importar fica fixo embaixo, mesmo com a lista rolada', fixo.rolada && fixo.fundoBarra >= fixo.fundoJanela - 40 && fixo.fundoBarra <= fixo.fundoJanela + 1 && fixo.fundoBotao <= fixo.fundoBarra && fixo.topoBotao > 0 && fixo.fundoBotao <= fixo.altura, JSON.stringify(fixo));
   await axe('prévia com problemas');
 
   await p.click('[data-act=imp-erros]');

@@ -105,10 +105,17 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R60. Ação que apaga tudo pede uma confirmação digitada, como o GitHub pede o nome do repositório: a pessoa digita o próprio CPF/CNPJ, cadastrado na primeira vez, e o botão só ativa quando confere. Antes, a tela diz quantos clientes, contas, comprovantes e importações serão apagados e oferece a cópia de segurança. Só existe na versão de teste, fica separado das tarefas comuns e não reinicia a avaliação. [tarefas]
 - R61. Na versão de teste, CPF/CNPJ com dígito errado é aceito (desde que tenha 11 ou 14 números), sempre com aviso: no formulário enquanto digita, no aviso ao salvar, na linha da planilha e com o rótulo "inválido (teste)" na lista. Repetido continua barrado. A produção só aceita número válido. [tarefas, importacao, app]
 - R62. Um aviso que aparece ou some embaixo de um campo não pode mudar no `blur`. O `blur` acontece no mesmo toque do botão Salvar: a janela muda de altura, o botão sai do lugar e o toque se perde. Atualize o aviso enquanto a pessoa digita. [app, tarefas]
+- R63. Teste de layout não usa limite fixo em pixels que dependa da fonte ("y > 600"). Cada máquina tem fontes diferentes, e o texto muda de altura: o que passa no computador falha no GitHub. A régua é a própria janela ou outro elemento da tela (por exemplo, o fundo da barra de botões perto do fundo da janela). [importacao]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-024 · 01/11/2026 · Primeira execução do GitHub Actions falhou num teste
+- **O que aconteceu:** as 9 suítes passavam aqui, mas na primeira execução do workflow no GitHub falhou 1 verificação de 400: "Botão de importar fica fixo embaixo, mesmo com a lista rolada", com o botão em `y=598,6` e o teste exigindo `y > 600`.
+- **Causa:** o teste usava um número fixo de pixels como régua. O servidor do GitHub tem outras fontes, o texto do botão fica um pouco mais alto e o botão sobe 8 px. O app não tinha defeito.
+- **O que foi feito:** o teste agora mede a barra de botões em relação ao fundo da janela (fica colada embaixo, com a lista rolada).
+- **Como evitar:** regra R63. Rodar os testes no GitHub, e não só no computador, é o que mostra esse tipo de diferença.
 
 ### A-023 · 01/11/2026 · Link da política quebrado: o repositório não tinha `main`
 - **O que aconteceu:** depois de renomear o repositório, o link `.../blob/main/PRIVACIDADE.md` não abria. O ambiente bloqueia as páginas do github.com e não deu para abrir o link daqui, mas `git ls-remote` mostrou o motivo: só existia a branch da sessão, sem `main`.
