@@ -18,6 +18,12 @@ Mesmo padrão do geoTotal e do calcTotal: nome `palavraTotal` em camelCase, repo
 - APK de teste: `bash android/preparar-assets.sh && cd android && ./gradlew clean assembleHomologRelease --max-workers=1`. O de produção usa `assembleProducaoRelease`. O SDK fica em `/opt/android-sdk` (`android/local.properties`). O arquivo sai em `android/app/build/outputs/apk/<variante>/release/`.
 - A interface do APK vem do protótipo. Nunca edite `android/app/src/*/assets/` à mão.
 
+## Branches, CI e lançamento
+
+- A `main` é a versão aprovada. O trabalho de cada sessão vai numa branch própria e só entra na `main` depois dos testes verdes e da aprovação do Alessandro.
+- `.github/workflows/android.yml` roda as 9 suítes e compila o APK de teste a cada push. Na `main`, publica o APK numa Release (link fixo: `https://github.com/alessandrocdrx/acertoTotal/releases/latest/download/acertototal.apk`).
+- Lançar na Play Store: aumentar `versionCode`/`versionName` em `android/app/build.gradle.kts` e pôr `[release]` na mensagem do commit na `main`. O workflow gera o AAB assinado com a chave de envio, a partir dos Secrets `ACERTOTOTAL_KEYSTORE_BASE64`, `ACERTOTOTAL_KEYSTORE_PASSWORD` e `ACERTOTOTAL_KEY_ALIAS`. Sem os Secrets, ele para com erro. Passo a passo em `playstore/FICHA.md`.
+
 ## Regras de trabalho
 
 - Toda correção ganha um teste em `testes/`.

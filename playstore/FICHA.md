@@ -71,7 +71,7 @@ O acertoTotal não movimenta dinheiro: ele não faz nem recebe pagamentos. Ele s
 ## 6. Política de privacidade
 
 Texto em [`PRIVACIDADE.md`](../PRIVACIDADE.md). URL para colar no Play Console (depois de renomear o repositório para `acertoTotal`):
-`https://github.com/alessandrocdrx/acertoTotal/blob/HEAD/PRIVACIDADE.md`
+`https://github.com/alessandrocdrx/acertoTotal/blob/main/PRIVACIDADE.md`
 
 ## 7. Testes e lançamento
 

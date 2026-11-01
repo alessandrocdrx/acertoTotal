@@ -110,6 +110,12 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 As entradas mais recentes ficam no topo.
 
+### A-023 · 01/11/2026 · Link da política quebrado: o repositório não tinha `main`
+- **O que aconteceu:** depois de renomear o repositório, o link `.../blob/main/PRIVACIDADE.md` não abria. O ambiente bloqueia as páginas do github.com e não deu para abrir o link daqui, mas `git ls-remote` mostrou o motivo: só existia a branch da sessão, sem `main`.
+- **Causa:** o trabalho foi todo feito na branch da sessão, sem pull request, e a ficha da loja apontou para uma branch que nunca existiu. Um link escrito antes de existir não foi conferido.
+- **O que foi feito:** a `main` foi criada a partir da branch aprovada, e o repositório ganhou o padrão do calcTotal: `LICENSE`, workflow `android.yml` (testes, APK de teste na Release e lançamento na Play com `[release]`) e as regras de branch no `CLAUDE.md`.
+- **Como evitar:** todo link que vai para um formulário externo (política, ficha) é conferido com `git ls-remote` ou abrindo numa aba anônima antes de ser entregue. O workflow não pôde ser executado daqui; o primeiro push na `main` é o teste dele.
+
 ### A-022 · 01/11/2026 · Mudança de nome: CelsoPix vira acertoTotal
 - **Pedido do cliente:** o nome do app e do repositório devem seguir o padrão do geoTotal e do calcTotal, e não podem citar Pix, porque o app vai evoluir. Depois de descartar "caixa" (marca de banco) e "conta" (palavra genérica, some na busca entre os bancos), o cliente escolheu **acertoTotal**.
 - **O que mudou:**

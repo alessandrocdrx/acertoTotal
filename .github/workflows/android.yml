@@ -1,0 +1,104 @@
+name: Android
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Instalar Playwright e Chromium
+        run: |
+          npm install -g playwright
+          playwright install --with-deps chromium
+      - name: Testes automatizados (9 suítes)
+        run: bash testes/rodar.sh
+      - name: APK de teste
+        run: |
+          cd android
+          ./gradlew --no-daemon assembleHomologRelease
+          cp app/build/outputs/apk/homolog/release/app-homolog-release.apk ../acertototal.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: acertototal-teste-apk
+          path: acertototal.apk
+      # Na main, publica o APK de teste solto (sem zip) numa Release.
+      # Link fixo para a mais recente:
+      # https://github.com/alessandrocdrx/acertoTotal/releases/latest/download/acertototal.apk
+      - name: Publicar Release de teste
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[release]')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: acertoTotal (build ${{ github.run_number }})
+          body: APK de teste gerado automaticamente a partir da main (${{ github.sha }}).
+          files: acertototal.apk
+          make_latest: true
+
+  # Lançamento na Play Store: commit na main com "[release]" na mensagem.
+  # Precisa dos Secrets ACERTOTOTAL_KEYSTORE_BASE64, ACERTOTOTAL_KEYSTORE_PASSWORD e ACERTOTOTAL_KEY_ALIAS
+  # (a senha da chave é a mesma da keystore). Se faltar algum, para com erro: nunca assina com a chave de teste.
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Preparar chave de envio
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ACERTOTOTAL_KEYSTORE_BASE64 }}
+          SENHA: ${{ secrets.ACERTOTOTAL_KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.ACERTOTOTAL_KEY_ALIAS }}
+        run: |
+          for v in KEYSTORE_BASE64 SENHA ALIAS; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Falta um Secret da chave de envio (ACERTOTOTAL_KEYSTORE_BASE64, ACERTOTOTAL_KEYSTORE_PASSWORD ou ACERTOTOTAL_KEY_ALIAS)."
+              exit 1
+            fi
+          done
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/envio.keystore"
+          printf 'arquivo=%s\nalias=%s\nsenha=%s\n' "$RUNNER_TEMP/envio.keystore" "$ALIAS" "$SENHA" > android/assinatura-play.properties
+      - name: Compilar APK e AAB assinados
+        run: |
+          bash android/preparar-assets.sh
+          cd android
+          ./gradlew --no-daemon assembleProducaoRelease bundleProducaoRelease
+          # confere que saiu assinado com a chave de envio, e não sem assinatura
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify app/build/outputs/apk/producao/release/app-producao-release.apk
+          cp app/build/outputs/apk/producao/release/app-producao-release.apk ../acertototal.apk
+          cp app/build/outputs/bundle/producaoRelease/app-producao-release.aab ../acertototal.aab
+      - name: Versão do app
+        id: ver
+        run: echo "tag=v$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' android/app/build.gradle.kts)" >> "$GITHUB_OUTPUT"
+      - name: Publicar na página de Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: acertoTotal ${{ steps.ver.outputs.tag }}
+          body: |
+            `acertototal.aab` é o pacote para enviar ao Google Play Console.
+            `acertototal.apk` é a mesma versão para instalar e testar no celular antes de enviar.
+          make_latest: true
+          files: |
+            acertototal.apk
+            acertototal.aab
