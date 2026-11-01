@@ -26,6 +26,8 @@ Mesmo padrão do geoTotal e do calcTotal: nome `palavraTotal` em camelCase, repo
 
 ## Regras de trabalho
 
+- Com o Alessandro, guie **um passo por vez**: dê só o próximo passo, espere ele responder (muitas vezes com uma captura de tela) e só então dê o seguinte. Mensagens curtas, sem listas longas.
+
 - Toda correção ganha um teste em `testes/`.
 - Todo problema achado, seja por teste, pelo cliente ou numa revisão, vira uma entrada em `docs/aprendizados.md` com causa, correção e como evitar.
 - Publique o artefato só com todas as suítes passando.
