@@ -14,4 +14,4 @@ O acertoTotal é um aplicativo de contas a receber, criado por **alessandrocdrx*
 
 **Dados de terceiros:** os dados dos seus clientes são de sua responsabilidade. Use o app de acordo com a LGPD.
 
-**Contato:** [e-mail de contato]
+**Contato:** alessandrocdrx@gmail.com

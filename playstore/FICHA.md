@@ -82,7 +82,7 @@ Texto em [`PRIVACIDADE.md`](../PRIVACIDADE.md). URL para colar no Play Console (
 ## 8. Pendências antes de enviar
 
 - [ ] Nível de API de destino: o app usa `targetSdk 35`. A Play pode exigir um nível mais novo para apps novos. O Play Console avisa no envio do AAB. Se exigir, é preciso atualizar o Android Gradle Plugin e o SDK para o nível pedido (a exigência exata não foi conferida aqui).
-- [ ] Renomear o repositório `celsao` para `acertoTotal` no GitHub e colocar o e-mail de contato no `PRIVACIDADE.md`.
+- [x] Repositório renomeado para `acertoTotal` e e-mail de contato no `PRIVACIDADE.md`.
 - [ ] Decidir o limite de avaliação (hoje a Play nasce **sem limite**).
 - [ ] Guardar uma cópia da chave de envio e da senha.
 - [ ] Testar o AAB instalado pela Play (teste interno) num aparelho de verdade: seletor de arquivos, salvar em Downloads e botão Voltar ainda não foram testados em aparelho.
