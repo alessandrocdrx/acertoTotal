@@ -1,4 +1,4 @@
-package br.com.celsopix
+package io.github.alessandrocdrx.acertototal
 
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
@@ -23,8 +23,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebViewAssetLoader
 
 /**
- * Casca Android do protótipo CelsoPix: a interface é a mesma página testada em
- * prototipo/celsopix.html, servida das assets do APK (funciona sem internet).
+ * Casca Android do protótipo acertoTotal: a interface é a mesma página testada em
+ * prototipo/acertototal.html, servida das assets do APK (funciona sem internet).
  */
 class MainActivity : ComponentActivity() {
 
@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
             allowContentAccess = false
             setSupportZoom(false)
         }
-        web.addJavascriptInterface(Ponte(applicationContext), "CelsoPixAndroid")
+        web.addJavascriptInterface(Ponte(applicationContext), "acertoTotalAndroid")
 
         web.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =

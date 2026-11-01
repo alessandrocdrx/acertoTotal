@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Roda todos os testes automatizados do protótipo CelsoPix.
+# Roda todos os testes automatizados do protótipo acertoTotal.
 # Uso: bash testes/rodar.sh
 set -u
 cd "$(dirname "$0")"
@@ -13,7 +13,7 @@ mkdir -p vendor .build capturas
 {
   printf '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
   printf '<style>:root{color-scheme:light}body{margin:0;font-size:14px}</style>\n'
-  cat ../prototipo/celsopix.html
+  cat ../prototipo/acertototal.html
 } > .build/page.html
 
 # Monta as páginas do APK a partir do mesmo protótipo

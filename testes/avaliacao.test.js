@@ -25,7 +25,7 @@ const DIA = 864e5;
       await p.addInitScript(([d, visto]) => {
         if (window.__semente) return; window.__semente = 1;
         const agora = Date.now();
-        localStorage.setItem('celsopix-avaliacao', JSON.stringify({ inicio: agora - d * 864e5, visto: visto != null ? agora + visto : agora - d * 864e5 }));
+        localStorage.setItem('acertototal-avaliacao', JSON.stringify({ inicio: agora - d * 864e5, visto: visto != null ? agora + visto : agora - d * 864e5 }));
       }, [diasAtras, opts.visto]);
     }
     await p.goto(opts.url || ('file://' + __dirname + '/.build/page.html'));
@@ -42,11 +42,11 @@ const DIA = 864e5;
     ok('Primeiro uso: faixa mostra "faltam 7 dias" e a data final', /Avaliação: faltam 7 dias \(até (\d\d\/\d\d\/\d{4})\)/.test(f) && f.includes(fim), f);
     ok('Primeiro uso: faixa continua avisando que é ambiente de teste', /Ambiente de teste/.test(f));
     ok('Primeiro uso: dá para dar baixa e cadastrar', (await p.locator('.crow .btn.primary').count()) > 0 && (await p.locator('.fab').count()) === 1);
-    const ini = await p.evaluate(() => JSON.parse(localStorage.getItem('celsopix-avaliacao')).inicio);
+    const ini = await p.evaluate(() => JSON.parse(localStorage.getItem('acertototal-avaliacao')).inicio);
     await p.reload(); await p.waitForSelector('.crow');
-    ok('Recarregar não reinicia a contagem', (await p.evaluate(() => JSON.parse(localStorage.getItem('celsopix-avaliacao')).inicio)) === ini);
+    ok('Recarregar não reinicia a contagem', (await p.evaluate(() => JSON.parse(localStorage.getItem('acertototal-avaliacao')).inicio)) === ini);
     await p.evaluate(() => document.getElementById('reset').click());
-    ok('"Restaurar dados de exemplo" não reinicia a contagem', (await p.evaluate(() => JSON.parse(localStorage.getItem('celsopix-avaliacao')).inicio)) === ini);
+    ok('"Restaurar dados de exemplo" não reinicia a contagem', (await p.evaluate(() => JSON.parse(localStorage.getItem('acertototal-avaliacao')).inicio)) === ini);
     await ctx.close();
   }
   // Meio do período e último dia

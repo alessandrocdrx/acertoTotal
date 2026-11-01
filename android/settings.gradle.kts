@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "CelsoPix"
+rootProject.name = "acertoTotal"
 include(":app")

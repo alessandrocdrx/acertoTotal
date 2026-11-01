@@ -1,4 +1,4 @@
-<title>CelsoPix</title>
+<title>acertoTotal</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -263,11 +263,11 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 <div class="stage">
   <section class="pitch">
     <div class="tag">Protótipo navegável</div>
-    <h1 style="display:flex;align-items:center;gap:12px"><svg width="48" height="48" viewBox="0 0 32 32" aria-hidden="true" style="flex:none"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M16 6l10 10-10 10L6 16z" fill="none" stroke="var(--accent-fg)" stroke-width="2" stroke-linejoin="round"/><path d="M11.5 16.5l3 3 6-6.5" fill="none" stroke="var(--accent-fg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>CelsoPix</h1>
-    <p>Cadastre clientes, registre as contas a receber e dê baixa quando o Pix chegar. Tudo no celular, com um administrador.</p>
+    <h1 style="display:flex;align-items:center;gap:12px"><svg width="48" height="48" viewBox="0 0 32 32" aria-hidden="true" style="flex:none"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M16 6l10 10-10 10L6 16z" fill="none" stroke="var(--accent-fg)" stroke-width="2" stroke-linejoin="round"/><path d="M11.5 16.5l3 3 6-6.5" fill="none" stroke="var(--accent-fg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>acertoTotal</h1>
+    <p>Cadastre clientes, registre as contas a receber e dê baixa quando o pagamento chegar. Tudo no celular, com um administrador.</p>
     <ol>
       <li><b>1</b><span>Na aba <strong>Contas</strong>, toque em <strong>Dar baixa</strong> numa conta em aberto e informe a data do pagamento.</span></li>
-      <li><b>2</b><span>Anexe um comprovante Pix (foto ou PDF). O app guarda o arquivo, sem conferir.</span></li>
+      <li><b>2</b><span>Anexe o comprovante (foto ou PDF). O app guarda o arquivo, sem conferir.</span></li>
       <li><b>3</b><span>Na aba <strong>Planilha</strong>, toque em <strong>Importar planilha</strong>. Antes de gravar, o app mostra o que entra, o que muda e cada erro com a linha e a coluna.</span></li>
       <li><b>4</b><span>Para mudar várias contas, use <strong>Atualizar pelo Excel</strong>: baixe a planilha, edite e envie de volta. O CPF/CNPJ identifica cada cliente.</span></li>
     </ol>
@@ -277,7 +277,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 
   <div class="phone" id="phone">
     <div class="ambiente" id="ambiente" role="note" hidden></div>
-    <header class="head"><div><div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M16 6l10 10-10 10L6 16z" fill="none" stroke="var(--accent-fg)" stroke-width="2" stroke-linejoin="round"/><path d="M11.5 16.5l3 3 6-6.5" fill="none" stroke="var(--accent-fg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>CelsoPix</span></div><h2 id="title"></h2><small id="subtitle"></small></div><div id="headAction"></div></header>
+    <header class="head"><div><div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M16 6l10 10-10 10L6 16z" fill="none" stroke="var(--accent-fg)" stroke-width="2" stroke-linejoin="round"/><path d="M11.5 16.5l3 3 6-6.5" fill="none" stroke="var(--accent-fg)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>acertoTotal</span></div><h2 id="title"></h2><small id="subtitle"></small></div><div id="headAction"></div></header>
     <main class="screen" id="screen"></main>
     <nav class="tabs" id="tabs"></nav>
     <div id="layer"></div>
@@ -302,7 +302,7 @@ function cpfOk(d){if(!/^\d{11}$/.test(d)||/^(\d)\1+$/.test(d))return false;for(v
 function cnpjOk(d){if(!/^\d{14}$/.test(d)||/^(\d)\1+$/.test(d))return false;var w=[6,5,4,3,2,9,8,7,6,5,4,3,2];for(var n=12;n<14;n++){var s=0;for(var i=0;i<n;i++)s+=+d[i]*w[i+13-n];var r=s%11;if((r<2?0:11-r)!==+d[n])return false}return true}
 function docOk(d){return d.length===11?cpfOk(d):(d.length===14?cnpjOk(d):false)}
 // Versão de teste: aceita CPF/CNPJ com dígito errado (11 ou 14 números), sempre avisando. Produção só aceita válido.
-function docAceito(d){return docOk(d)||(window.CELSOPIX_AMBIENTE!=='producao'&&(d.length===11||d.length===14))}
+function docAceito(d){return docOk(d)||(window.ACERTO_AMBIENTE!=='producao'&&(d.length===11||d.length===14))}
 var AVISO_TESTE='não é um número válido. Foi aceito só porque esta é a versão de teste; na versão oficial seria recusado.';
 function fmtDoc(d){d=soDig(d);return d.length===11?d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4'):(d.length===14?d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5'):d)}
 function tipoDoc(d){return soDig(d).length===14?'CNPJ':'CPF'}
@@ -532,7 +532,7 @@ function viewPlanilha(){
    +'</nav>'+historicoImport()+zonaPerigo();
 }
 // Só na versão de teste: apagar tudo, confirmado com o CPF/CNPJ do dono (como o GitHub pede o nome do repositório).
-var DONO_KEY='celsopix-dono';
+var DONO_KEY='acertototal-dono';
 function donoDoc(){try{return localStorage.getItem(DONO_KEY)||''}catch(e){return ''}}
 function zonaPerigo(){
   if(AMBIENTE==='producao')return '';
@@ -608,7 +608,7 @@ function sheetExport(kind){
     rows=filteredContas().map(function(c){return linhaRelatorio(c,false)});
   }else{
     // Cópia de segurança = planilha para editar com tudo, inclusive clientes sem contas. Importar de volta restaura.
-    head=EDIT_HEAD;titulo='Cópia de segurança';file='backup-celsopix';extra=[{nome:'Como editar',aoa:COMO_EDITAR}];ed=true;rows=[];
+    head=EDIT_HEAD;titulo='Cópia de segurança';file='backup-acertototal';extra=[{nome:'Como editar',aoa:COMO_EDITAR}];ed=true;rows=[];
     S.clientes.slice().sort(function(a,b){return a.nome.localeCompare(b.nome)}).forEach(function(cl){
       var cs=S.contas.filter(function(c){return c.clienteId===cl.id}).sort(function(a,b){return a.venc<b.venc?-1:1});
       if(cs.length)cs.forEach(function(c){rows.push(linhaEditar(c))});else rows.push(['',fmtDoc(cl.doc||''),cl.nome,cl.telefone||'',cl.email||'','','','','']);
@@ -703,13 +703,13 @@ function sheetConta(id){
    +(c.pagoEm?'<dt>Pago em</dt><dd>'+fmtD(c.pagoEm)+'</dd>':'')+'</dl>';
   if(c.comprovante){
     h+='<div class="comp"><strong>Comprovante anexado</strong><div style="color:var(--muted);font-size:13px">'+esc(c.comprovante.nome)+'</div>'
-     +(c.comprovante.data&&c.comprovante.tipo.indexOf('image')===0?'<img alt="Comprovante Pix" src="'+c.comprovante.data+'">':'')+'</div>';
+     +(c.comprovante.data&&c.comprovante.tipo.indexOf('image')===0?'<img alt="Comprovante" src="'+c.comprovante.data+'">':'')+'</div>';
   }
   if(somenteLeitura()){
     h+='<p class="leitura">'+esc(MSG_LEITURA)+'</p><div class="actions"><button class="btn block" data-act="close">Fechar</button></div>';
   }else if(s!=='paga'){
     h+='<h3>Dar baixa</h3><div class="field"><label for="dtpago">Data do pagamento</label><input id="dtpago" type="date" value="'+today+'" max="'+today+'"></div>'
-     +'<div class="comp"><strong>Comprovante Pix (opcional)</strong><div style="color:var(--muted);font-size:13px;margin:2px 0 8px" id="compname">Nenhum arquivo escolhido. O app guarda o arquivo, sem conferir.</div>'
+     +'<div class="comp"><strong>Comprovante (opcional)</strong><div style="color:var(--muted);font-size:13px;margin:2px 0 8px" id="compname">Nenhum arquivo escolhido. O app guarda o arquivo, sem conferir.</div>'
      +'<input type="file" id="fcomp" accept="image/*,application/pdf" hidden><button class="btn" data-act="pick-comp">Anexar foto ou PDF</button></div>'
      +'<div class="actions"><button class="btn primary block" data-act="baixa" data-id="'+c.id+'">Confirmar baixa (marcar como paga)</button><button class="btn block" data-act="close">Fechar</button></div>';
   }else{
@@ -1131,7 +1131,7 @@ function baixarModelo(){
   var tit=['CPF/CNPJ','Nome','Telefone','E-mail','Descrição','Valor','Vencimento','Pago em'];
   var como=[['Coluna','Precisa?','O que colocar']].concat(CAMPOS.filter(function(c){return c.k!=='codigo'}).map(function(c){return [c.rotL,{sim:'Sim',novo:'Sim, para cliente novo',conta:'Sim, para criar conta'}[c.req]||'Não','Exemplo: '+c.ex+(c.dica?'. '+c.dica:'')]}))
     .concat([[''],['Cada linha é uma conta. Um cliente com várias contas ocupa várias linhas com o mesmo CPF/CNPJ.'],['Para mudar contas que já existem, use no app: Planilha › Baixar planilha para editar.']]);
-  baixarXlsx('modelo-importacao-celsopix',[{nome:'Contas',aoa:[tit]},{nome:'Como preencher',aoa:como}],null,true);
+  baixarXlsx('modelo-importacao-acertototal',[{nome:'Contas',aoa:[tit]},{nome:'Como preencher',aoa:como}],null,true);
 }
 function aplicarImport(){
   if(somenteLeitura()){toast(MSG_LEITURA);return}
@@ -1213,7 +1213,7 @@ function baixarXlsx(nome,abas,depois,semData){
 }
 
 var hostTheme=document.documentElement.getAttribute('data-theme'),themePref='light';
-try{themePref=localStorage.getItem('celso-pix-tema')||'light'}catch(e){}
+try{themePref=localStorage.getItem('acerto-total-tema')||'light'}catch(e){}
 function applyTheme(){
   var r=document.documentElement;
   if(themePref==='auto'){if(hostTheme)r.setAttribute('data-theme',hostTheme);else r.removeAttribute('data-theme')}
@@ -1223,7 +1223,7 @@ function lum(h){var c=[1,3,5].map(function(i){var v=parseInt(h.slice(i,i+2),16)/
 function ratio(a,b){var x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
 var PALETA=[
  ['Marca',[
-  ['Verde Pix','Botões, aba ativa, destaques',['#ffffff','#0a7c73'],['#062823','#3cc5b4']],
+  ['Verde acerto','Botões, aba ativa, destaques',['#ffffff','#0a7c73'],['#062823','#3cc5b4']],
   ['Verde suave','Fundo de destaques',['#0a7c73','#eaf6f4'],['#3cc5b4','#17403b']]]],
  ['Situação da conta',[
   ['Atrasada','Faixa lateral e selo',['#b3261e','#fadcd8'],['#ff9a90','#44201c']],
@@ -1241,7 +1241,7 @@ function swatch(p){
 }
 function sheetAparencia(){
   var opts=[['auto','Automático'],['light','Claro'],['dark','Escuro']];
-  var h='<h2>Tema e paleta</h2><p class="sub">O verde do Pix é a cor da marca. A situação da conta sempre vem escrita, além da cor.</p>'
+  var h='<h2>Tema e paleta</h2><p class="sub">O verde é a cor da marca. A situação da conta sempre vem escrita, além da cor.</p>'
    +'<div class="seg" role="radiogroup" aria-label="Tema">'+opts.map(function(o){return '<button role="radio" aria-checked="'+(themePref===o[0])+'" data-act="theme" data-t="'+o[0]+'">'+o[1]+'</button>'}).join('')+'</div>'
    +'<p class="sub" style="font-size:13px;margin:6px 0 0">Automático segue o tema do celular.</p>';
   PALETA.forEach(function(g){
@@ -1354,7 +1354,7 @@ document.addEventListener('click',function(e){
   else if(a==='export-backup')sheetExport('backup');
   else if(a==='periodo'){statsPeriod=+el.dataset.p;render()}
   else if(a==='aparencia')sheetAparencia();
-  else if(a==='theme'){themePref=el.dataset.t;try{localStorage.setItem('celso-pix-tema',themePref)}catch(err){}applyTheme();sheetAparencia()}
+  else if(a==='theme'){themePref=el.dataset.t;try{localStorage.setItem('acerto-total-tema',themePref)}catch(err){}applyTheme();sheetAparencia()}
   else if(a==='export-filtrado')sheetExport('filtrado');
   else if(a==='xlsx-export'){
     var ex=lastExport,num={'Valor':1,'Dias de atraso':1};
@@ -1369,13 +1369,13 @@ document.addEventListener('click',function(e){
 });
 $('reset').addEventListener('click',function(){if(somenteLeitura()){toast(MSG_LEITURA);return}S=sample();save();closeSheet();tab='contas';filter='abertas';query='';render();toast('Dados de exemplo restaurados')});
 document.documentElement.lang='pt-BR';
-// Ambiente: o APK de produção define CELSOPIX_AMBIENTE='producao'; qualquer outro caso é teste.
-var AMBIENTE=window.CELSOPIX_AMBIENTE||'teste';
+// Ambiente: o APK de produção define ACERTO_AMBIENTE='producao'; qualquer outro caso é teste.
+var AMBIENTE=window.ACERTO_AMBIENTE||'teste';
 // Período de avaliação: conta a partir do primeiro uso neste aparelho. Depois dele, o app fica só
-// para consulta. CELSOPIX_LIMITE_DIAS=0 desliga o limite (variante de produção do APK).
-LIMITE_DIAS=window.CELSOPIX_LIMITE_DIAS!=null?+window.CELSOPIX_LIMITE_DIAS:7;
+// para consulta. ACERTO_LIMITE_DIAS=0 desliga o limite (variante de produção do APK).
+LIMITE_DIAS=window.ACERTO_LIMITE_DIAS!=null?+window.ACERTO_LIMITE_DIAS:7;
 AV=(function(){
-  var k='celsopix-avaliacao',a=null,agora=Date.now();
+  var k='acertototal-avaliacao',a=null,agora=Date.now();
   try{a=JSON.parse(localStorage.getItem(k)||'null')}catch(e){}
   if(!a||!a.inicio)a={inicio:agora,visto:agora};
   // Relógio voltado mais de 1 dia em relação ao último uso: trata como avaliação encerrada.

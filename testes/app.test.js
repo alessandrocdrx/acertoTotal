@@ -24,7 +24,7 @@ async function newPage(browser, opts = {}) {
     if (u.startsWith('file://')) return route.continue();
     return route.fulfill({ status: 200, contentType: 'text/css', body: '' });
   });
-  if (opts.dark) await page.addInitScript(() => { try { localStorage.setItem('celso-pix-tema', 'dark'); } catch (e) {} });
+  if (opts.dark) await page.addInitScript(() => { try { localStorage.setItem('acerto-total-tema', 'dark'); } catch (e) {} });
   if (opts.mockDownloads !== false) {
     await page.addInitScript(() => {
       window.claude = { use: async n => n === 'downloads' ? { save: async r => { window.__saved = { filename: r.filename, bytes: Array.from(new Uint8Array(r.data)) }; return { status: 'saved' }; } } : null };
@@ -58,7 +58,7 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
     // Baixa com comprovante
     await page.locator('.crow.atrasada .btn.primary').first().click();
     const sheetTxt = await page.locator('.sheet').innerText();
-    rec('Código', 'Tela de baixa abre com data, comprovante e confirmar', /Data do pagamento/.test(sheetTxt) && /Comprovante Pix/.test(sheetTxt) && /Confirmar baixa/.test(sheetTxt));
+    rec('Código', 'Tela de baixa abre com data, comprovante e confirmar', /Data do pagamento/.test(sheetTxt) && /Comprovante \(opcional\)/.test(sheetTxt) && /Confirmar baixa/.test(sheetTxt));
     const defaultDate = await page.inputValue('#dtpago');
     const today = await page.evaluate(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
     rec('Código', 'Data do pagamento começa em hoje', defaultDate === today, defaultDate + ' vs ' + today);

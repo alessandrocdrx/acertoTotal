@@ -110,6 +110,15 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 As entradas mais recentes ficam no topo.
 
+### A-022 · 01/11/2026 · Mudança de nome: CelsoPix vira acertoTotal
+- **Pedido do cliente:** o nome do app e do repositório devem seguir o padrão do geoTotal e do calcTotal, e não podem citar Pix, porque o app vai evoluir. Depois de descartar "caixa" (marca de banco) e "conta" (palavra genérica, some na busca entre os bancos), o cliente escolheu **acertoTotal**.
+- **O que mudou:**
+  - Nome do app (`acertoTotal`, e `acertoTotal Teste` na versão de teste), ID `io.github.alessandrocdrx.acertototal`, pacote Kotlin, `prototipo/acertototal.html` e nomes dos arquivos de exportação.
+  - O texto do app não fala mais de Pix: "dê baixa quando o pagamento chegar", "Comprovante" no lugar de "Comprovante Pix" e a paleta "Verde acerto".
+  - A política passou a `PRIVACIDADE.md` e a ficha da loja a `playstore/FICHA.md`, como no calcTotal.
+- **O que não mudou, de propósito:** a chave de dados `baixa-pix-v2` (o nome é invisível e mudar exigiria migração), o arquivo da chave de envio `celsopix-envio.keystore` e as capturas antigas de documentação no histórico deste arquivo, que mantêm o nome da época.
+- **Como evitar:** o ID do app na Play não muda depois do primeiro envio, então o nome se decide antes de criar o app no Console. Nome de produto não leva marca de banco, termo genérico nem meio de pagamento. Pesquisar o nome na Play e no INPI (classes 9 e 36) antes de usar.
+
 ### A-021 · 01/11/2026 · Primeiro pacote para a Google Play
 - **Pedido do cliente:** publicar na Play pela conta pessoal alessandrocdrx. O passo a passo está em `docs/play-store.md`.
 - **O que foi feito:**

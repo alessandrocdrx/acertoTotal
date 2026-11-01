@@ -1,4 +1,4 @@
-package br.com.celsopix
+package io.github.alessandrocdrx.acertototal
 
 import android.content.ContentValues
 import android.content.Context
@@ -10,7 +10,7 @@ import android.webkit.JavascriptInterface
 import android.widget.Toast
 
 /**
- * Ponte chamada pela página (window.CelsoPixAndroid). Faz o papel da permissão de
+ * Ponte chamada pela página (window.acertoTotalAndroid). Faz o papel da permissão de
  * download do artefato: recebe o Excel gerado e salva na pasta Downloads.
  * Respostas seguem os códigos do protótipo: "saved", "rejected_extension", "unavailable".
  */

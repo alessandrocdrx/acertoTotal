@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "br.com.celsopix"
+    namespace = "io.github.alessandrocdrx.acertototal"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "br.com.celsopix"
+        applicationId = "io.github.alessandrocdrx.acertototal"
         minSdk = 29
         targetSdk = 35
         versionCode = 9
@@ -52,12 +52,12 @@ android {
             dimension = "ambiente"
             applicationIdSuffix = ".teste"
             versionNameSuffix = "-teste"
-            resValue("string", "app_name", "CelsoPix Teste")
+            resValue("string", "app_name", "acertoTotal Teste")
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
         create("producao") {
             dimension = "ambiente"
-            resValue("string", "app_name", "CelsoPix")
+            resValue("string", "app_name", "acertoTotal")
             // Google Play: assinado com a chave de envio (assinatura-play.properties, fora do repositório).
             signingConfigs.findByName("play")?.let { signingConfig = it }
         }

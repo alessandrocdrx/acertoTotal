@@ -80,8 +80,8 @@ const CPF_MARINA = '637.129.261-70', CPF_BRUNO = cpf('434259868'), CPF_LIA = cpf
   await p.click('[data-act=import-abrir]');
   await p.click('.sheet [data-act=import-modelo]');
   const modelo = await salvo();
-  ok('Planilha modelo começa pelo CPF/CNPJ', modelo.nome === 'modelo-importacao-celsopix.xlsx' && JSON.stringify(modelo.aoa[0]) === JSON.stringify(['CPF/CNPJ', 'Nome', 'Telefone', 'E-mail', 'Descrição', 'Valor', 'Vencimento', 'Pago em']), JSON.stringify(modelo.aoa[0]));
-  await enviar('modelo-importacao-celsopix.xlsx', modelo.d);
+  ok('Planilha modelo começa pelo CPF/CNPJ', modelo.nome === 'modelo-importacao-acertototal.xlsx' && JSON.stringify(modelo.aoa[0]) === JSON.stringify(['CPF/CNPJ', 'Nome', 'Telefone', 'E-mail', 'Descrição', 'Valor', 'Vencimento', 'Pago em']), JSON.stringify(modelo.aoa[0]));
+  await enviar('modelo-importacao-acertototal.xlsx', modelo.d);
   ok('Importar o modelo vazio diz que está sem dados (não lê a aba "Como preencher")', (await p.locator('.sheet h2').innerText()) === 'A planilha está sem dados');
 
   // ---------- Passo 1

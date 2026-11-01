@@ -1,6 +1,10 @@
-# CelsoPix
+# acertoTotal
 
-App de controle de cobranças Pix: cadastrar clientes e contas, dar baixa com o comprovante, ver quem está em atraso, importar e exportar Excel. O protótipo navegável fica em `prototipo/celsopix.html` e é publicado como artefato. O app final será Android nativo.
+App de contas a receber (antes chamado CelsoPix): cadastrar clientes e contas, dar baixa com o comprovante, ver quem está em atraso, importar e exportar Excel. O protótipo navegável fica em `prototipo/acertototal.html` e é publicado como artefato. O app final será Android nativo.
+
+## Nome e padrão da família
+
+Mesmo padrão do geoTotal e do calcTotal: nome `palavraTotal` em camelCase, repositório com o mesmo nome (`acertoTotal`), ID do app `io.github.alessandrocdrx.acertototal`, `PRIVACIDADE.md` na raiz e ficha da loja em `playstore/FICHA.md`. O nome não pode citar um meio de pagamento (Pix): o app vai crescer além de cobranças. O app de teste se chama `acertoTotal Teste`.
 
 ## Antes de qualquer mudança
 

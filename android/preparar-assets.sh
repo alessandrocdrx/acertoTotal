@@ -17,7 +17,7 @@ IFS=: read -r VARIANTE AMB DIAS <<< "$PAR"
 DEST=app/src/$VARIANTE/assets
 mkdir -p "$DEST"
 cp "$XLSX" "$DEST/xlsx.full.min.js"
-python3 - ../prototipo/celsopix.html "$DEST/index.html" "$AMB" "$DIAS" <<'PY'
+python3 - ../prototipo/acertototal.html "$DEST/index.html" "$AMB" "$DIAS" <<'PY'
 import re, sys
 src, dst, amb, dias = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
 s = open(src, encoding='utf-8').read()
@@ -25,16 +25,16 @@ s, n1 = re.subn(r'<link rel="stylesheet" href="https://fonts\.googleapis\.com[^>
 s, n2 = re.subn(r'https://cdnjs\.cloudflare\.com/ajax/libs/xlsx/[^"]+', 'xlsx.full.min.js', s)
 assert n1 == 1 and n2 == 1, f'protótipo mudou: fontes={n1} xlsx={n2}'
 ponte = """<script>
-window.CELSOPIX_AMBIENTE = '""" + amb + """';
-window.CELSOPIX_LIMITE_DIAS = """ + str(dias) + """;
+window.ACERTO_AMBIENTE = '""" + amb + """';
+window.ACERTO_LIMITE_DIAS = """ + str(dias) + """;
 // Ponte Android: substitui a permissão de download do artefato.
 window.claude = { use: function (nome) {
-  if (nome !== 'downloads' || !window.CelsoPixAndroid) return Promise.resolve(null);
+  if (nome !== 'downloads' || !window.acertoTotalAndroid) return Promise.resolve(null);
   return Promise.resolve({ save: function (r) {
     return new Promise(function (ok, falha) {
       var b = new Uint8Array(r.data), s = '';
       for (var i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
-      var st = window.CelsoPixAndroid.salvarArquivo(r.filename, btoa(s));
+      var st = window.acertoTotalAndroid.salvarArquivo(r.filename, btoa(s));
       if (st === 'saved') ok({ status: 'saved' }); else falha({ code: st || 'unavailable', message: st });
     });
   } });

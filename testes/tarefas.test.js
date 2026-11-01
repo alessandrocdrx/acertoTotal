@@ -130,7 +130,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   toques = 0;
   await tocar('button[data-tab=planilha]');
   await tocar('[data-act=import-abrir]');
-  await enviar('backup-celsopix.xlsx', bk.d);
+  await enviar('backup-acertototal.xlsx', bk.d);
   await tocar('[data-act=import-confirm]');
   const depois = await estado();
   ok('T5 · No celular novo, importar a cópia traz tudo de volta', depois.clientes.length === antes.clientes.length && depois.contas.length === antes.contas.length && depois.contas.every(c => antes.contas.some(a => a.id === c.id && a.valor === c.valor && a.venc === c.venc && (a.pagoEm || null) === (c.pagoEm || null))));
@@ -183,7 +183,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   ok(`T7 · 3 cadastros resolvidos em ${toques} toques (meta: até 7)`, toques <= 7, `${toques}`);
 
   // ===== Tarefa 8: "Apagar tudo" na versão de teste, confirmado com o CPF/CNPJ do dono
-  const aval0 = await p.evaluate(() => localStorage.getItem('celsopix-avaliacao'));
+  const aval0 = await p.evaluate(() => localStorage.getItem('acertototal-avaliacao'));
   await inicio();
   await tocar('button[data-tab=planilha]');
   ok('T8 · Versão de teste: "Apagar tudo…" fica no fim da aba Planilha, separado das tarefas', await p.locator('.perigo [data-act=apagar-abrir]').count() === 1 && await p.locator('.opcoes [data-act=apagar-abrir]').count() === 0);
@@ -203,7 +203,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   await tocar('[data-act=apagar-sim]');
   const S8 = await estado();
   ok('T8 · Tudo apagado: sem clientes, contas nem histórico', S8.clientes.length === 0 && S8.contas.length === 0 && (S8.importacoes || []).length === 0);
-  ok('T8 · Apagar tudo não reinicia a avaliação de 7 dias', await p.evaluate(() => localStorage.getItem('celsopix-avaliacao')) === aval0);
+  ok('T8 · Apagar tudo não reinicia a avaliação de 7 dias', await p.evaluate(() => localStorage.getItem('acertototal-avaliacao')) === aval0);
   await p.reload(); await p.waitForSelector('#screen'); await p.waitForTimeout(300);
   ok('T8 · Depois de reabrir, o app continua vazio (não volta o exemplo)', (await estado()).clientes.length === 0 && /Nenhuma|Comece|nenhuma/.test(await p.locator('#screen').innerText()));
   ok(`T8 · Apagar em ${toques} toques (meta: até 5)`, toques <= 5, `${toques}`);
@@ -214,7 +214,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
 
   // Produção não tem "Apagar tudo"
   const pp = await ctx.newPage();
-  await pp.addInitScript(() => { window.CELSOPIX_AMBIENTE = 'producao'; window.CELSOPIX_LIMITE_DIAS = 0; });
+  await pp.addInitScript(() => { window.ACERTO_AMBIENTE = 'producao'; window.ACERTO_LIMITE_DIAS = 0; });
   await pp.route('**/*', r => { const u = r.request().url(); if (u.includes('xlsx')) return r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(__dirname + '/vendor/xlsx.js', 'utf8') }); return u.startsWith('file://') ? r.continue() : r.fulfill({ status: 200, body: '' }); });
   await pp.goto('file://' + __dirname + '/.build/page.html'); await pp.waitForSelector('#screen');
   await pp.click('button[data-tab=planilha]');

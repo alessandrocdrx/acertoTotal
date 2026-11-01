@@ -32,7 +32,7 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   // Ponte de download
   {
     const { p, ctx } = await nova(() => {
-      window.CelsoPixAndroid = { salvarArquivo: (nome, b64) => { window.__salvo = { nome, b64 }; return 'saved'; } };
+      window.acertoTotalAndroid = { salvarArquivo: (nome, b64) => { window.__salvo = { nome, b64 }; return 'saved'; } };
     });
     ok('Sem internet: app abre e funciona', (await p.locator('.crow').count()) > 0 && typeof (await p.evaluate(() => typeof XLSX)) === 'string' && (await p.evaluate(() => typeof XLSX)) === 'object');
     await p.click('button[data-tab=planilha]');
@@ -51,7 +51,7 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
     await ctx.close();
   }
   {
-    const { p, ctx } = await nova(() => { window.CelsoPixAndroid = { salvarArquivo: () => 'unavailable' }; });
+    const { p, ctx } = await nova(() => { window.acertoTotalAndroid = { salvarArquivo: () => 'unavailable' }; });
     await p.click('button[data-tab=planilha]'); await p.click('[data-act=export-backup]'); await p.click('[data-act=xlsx-export]');
     await p.waitForTimeout(300);
     ok('Se o Android não conseguir salvar, o app avisa e não quebra', /Não foi possível salvar o arquivo/.test(await p.locator('.toast').innerText()) && p.errs.length === 0, p.errs.join('|'));
