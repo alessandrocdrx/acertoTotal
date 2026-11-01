@@ -7,13 +7,13 @@ plugins {
 
 android {
     namespace = "io.github.alessandrocdrx.acertototal"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.alessandrocdrx.acertototal"
         minSdk = 29
-        targetSdk = 35
-        versionCode = 10
+        targetSdk = 36
+        versionCode = 11
         versionName = "0.9.0"
     }
 

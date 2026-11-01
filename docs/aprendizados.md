@@ -115,6 +115,12 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 As entradas mais recentes ficam no topo.
 
+### A-026 · 01/11/2026 · Play exige nível de API 36
+- **O que aconteceu:** o rascunho do teste interno (versão 10) foi recusado com "o nível desejado da API do app é 35; precisa ser pelo menos 36".
+- **Causa:** `compileSdk` e `targetSdk` estavam em 35, e a Play passou a exigir 36 para novos envios.
+- **O que foi feito:** `compileSdk` e `targetSdk` em 36, `versionCode` 11, versão 0.9.0. A plataforma Android 36 foi instalada no SDK do ambiente. O AAB foi gerado e assinado com a chave de envio.
+- **Como evitar:** antes de cada envio à Play, conferir o nível de API exigido na documentação da Play. A versão de teste (APK) continua em 35 no mesmo projeto, por isso o teste precisa ser recompilado quando o nível mudar.
+
 ### A-025 · 01/11/2026 · Assinatura paga pela Google Play
 - **Pedido do cliente:** cobrar assinatura: plano semanal, mensal, semestral e anual; mensal R$ 9,99, semestral 5% e anual 10% mais baratos, semanal mais caro por dia; teste grátis de 7 dias, e 32 dias na fase de aprovação da Play.
 - **Decisões:** semanal R$ 2,99 (30% mais caro por mês que o mensal), semestral R$ 56,90 (R$ 9,48 por mês), anual R$ 107,90 (R$ 8,99 por mês). O teste grátis é do app, e não uma oferta da Play, para a revisão do Google e os 12 testadores não esbarrarem numa tela de pagamento.
