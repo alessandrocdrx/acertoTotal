@@ -1,4 +1,4 @@
-// Período de avaliação de 7 dias: contagem, aviso, modo só consulta depois do prazo e relógio atrasado.
+// Teste grátis (7 dias no app de teste, 32 na aprovação da Play): contagem, aviso, modo só consulta depois do prazo e relógio atrasado.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -39,7 +39,7 @@ const DIA = 864e5;
     const { p, ctx } = await abrir(null);
     const f = await faixa(p);
     const fim = await p.evaluate(() => { const d = new Date(Date.now() + 7 * 864e5); return d.toLocaleDateString('pt-BR'); });
-    ok('Primeiro uso: faixa mostra "faltam 7 dias" e a data final', /Avaliação: faltam 7 dias \(até (\d\d\/\d\d\/\d{4})\)/.test(f) && f.includes(fim), f);
+    ok('Primeiro uso: faixa mostra "faltam 7 dias" e a data final', /Teste grátis: faltam 7 dias \(até (\d\d\/\d\d\/\d{4})\)/.test(f) && f.includes(fim), f);
     ok('Primeiro uso: faixa continua avisando que é ambiente de teste', /Ambiente de teste/.test(f));
     ok('Primeiro uso: dá para dar baixa e cadastrar', (await p.locator('.crow .btn.primary').count()) > 0 && (await p.locator('.fab').count()) === 1);
     const ini = await p.evaluate(() => JSON.parse(localStorage.getItem('acertototal-avaliacao')).inicio);
@@ -63,7 +63,7 @@ const DIA = 864e5;
     const { p, ctx } = await abrir(8);
     const antes = await p.evaluate(() => localStorage.getItem('baixa-pix-v2'));
     const f = await faixa(p);
-    ok('Prazo vencido: faixa vermelha explica que é só consulta', /Avaliação encerrada em \d\d\/\d\d\/\d{4}\. O app está só para consulta/.test(f) && await p.locator('#ambiente').evaluate(e => e.classList.contains('fim')), f);
+    ok('Prazo vencido: faixa vermelha explica que é só consulta', /Teste grátis encerrado em \d\d\/\d\d\/\d{4}\. O app está só para consulta/.test(f) && await p.locator('#ambiente').evaluate(e => e.classList.contains('fim')), f);
     ok('Contas: lista continua visível, com situação escrita', (await p.locator('.crow').count()) > 0 && /Atrasada há/.test(await p.locator('#screen').innerText()));
     ok('Contas: some o aviso de cópia de segurança (exportar está bloqueado)', (await p.locator('#screen .warn').count()) === 0);
     ok('Contas: sem botões "Dar baixa", sem "+ Nova conta" e sem "Exportar"', (await p.locator('.crow .btn.primary').count()) === 0 && (await p.locator('.fab').count()) === 0 && (await p.locator('[data-act=export-filtrado]').count()) === 0);
@@ -83,7 +83,7 @@ const DIA = 864e5;
     ok('Números: estatísticas continuam disponíveis', (await p.locator('.statbox').count()) === 1);
     await p.click('button[data-tab=planilha]');
     const pl = await p.locator('#screen').innerText();
-    ok('Planilha: cartão "Só consulta" explica, sem importar nem exportar', /Só consulta/i.test(pl) && /versão completa/.test(pl) && (await p.locator('[data-act=pick-xl], [data-act=import-abrir], [data-act=export-abrir], [data-act=export-backup], [data-act=import-modelo]').count()) === 0);
+    ok('Planilha: cartão "Só consulta" explica, sem importar nem exportar', /Só consulta/i.test(pl) && /Assine para voltar a importar/.test(pl) && (await p.locator('[data-act=pick-xl], [data-act=import-abrir], [data-act=export-abrir], [data-act=export-backup], [data-act=import-modelo]').count()) === 0);
     await p.click('.iconbtn[data-act=aparencia]');
     await p.click('.seg button[data-t=dark]');
     ok('Tema continua podendo ser trocado (não mexe nos dados)', (await p.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'dark');
@@ -115,12 +115,25 @@ const DIA = 864e5;
   const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
   {
     const { p, ctx } = await abrir(8, { url: 'file://' + path.join(SRC, 'homolog', 'assets', 'index.html') });
-    ok('APK de teste: limite de 7 dias ligado', /Avaliação encerrada/.test(await faixa(p)));
+    ok('APK de teste: limite de 7 dias ligado', /Teste grátis encerrado/.test(await faixa(p)));
+    await ctx.close();
+  }
+  const PROD = 'file://' + path.join(SRC, 'producao', 'assets', 'index.html');
+  {
+    const { p, ctx } = await abrir(5, { url: PROD });
+    ok('APK de produção: teste de 32 dias, sem a faixa "Ambiente de teste" e sem aviso logo no começo', !(await p.locator('#ambiente').isVisible()) && (await p.locator('.fab').count()) === 1);
+    ok('APK de produção: a aba Planilha mostra quantos dias faltam do teste (27)', await (async () => { await p.click('button[data-tab=planilha]'); return /Teste grátis: faltam 27 dias/.test(await p.locator('.assin').innerText()); })());
     await ctx.close();
   }
   {
-    const { p, ctx } = await abrir(30, { url: 'file://' + path.join(SRC, 'producao', 'assets', 'index.html') });
-    ok('APK de produção: sem limite e sem faixa', !(await p.locator('#ambiente').isVisible()) && (await p.locator('.fab').count()) === 1);
+    const { p, ctx } = await abrir(30, { url: PROD });
+    const f = await faixa(p);
+    ok('APK de produção: nos últimos 3 dias a faixa avisa e oferece "Ver planos", sem "Ambiente de teste"', /Teste grátis: faltam 2 dias/.test(f) && !/Ambiente de teste/.test(f) && (await p.locator('#ambiente [data-act=planos]').count()) === 1, f);
+    await ctx.close();
+  }
+  {
+    const { p, ctx } = await abrir(33, { url: PROD });
+    ok('APK de produção: depois dos 32 dias fica só para consulta, com "Assinar"', /Teste grátis encerrado/.test(await faixa(p)) && (await p.locator('.fab').count()) === 0 && (await p.locator('#ambiente [data-act=planos]').count()) === 1);
     await ctx.close();
   }
 

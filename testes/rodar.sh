@@ -23,7 +23,7 @@ bash ../android/preparar-assets.sh >/dev/null
 export NODE_PATH="${NODE_PATH:-}:$(npm root -g 2>/dev/null)"
 
 falhas=0
-for t in app estatisticas tema usabilidade exportacao importacao tarefas avaliacao android; do
+for t in app estatisticas tema usabilidade exportacao importacao tarefas avaliacao assinatura android; do
   echo
   echo "==================== $t ===================="
   node "$t.test.js" || falhas=$((falhas+1))

@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var web: WebView
     private var arquivoCallback: ValueCallback<Array<Uri>>? = null
+    private var assinatura: Assinatura? = null
 
     private val escolherArquivo =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
@@ -70,7 +71,13 @@ class MainActivity : ComponentActivity() {
             allowContentAccess = false
             setSupportZoom(false)
         }
-        web.addJavascriptInterface(Ponte(applicationContext), "acertoTotalAndroid")
+        // Cobrança real só no app da Play (produção). No app de teste a página simula a assinatura.
+        if (BuildConfig.COBRANCA_REAL) {
+            assinatura = Assinatura(applicationContext) { json ->
+                web.post { web.evaluateJavascript("window.acertoAssinatura&&window.acertoAssinatura($json)", null) }
+            }
+        }
+        web.addJavascriptInterface(Ponte(applicationContext, assinatura, this), "acertoTotalAndroid")
 
         web.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
@@ -124,6 +131,17 @@ class MainActivity : ComponentActivity() {
 
         if (savedInstanceState == null) web.loadUrl("https://$ORIGEM_HOST/assets/index.html")
         else web.restoreState(savedInstanceState)
+    }
+
+    // Ao voltar da tela de compra da Play (ou de "gerenciar assinatura"), confere de novo a assinatura.
+    override fun onResume() {
+        super.onResume()
+        assinatura?.iniciar()
+    }
+
+    override fun onDestroy() {
+        assinatura?.fechar()
+        super.onDestroy()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

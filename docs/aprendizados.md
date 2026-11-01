@@ -106,10 +106,27 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R61. Na versão de teste, CPF/CNPJ com dígito errado é aceito (desde que tenha 11 ou 14 números), sempre com aviso: no formulário enquanto digita, no aviso ao salvar, na linha da planilha e com o rótulo "inválido (teste)" na lista. Repetido continua barrado. A produção só aceita número válido. [tarefas, importacao, app]
 - R62. Um aviso que aparece ou some embaixo de um campo não pode mudar no `blur`. O `blur` acontece no mesmo toque do botão Salvar: a janela muda de altura, o botão sai do lugar e o toque se perde. Atualize o aviso enquanto a pessoa digita. [app, tarefas]
 - R63. Teste de layout não usa limite fixo em pixels que dependa da fonte ("y > 600"). Cada máquina tem fontes diferentes, e o texto muda de altura: o que passa no computador falha no GitHub. A régua é a própria janela ou outro elemento da tela (por exemplo, o fundo da barra de botões perto do fundo da janela). [importacao]
+- R64. Assinatura: um produto (`acertototal_premium`) com 4 planos base (`semanal`, `mensal`, `semestral`, `anual`). Os preços saem da Play, e o app só calcula o equivalente por mês e a economia (semestral 5%, anual 10%). O ID do produto e dos planos é o mesmo no Console, na página e na casca Android. [assinatura]
+- R65. Só o app da Play cobra de verdade (`COBRANCA_REAL`). O protótipo e o app de teste simulam a assinatura, avisam isso na janela e nunca cobram. A última resposta da Play fica guardada no aparelho, para quem já assinou abrir o app liberado sem internet. Sem servidor, essa checagem só vale no aparelho, como o teste grátis (R43). [assinatura]
+- R66. Texto de privacidade e ficha da loja prometem só o que o pacote final confere. O Play Billing traz as permissões de internet e de cobrança sozinho: depois de acrescentar uma biblioteca, leia as permissões do pacote montado (`aapt2 dump permissions`) antes de escrever "sem internet". [assinatura]
+- R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-025 · 01/11/2026 · Assinatura paga pela Google Play
+- **Pedido do cliente:** cobrar assinatura: plano semanal, mensal, semestral e anual; mensal R$ 9,99, semestral 5% e anual 10% mais baratos, semanal mais caro por dia; teste grátis de 7 dias, e 32 dias na fase de aprovação da Play.
+- **Decisões:** semanal R$ 2,99 (30% mais caro por mês que o mensal), semestral R$ 56,90 (R$ 9,48 por mês), anual R$ 107,90 (R$ 8,99 por mês). O teste grátis é do app, e não uma oferta da Play, para a revisão do Google e os 12 testadores não esbarrarem numa tela de pagamento.
+- **O que foi feito:**
+  - Casca Android: `Assinatura.kt` (Play Billing 8: conectar, buscar preços, conferir compras, abrir a compra, confirmar a compra) e novos métodos da ponte (`assinaturaEstado`, `assinar`, `atualizarAssinatura`, `gerenciarAssinatura`). `COBRANCA_REAL` liga a cobrança só na produção.
+  - Página: janela "Assinar" com os 4 planos, cartão "Assinatura" na aba Planilha (as 4 tarefas continuam cabendo sem rolar), faixa com "Assinar" quando o teste termina (e nos últimos 3 dias no app oficial). Assinante libera o app; sem assinatura, depois do teste, só consulta.
+  - Textos: faixa e avisos passaram de "Avaliação" para "Teste grátis".
+  - Suíte nova `assinatura` (44 verificações), com uma ponte falsa no lugar da casca Android.
+- **Problemas achados:**
+  - O Play Billing traz um Fragment antigo e o lint de release barrou o pacote ("Upgrade Fragment version"). Corrigido fixando `androidx.fragment` 1.8.5.
+  - O pacote ganhou as permissões `INTERNET`, `ACCESS_NETWORK_STATE` e `com.android.vending.BILLING`, que vêm da biblioteca. A política e a ficha diziam "sem permissão de internet". Os textos foram corrigidos (R66).
+- **Limites:** a compra de verdade só dá para testar com o app na Play (teste interno) e uma conta de testador de licença; aqui foi testada com uma ponte falsa. A checagem da assinatura é só no aparelho (R65).
 
 ### A-024 · 01/11/2026 · Primeira execução do GitHub Actions falhou num teste
 - **O que aconteceu:** as 9 suítes passavam aqui, mas na primeira execução do workflow no GitHub falhou 1 verificação de 400: "Botão de importar fica fixo embaixo, mesmo com a lista rolada", com o botão em `y=598,6` e o teste exigindo `y > 600`.

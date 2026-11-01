@@ -3,7 +3,7 @@
 # - troca o leitor de Excel do CDN por uma cópia local;
 # - remove as fontes do Google (o app usa as fontes do sistema);
 # - injeta a ponte de download do Android no lugar da permissão do artefato;
-# - marca o ambiente (teste ou producao) e os dias de avaliação (homolog: 7; producao: sem limite).
+# - marca o ambiente (teste ou producao) e os dias de avaliação (homolog: 7; producao: 32 na aprovação da Play).
 set -euo pipefail
 cd "$(dirname "$0")"
 XLSX=../testes/vendor/xlsx.js
@@ -11,8 +11,8 @@ XLSX=../testes/vendor/xlsx.js
 
 # Um conjunto de páginas por variante do app: homolog (ambiente "teste", mostra a faixa
 # de aviso) e producao (sem faixa). O Android não aceita variante com nome começando por "test".
-# Formato: variante:ambiente:dias de avaliação (0 = sem limite).
-for PAR in homolog:teste:7 producao:producao:0; do
+# Formato: variante:ambiente:dias de teste grátis (0 = sem limite). Produção: 32 dias na aprovação da Play; na versão final, 7.
+for PAR in homolog:teste:7 producao:producao:32; do
 IFS=: read -r VARIANTE AMB DIAS <<< "$PAR"
 DEST=app/src/$VARIANTE/assets
 mkdir -p "$DEST"

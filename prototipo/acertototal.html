@@ -243,6 +243,22 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .passo-a-passo li{counter-increment:p;display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:15px}
 .passo-a-passo li::before{content:counter(p);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-weight:700;font-size:14px}
 .semdoc{color:var(--warn);font-weight:600}
+.planos{display:grid;gap:8px;margin:12px 0}
+.plano{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;min-height:64px;padding:10px 12px;text-align:left;border:2px solid var(--line);border-radius:14px;background:var(--surface);color:var(--fg)}
+.plano[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.plano .rd{width:22px;height:22px;border:2px solid var(--muted);border-radius:50%;display:grid;place-items:center}
+.plano[aria-checked="true"] .rd{border-color:var(--accent)}
+.plano[aria-checked="true"] .rd::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.plano .pn b{display:block;font-size:16px}
+.plano .pn small{display:block;color:var(--muted);font-size:13px}
+.plano .pv{font-weight:700;font-size:16px;white-space:nowrap}
+.plano .eco{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--ok-bg);color:var(--ok);font-size:12px;font-weight:700}
+.card.assin{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.card.assin b{display:block}
+.card.assin .btn{white-space:nowrap}
+.card.assin span{display:block;color:var(--muted);font-size:13px}
+.ambiente .btn{margin-top:6px}
+.cobrar{color:var(--muted);font-size:13px;margin:8px 0 0}
 .aviso-teste{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:8px 10px;font-size:14px;font-weight:500;margin:6px 0 0}
 .perigo{border:1px solid var(--bad);border-radius:14px;padding:14px;margin:20px 0 8px}
 .perigo h3{color:var(--bad);margin-top:0}
@@ -369,9 +385,12 @@ function sum(list){return list.reduce(function(a,c){return a+c.valor},0)}
 function daysBetween(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5)}
 
 var LIMITE_DIAS=0,AV={inicio:0,fim:0,relogio:false};
-function somenteLeitura(){return LIMITE_DIAS>0&&(AV.relogio||Date.now()>=AV.fim)}
+// Assinatura: ativa libera o app depois do teste grátis. "real" = cobrança da Google Play (APK de produção);
+// sem ela, a assinatura é simulada (protótipo e APK de teste: ninguém é cobrado).
+var ASSIN={ativa:false,real:false,pronto:false,precos:{},plano:''};
+function somenteLeitura(){return LIMITE_DIAS>0&&(AV.relogio||Date.now()>=AV.fim)&&!ASSIN.ativa}
 function diasRestantes(){return Math.max(0,Math.ceil((AV.fim-Date.now())/864e5))}
-var MSG_LEITURA='Avaliação encerrada: o app está só para consulta.';
+var MSG_LEITURA='Teste grátis encerrado: o app está só para consulta. Assine para continuar.';
 var ACOES_ESCRITA=['baixa','desfazer','excluir-conta','salvar-conta','salvar-cliente','nova-conta','nova-conta-cli','novo-cliente','editar-cliente','pick-comp','pick-xl','import-sample','import-confirm','export-custom','export-backup','export-filtrado','xlsx-export','copy-export','import-abrir','import-modelo','imp-colunas','imp-map-ok','imp-erros','imp-desfazer','imp-desfazer-sim','export-abrir','editar-xl','editar-xl-cli','enviar-editada','xf-voltar','xf-formato','atualizar-abrir','completar-docs','excluir-cliente','apagar-abrir','apagar-dono','apagar-sim'];
 var tab='contas',filter='abertas',query='',queryC='',pendingComp=null,toastT;
 var $=function(id){return document.getElementById(id)};
@@ -522,15 +541,68 @@ function backupInfo(){
 }
 function opcao(act,ic,titulo,texto,extra){return '<button class="opcao" data-act="'+act+'"><span class="ic" aria-hidden="true">'+ICON[ic]+'</span><span class="ot"><b>'+titulo+'</b><span>'+texto+'</span>'+(extra||'')+'</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'}
 function viewPlanilha(){
-  if(somenteLeitura())return '<div class="card"><h3 class="ct">Só consulta</h3><p>A avaliação terminou em '+fimTxt()+'. Importar e exportar planilhas fica disponível na versão completa. Você ainda pode consultar contas, clientes, números e o histórico abaixo.</p></div>'+historicoImport();
+  if(somenteLeitura())return '<div class="card"><h3 class="ct">Só consulta</h3><p>O teste grátis terminou em '+fimTxt()+'. Assine para voltar a importar e exportar planilhas. Você ainda pode consultar contas, clientes, números e o histórico abaixo.</p></div>'+assinCard()+historicoImport();
   var b=backupInfo();
   return '<p class="intro">O que você quer fazer?</p><nav class="opcoes" aria-label="Tarefas com planilha">'
    +opcao('import-abrir','importar','Importar planilha','Cadastrar clientes e contas de uma vez')
    +opcao('atualizar-abrir','editar','Atualizar pelo Excel','Mudar valores, vencimentos e baixas de várias contas')
    +opcao('export-abrir','exportar','Exportar relatório','Contas em Excel para ler ou mandar a alguém')
    +opcao('export-backup','backup','Cópia de segurança','Tudo numa planilha, para guardar ou trocar de celular','<span class="pill '+b.cls+'">'+b.txt+'</span>')
-   +'</nav>'+historicoImport()+zonaPerigo();
+   +'</nav>'+assinCard()+historicoImport()+zonaPerigo();
 }
+// ===== Assinatura: planos, cartão na aba Planilha e janela "Assinar"
+var PLANOS=[
+  {id:'semanal',nome:'Semanal',ciclo:'a cada semana',preco:2.99,porMes:2.99*52/12},
+  {id:'mensal',nome:'Mensal',ciclo:'todo mês',preco:9.99,porMes:9.99},
+  {id:'semestral',nome:'Semestral',ciclo:'a cada 6 meses',preco:56.90,porMes:56.90/6,eco:5},
+  {id:'anual',nome:'Anual',ciclo:'uma vez por ano',preco:107.90,porMes:107.90/12,eco:10}
+];
+var planoSel='mensal';
+function precoPlano(p){return ASSIN.real&&ASSIN.precos&&ASSIN.precos[p.id]?ASSIN.precos[p.id]:brl.format(p.preco)}
+function assinCard(){
+  var t,b='Ver planos';
+  if(ASSIN.ativa){t='Ativa. Obrigado por assinar!';b='Gerenciar'}
+  else if(somenteLeitura())t='Teste grátis encerrado. Assine para continuar.';
+  else if(LIMITE_DIAS>0){var d=diasRestantes();t='Teste grátis: '+(d<=1?'termina hoje':'faltam '+d+' dias')+' (até '+fimTxt()+').'}
+  else t='Escolha um plano quando quiser.';
+  return '<section class="card assin" aria-label="Assinatura"><div><b>Assinatura</b><span>'+esc(t)+'</span></div><button class="btn sm" data-act="planos">'+b+'</button></section>';
+}
+function sheetPlanos(){
+  var ativa=ASSIN.ativa,sim=!ASSIN.real,h='<div data-planos hidden></div>';
+  if(ativa){
+    h+='<h2>Sua assinatura</h2><p class="sub">Assinatura ativa. O app está liberado: obrigado por assinar!</p>'
+     +(sim?'<div class="alerta info">Versão de teste: esta assinatura é simulada e ninguém é cobrado.</div>':'')
+     +'<p class="cobrar">Para trocar de plano ou cancelar, use a Google Play › Pagamentos e assinaturas › Assinaturas.</p>'
+     +'<div class="actions"><button class="btn primary block" data-act="gerenciar-assin">'+(sim?'Gerenciar (simulação)':'Gerenciar na Google Play')+'</button>'+(sim?'<button class="btn block" data-act="cancelar-sim">Cancelar a assinatura simulada</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>';
+    sheet(h);return;
+  }
+  var enc=somenteLeitura();
+  h+='<h2>Assinar acertoTotal</h2><p class="sub">'+(enc?'Seu teste grátis terminou. Assine para voltar a cadastrar, dar baixa, importar e exportar. Seus dados continuam guardados.':'Seu teste grátis vai até '+fimTxt()+'. Você pode assinar agora ou depois: escolha o plano.')+'</p>'
+   +(sim?'<div class="alerta info">Versão de teste: a assinatura é simulada e ninguém é cobrado.</div>':'')
+   +'<div class="planos" role="radiogroup" aria-label="Plano de assinatura">'+PLANOS.map(function(p){
+      var on=p.id===planoSel;
+      return '<button class="plano" role="radio" aria-checked="'+on+'" data-act="plano-sel" data-p="'+p.id+'"><span class="rd" aria-hidden="true"></span><span class="pn"><b>'+p.nome+(p.eco?'<span class="eco">'+p.eco+'% mais barato</span>':'')+'</b><small>'+p.ciclo+' · R$ '+p.porMes.toFixed(2).replace('.',',')+' por mês</small></span><span class="pv">'+esc(precoPlano(p))+'</span></button>'}).join('')+'</div>'
+   +'<p class="cobrar">A cobrança é feita pela Google Play e renova sozinha. Cancele quando quiser, em Google Play › Pagamentos e assinaturas › Assinaturas.</p>'
+   +'<div class="actions fixo"><button class="btn primary block" data-act="assinar" id="bt-assinar"></button><button class="btn block" data-act="restaurar-assin">Já assinei: restaurar</button><button class="btn block" data-act="close">Agora não</button></div>';
+  sheet(h);atualizaBotaoAssinar();
+}
+function atualizaBotaoAssinar(){
+  var p=PLANOS.find(function(x){return x.id===planoSel}),b=$('bt-assinar');
+  if(b)b.textContent='Assinar o plano '+p.nome.toLowerCase()+' por '+precoPlano(p);
+}
+var SIM_KEY='acertototal-assin-sim';
+function assinInicial(){
+  var br=window.acertoTotalAndroid,j=null;
+  try{if(br&&br.assinaturaEstado){var t=br.assinaturaEstado();if(t)j=JSON.parse(t)}}catch(e){}
+  if(j){aplicaAssin(j);return}
+  try{var m=JSON.parse(localStorage.getItem(SIM_KEY)||'null');if(m&&m.plano){ASSIN.ativa=true;ASSIN.plano=m.plano}}catch(e){}
+}
+function aplicaAssin(j){
+  ASSIN.real=true;ASSIN.ativa=!!j.ativa;ASSIN.pronto=!!j.pronto;ASSIN.precos=j.precos||{};ASSIN.plano=j.plano||'';
+  if(typeof render==='function'&&S){render();if(document.querySelector('#layer [data-planos]'))sheetPlanos()}
+}
+// A casca Android avisa por aqui quando a Google Play muda a situação da assinatura.
+window.acertoAssinatura=function(j){try{if(typeof j==='string')j=JSON.parse(j);aplicaAssin(j)}catch(e){}};
 // Só na versão de teste: apagar tudo, confirmado com o CPF/CNPJ do dono (como o GitHub pede o nome do repositório).
 var DONO_KEY='acertototal-dono';
 function donoDoc(){try{return localStorage.getItem(DONO_KEY)||''}catch(e){return ''}}
@@ -675,13 +747,17 @@ function viewNumeros(){
 var TITLES={contas:['Contas',''],clientes:['Clientes',S.clientes.length+' cadastrados'],numeros:['Estatísticas','Seus números'],planilha:['Planilha','Importar e exportar']};
 function fimTxt(){return fmtD(iso(new Date(AV.fim)))}
 function atualizaFaixa(){
-  var f=$('ambiente'),l=[],fim=somenteLeitura();
-  if(fim)l.push(AV.relogio?'O relógio do aparelho foi atrasado. A avaliação foi encerrada e o app está só para consulta.':'Avaliação encerrada em '+fimTxt()+'. O app está só para consulta: dá para ver tudo, mas não cadastrar, dar baixa, importar ou exportar.');
+  var f=$('ambiente'),l=[],fim=somenteLeitura(),cta='';
+  if(fim){l.push(AV.relogio?'O relógio do aparelho foi atrasado. O teste grátis foi encerrado e o app está só para consulta.':'Teste grátis encerrado em '+fimTxt()+'. O app está só para consulta: dá para ver tudo, mas não cadastrar, dar baixa, importar ou exportar.');cta='Assinar'}
   else{
     if(AMBIENTE!=='producao')l.push('Ambiente de teste: os dados podem ser apagados a qualquer momento.');
-    if(LIMITE_DIAS>0){var d=diasRestantes();l.push('Avaliação: '+(d<=1?'termina hoje':'faltam '+d+' dias')+' (até '+fimTxt()+').')}
+    if(LIMITE_DIAS>0&&!ASSIN.ativa){
+      var d=diasRestantes();
+      // No app oficial, o aviso só aparece nos últimos 3 dias; antes disso a contagem fica na aba Planilha.
+      if(AMBIENTE!=='producao'||d<=3){l.push('Teste grátis: '+(d<=1?'termina hoje':'faltam '+d+' dias')+' (até '+fimTxt()+').');if(d<=3)cta='Ver planos'}
+    }
   }
-  f.innerHTML=l.map(function(t){return '<span>'+esc(t)+'</span>'}).join('');
+  f.innerHTML=l.map(function(t){return '<span>'+esc(t)+'</span>'}).join('')+(cta?'<button class="btn sm" data-act="planos">'+cta+'</button>':'');
   f.hidden=!l.length;f.classList.toggle('fim',fim);
 }
 function render(){
@@ -706,7 +782,7 @@ function sheetConta(id){
      +(c.comprovante.data&&c.comprovante.tipo.indexOf('image')===0?'<img alt="Comprovante" src="'+c.comprovante.data+'">':'')+'</div>';
   }
   if(somenteLeitura()){
-    h+='<p class="leitura">'+esc(MSG_LEITURA)+'</p><div class="actions"><button class="btn block" data-act="close">Fechar</button></div>';
+    h+='<p class="leitura">'+esc(MSG_LEITURA)+'</p><div class="actions"><button class="btn primary block" data-act="planos">Ver planos</button><button class="btn block" data-act="close">Fechar</button></div>';
   }else if(s!=='paga'){
     h+='<h3>Dar baixa</h3><div class="field"><label for="dtpago">Data do pagamento</label><input id="dtpago" type="date" value="'+today+'" max="'+today+'"></div>'
      +'<div class="comp"><strong>Comprovante (opcional)</strong><div style="color:var(--muted);font-size:13px;margin:2px 0 8px" id="compname">Nenhum arquivo escolhido. O app guarda o arquivo, sem conferir.</div>'
@@ -766,7 +842,7 @@ function sheetCliente(id){
   var c=S.clientes.find(function(x){return x.id===id});if(!c)return;
   var cs=S.contas.filter(function(x){return x.clienteId===id}).sort(function(a,b){return a.venc<b.venc?-1:1}),rl=somenteLeitura();
   sheet('<h2>'+esc(c.nome)+'</h2><p class="sub">'+(c.doc?tipoDoc(c.doc)+' '+fmtDoc(c.doc)+(docOk(c.doc)?'':' · <span class="semdoc">não é válido (aceito na versão de teste)</span>')+'<br>':'')+esc([c.telefone,c.email].filter(Boolean).join(' · ')||'Sem contato')+'</p>'
-   +(rl?'<p class="leitura">'+esc(MSG_LEITURA)+'</p>':(!c.doc?'<div class="alerta info">Falta o CPF ou CNPJ. Sem ele não dá para lançar contas nem usar planilhas com este cliente.</div><div class="actions"><button class="btn primary block" data-act="editar-cliente" data-id="'+id+'">Completar cadastro</button>'+(cs.length?'':'<button class="btn block danger" data-act="excluir-cliente" data-id="'+id+'">Excluir cliente</button>')+'</div>'
+   +(rl?'<p class="leitura">'+esc(MSG_LEITURA)+'</p><div class="actions"><button class="btn primary block" data-act="planos">Ver planos</button></div>':(!c.doc?'<div class="alerta info">Falta o CPF ou CNPJ. Sem ele não dá para lançar contas nem usar planilhas com este cliente.</div><div class="actions"><button class="btn primary block" data-act="editar-cliente" data-id="'+id+'">Completar cadastro</button>'+(cs.length?'':'<button class="btn block danger" data-act="excluir-cliente" data-id="'+id+'">Excluir cliente</button>')+'</div>'
      :'<div class="actions"><button class="btn primary block" data-act="nova-conta-cli" data-id="'+id+'">Nova conta para este cliente</button><div class="lado"><button class="btn" data-act="editar-cliente" data-id="'+id+'">Editar dados</button>'+(cs.length?'<button class="btn" data-act="editar-xl-cli" data-id="'+id+'">Atualizar pelo Excel</button>':'<button class="btn danger" data-act="excluir-cliente" data-id="'+id+'">Excluir cliente</button>')+'</div></div>'))
    +'<h3>Contas ('+cs.length+')</h3>'+(cs.length?cs.map(function(x){return contaRow(x,true)}).join(''):'<div class="empty">Sem contas ainda.</div>')
    +'<div class="actions"><button class="btn block" data-act="close">Fechar</button></div>');
@@ -1289,6 +1365,34 @@ document.addEventListener('click',function(e){
   else if(a==='limpar-busca'){query='';render()}
   else if(a==='limpar-busca-c'){queryC='';render()}
   else if(a==='editar-cliente'){filaDoc=false;sheetNovoCliente(el.dataset.id)}
+  else if(a==='planos'){filaDoc=false;sheetPlanos()}
+  else if(a==='plano-sel'){
+    planoSel=el.dataset.p;
+    document.querySelectorAll('.plano').forEach(function(b){b.setAttribute('aria-checked',String(b.dataset.p===planoSel))});
+    atualizaBotaoAssinar();
+  }
+  else if(a==='assinar'){
+    if(ASSIN.real){
+      var rr='';try{rr=window.acertoTotalAndroid.assinar(planoSel)}catch(err){rr='indisponivel'}
+      if(rr!=='ok')toast('Não consegui abrir a Google Play. Confira a internet e tente de novo.');
+    }else{
+      try{localStorage.setItem(SIM_KEY,JSON.stringify({plano:planoSel,quando:Date.now()}))}catch(err){}
+      ASSIN.ativa=true;ASSIN.plano=planoSel;closeSheet();render();toast('Assinatura simulada ativada. Nesta versão de teste ninguém é cobrado.');
+    }
+  }
+  else if(a==='restaurar-assin'){
+    if(ASSIN.real){try{window.acertoTotalAndroid.atualizarAssinatura()}catch(err){}toast('Conferindo na Google Play…')}
+    else{
+      var ms=null;try{ms=JSON.parse(localStorage.getItem(SIM_KEY)||'null')}catch(err){}
+      if(ms&&ms.plano){ASSIN.ativa=true;closeSheet();render();toast('Assinatura simulada restaurada.')}
+      else toast('Nenhuma assinatura encontrada neste aparelho.');
+    }
+  }
+  else if(a==='gerenciar-assin'){
+    if(ASSIN.real){try{window.acertoTotalAndroid.gerenciarAssinatura()}catch(err){}}
+    else toast('Na versão de teste não há o que gerenciar na Google Play.');
+  }
+  else if(a==='cancelar-sim'){try{localStorage.removeItem(SIM_KEY)}catch(err){}ASSIN.ativa=false;render();sheetPlanos();toast('Assinatura simulada cancelada.')}
   else if(a==='completar-docs'){filaDoc=true;proximoSemDoc()}
   else if(a==='excluir-cliente'){
     var ix=S.clientes.findIndex(function(x){return x.id===el.dataset.id}),cx=S.clientes[ix];
@@ -1372,7 +1476,8 @@ document.documentElement.lang='pt-BR';
 // Ambiente: o APK de produção define ACERTO_AMBIENTE='producao'; qualquer outro caso é teste.
 var AMBIENTE=window.ACERTO_AMBIENTE||'teste';
 // Período de avaliação: conta a partir do primeiro uso neste aparelho. Depois dele, o app fica só
-// para consulta. ACERTO_LIMITE_DIAS=0 desliga o limite (variante de produção do APK).
+// para consulta, até haver uma assinatura. ACERTO_LIMITE_DIAS são os dias de teste grátis (APK de produção: 32 na
+// aprovação da Play, 7 na versão final; 0 desliga o limite).
 LIMITE_DIAS=window.ACERTO_LIMITE_DIAS!=null?+window.ACERTO_LIMITE_DIAS:7;
 AV=(function(){
   var k='acertototal-avaliacao',a=null,agora=Date.now();
@@ -1384,6 +1489,7 @@ AV=(function(){
   try{localStorage.setItem(k,JSON.stringify(a))}catch(e){}
   return {inicio:a.inicio,fim:a.inicio+LIMITE_DIAS*864e5,relogio:!!a.relogio};
 })();
+assinInicial();
 $('xl').addEventListener('change',function(){var f=$('xl').files[0];$('xl').value='';if(f)lerArquivo(f)});
 applyTheme();
 render();

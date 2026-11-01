@@ -1,7 +1,11 @@
 package io.github.alessandrocdrx.acertototal
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
@@ -14,7 +18,34 @@ import android.widget.Toast
  * download do artefato: recebe o Excel gerado e salva na pasta Downloads.
  * Respostas seguem os códigos do protótipo: "saved", "rejected_extension", "unavailable".
  */
-class Ponte(private val ctx: Context) {
+class Ponte(
+    private val ctx: Context,
+    private val assinatura: Assinatura? = null,
+    private val atividade: Activity? = null,
+) {
+
+    /** Estado da assinatura em JSON. Vazio quando a cobrança real não existe (app de teste): a página simula. */
+    @JavascriptInterface
+    fun assinaturaEstado(): String = assinatura?.estado() ?: ""
+
+    @JavascriptInterface
+    fun assinar(plano: String): String = assinatura?.assinar(atividade, plano) ?: "indisponivel"
+
+    @JavascriptInterface
+    fun atualizarAssinatura() {
+        assinatura?.iniciar()
+    }
+
+    /** Abre, na Google Play, a página para trocar de plano ou cancelar. */
+    @JavascriptInterface
+    fun gerenciarAssinatura() {
+        val uri = Uri.parse("https://play.google.com/store/account/subscriptions?sku=${Assinatura.PRODUTO}&package=${ctx.packageName}")
+        try {
+            ctx.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: ActivityNotFoundException) {
+        }
+    }
+
 
     @JavascriptInterface
     fun salvarArquivo(nome: String, base64: String): String {

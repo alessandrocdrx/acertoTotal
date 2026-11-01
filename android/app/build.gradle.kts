@@ -13,8 +13,8 @@ android {
         applicationId = "io.github.alessandrocdrx.acertototal"
         minSdk = 29
         targetSdk = 35
-        versionCode = 9
-        versionName = "0.8.0"
+        versionCode = 10
+        versionName = "0.9.0"
     }
 
     // Assinatura: lida de android/assinatura.properties, que NÃO vai para o repositório
@@ -53,11 +53,13 @@ android {
             applicationIdSuffix = ".teste"
             versionNameSuffix = "-teste"
             resValue("string", "app_name", "acertoTotal Teste")
+            buildConfigField("boolean", "COBRANCA_REAL", "false")
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
         create("producao") {
             dimension = "ambiente"
             resValue("string", "app_name", "acertoTotal")
+            buildConfigField("boolean", "COBRANCA_REAL", "true")
             // Google Play: assinado com a chave de envio (assinatura-play.properties, fora do repositório).
             signingConfigs.findByName("play")?.let { signingConfig = it }
         }
@@ -69,6 +71,9 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+    }
+    buildFeatures {
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -83,4 +88,7 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.webkit:webkit:1.12.1")
+    implementation("com.android.billingclient:billing:8.0.0")
+    // O Play Billing traz um Fragment antigo; a janela de arquivos (ActivityResult) exige 1.3.0 ou mais.
+    implementation("androidx.fragment:fragment:1.8.5")
 }
