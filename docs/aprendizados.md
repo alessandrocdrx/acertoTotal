@@ -115,6 +115,12 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 As entradas mais recentes ficam no topo.
 
+### A-027 · 01/11/2026 · Marca nova: símbolo, cores pela teoria da luz e manual
+- **Pedido do cliente:** reformular a marca inteira, com cores pela teoria da luz e da cor, logo, símbolo e documentação.
+- **O que foi feito:** símbolo "anel aberto que se fecha com o visto", logotipo em Bricolage Grotesque convertido em curvas, paleta definida em OKLCH (Verde Acerto 186°, Sol 78°, situações de 27° a 152° com a mesma luminosidade), neutros tingidos, proporção 60·30·10. Aplicado no app, no ícone adaptativo do Android (com camada monocromática), no tema Android e nas imagens da Play (ícone 512, gráfico de destaque e capturas com título). Manual em `docs/marca.md`, arquivos em `marca/`.
+- **Problema achado:** o teste `tema` comparava a cor de fundo com valores fixos da paleta antiga. Atualizado para as cores novas.
+- **Como evitar:** cor nova entra pelos tokens (`:root`) e pelo manual, e é medida no contraste (teste `tema` e axe). O teste `android` confere que app, ícone e arquivos da marca usam a mesma geometria.
+
 ### A-026 · 01/11/2026 · Play exige nível de API 36
 - **O que aconteceu:** o rascunho do teste interno (versão 10) foi recusado com "o nível desejado da API do app é 35; precisa ser pelo menos 36".
 - **Causa:** `compileSdk` e `targetSdk` estavam em 35, e a Play passou a exigir 36 para novos envios.

@@ -114,6 +114,21 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
     ok('Sem erros de JavaScript', p.errs.length === 0, p.errs.join('|'));
     await ctx.close();
   }
+  // Marca: o mesmo símbolo no app, no ícone do Android e nos arquivos da marca (docs/marca.md)
+  {
+    const raiz = path.join(__dirname, '..');
+    const [anel, visto] = fs.readFileSync(path.join(raiz, 'marca', 'geom.txt'), 'utf8').split('\n');
+    const res = path.join(raiz, 'android', 'app', 'src', 'main', 'res');
+    const fg = fs.readFileSync(path.join(res, 'drawable', 'ic_launcher_foreground.xml'), 'utf8');
+    const mono = fs.readFileSync(path.join(res, 'drawable', 'ic_launcher_monochrome.xml'), 'utf8');
+    const adapt = fs.readFileSync(path.join(res, 'mipmap-anydpi', 'ic_launcher.xml'), 'utf8');
+    const tema = fs.readFileSync(path.join(res, 'values', 'themes.xml'), 'utf8');
+    const html = fs.readFileSync(path.join(raiz, 'prototipo', 'acertototal.html'), 'utf8');
+    ok('Marca: ícone do Android usa a geometria do símbolo (anel e visto)', fg.includes(anel) && fg.includes(visto) && mono.includes(anel));
+    ok('Marca: ícone adaptativo com fundo Verde Acerto e camada monocromática própria', /verde_acerto/.test(adapt) && /ic_launcher_monochrome/.test(adapt) && /#00766C/i.test(tema));
+    ok('Marca: o cabeçalho do app usa o mesmo símbolo, com o visto na cor Sol', html.includes(anel) && /stroke="var\(--sol\)"/.test(html) && /--sol:#fbb636/.test(html));
+    ok('Marca: arquivos do símbolo e do logotipo existem', ['simbolo.svg', 'simbolo-mono-tinta.svg', 'logo-horizontal.svg', 'logo-horizontal-negativo.svg', 'assinatura.svg'].every(f => fs.existsSync(path.join(raiz, 'marca', f))));
+  }
   await b.close();
   console.log(out.join('\n'));
   if (out.some(l => l.startsWith('✖'))) process.exitCode = 1;

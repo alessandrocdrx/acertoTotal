@@ -6,23 +6,23 @@ for(const os of ['light','dark']){
  await p.goto('file://'+__dirname+'/.build/page.html');await p.waitForSelector('.crow');
  const bg=()=>p.evaluate(()=>getComputedStyle(document.body).backgroundColor);
  const initial=await bg();
- ok(`Tema claro é o padrão, mesmo com celular no ${os==='dark'?'escuro':'claro'}`, initial==='rgb(238, 241, 240)',initial);
+ ok(`Tema claro é o padrão, mesmo com celular no ${os==='dark'?'escuro':'claro'}`, initial==='rgb(240, 248, 247)',initial);
  await p.click('.iconbtn');await p.waitForSelector('.sheet .seg');await p.waitForTimeout(400);
  ok(`Botão de tema abre a janela com 3 opções (${os})`,(await p.locator('.seg button').count())===3);
  ok(`Paleta lista 9 cores nos dois temas (${os})`,(await p.locator('.pal-r').count())===9);
  await p.click('.seg button[data-t=dark]');await p.waitForTimeout(100);
- ok(`Escuro força o tema escuro (${os})`,(await bg())==='rgb(12, 19, 17)'&&(await p.locator('.seg button[data-t=dark]').getAttribute('aria-checked'))==='true',await bg());
+ ok(`Escuro força o tema escuro (${os})`,(await bg())==='rgb(6, 18, 19)'&&(await p.locator('.seg button[data-t=dark]').getAttribute('aria-checked'))==='true',await bg());
  await p.click('.seg button[data-t=light]');await p.waitForTimeout(100);
- ok(`Claro força o tema claro (${os})`,(await bg())==='rgb(238, 241, 240)',await bg());
+ ok(`Claro força o tema claro (${os})`,(await bg())==='rgb(240, 248, 247)',await bg());
  await p.screenshot({path:__dirname+`/capturas/paleta-${os}.png`});
  await p.click('.seg button[data-t=auto]');await p.waitForTimeout(100);
- ok(`Automático segue o celular (${os})`,(await bg())===(os==='dark'?'rgb(12, 19, 17)':'rgb(238, 241, 240)'),await bg());
+ ok(`Automático segue o celular (${os})`,(await bg())===(os==='dark'?'rgb(6, 18, 19)':'rgb(240, 248, 247)'),await bg());
  // contraste das amostras
  const ratios=await p.evaluate(()=>[...document.querySelectorAll('.sw small')].map(s=>s.textContent).filter(t=>/:1/.test(t)).map(t=>parseFloat(t)));
  ok(`Amostras de texto com contraste ≥ 4,5:1 (${os})`,ratios.length===16&&ratios.every(r=>r>=4.5),JSON.stringify(ratios));
  await p.click('.seg button[data-t=dark]');await p.click('[data-act=close]');
  await p.reload();await p.waitForSelector('.crow');
- ok(`Escolha de tema é lembrada ao recarregar (${os})`,(await bg())==='rgb(12, 19, 17)');
+ ok(`Escolha de tema é lembrada ao recarregar (${os})`,(await bg())==='rgb(6, 18, 19)');
  ok(`Sem erros de JavaScript (${os})`,errs.length===0,errs.join('|'));
  await ctx.close();}
 await b.close();console.log(out.join('\n'));if(out.some(l=>l.startsWith('✖')))process.exitCode=1})()
