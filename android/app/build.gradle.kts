@@ -13,24 +13,8 @@ android {
         applicationId = "br.com.celsopix"
         minSdk = 29
         targetSdk = 35
-        versionCode = 8
-        versionName = "0.7.1"
-    }
-
-    // Dois apps separados: o de teste (faixa "Ambiente de teste", ícone próprio)
-    // e o de produção. Podem ficar instalados juntos no mesmo celular.
-    flavorDimensions += "ambiente"
-    productFlavors {
-        create("homolog") {
-            dimension = "ambiente"
-            applicationIdSuffix = ".teste"
-            versionNameSuffix = "-teste"
-            resValue("string", "app_name", "CelsoPix Teste")
-        }
-        create("producao") {
-            dimension = "ambiente"
-            resValue("string", "app_name", "CelsoPix")
-        }
+        versionCode = 9
+        versionName = "0.8.0"
     }
 
     // Assinatura: lida de android/assinatura.properties, que NÃO vai para o repositório
@@ -49,12 +33,41 @@ android {
         }
     }
 
+    val assinaturaPlay = rootProject.file("assinatura-play.properties")
+    if (assinaturaPlay.exists()) {
+        val p = Properties().apply { assinaturaPlay.inputStream().use { load(it) } }
+        signingConfigs.create("play") {
+            storeFile = rootProject.file(p.getProperty("arquivo"))
+            storePassword = p.getProperty("senha")
+            keyAlias = p.getProperty("alias")
+            keyPassword = p.getProperty("senha")
+        }
+    }
+
+    // Dois apps separados: o de teste (faixa "Ambiente de teste", ícone próprio)
+    // e o de produção. Podem ficar instalados juntos no mesmo celular.
+    flavorDimensions += "ambiente"
+    productFlavors {
+        create("homolog") {
+            dimension = "ambiente"
+            applicationIdSuffix = ".teste"
+            versionNameSuffix = "-teste"
+            resValue("string", "app_name", "CelsoPix Teste")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+        }
+        create("producao") {
+            dimension = "ambiente"
+            resValue("string", "app_name", "CelsoPix")
+            // Google Play: assinado com a chave de envio (assinatura-play.properties, fora do repositório).
+            signingConfigs.findByName("play")?.let { signingConfig = it }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
     compileOptions {

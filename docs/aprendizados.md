@@ -110,6 +110,14 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 As entradas mais recentes ficam no topo.
 
+### A-021 · 01/11/2026 · Primeiro pacote para a Google Play
+- **Pedido do cliente:** publicar na Play pela conta pessoal alessandrocdrx. O passo a passo está em `docs/play-store.md`.
+- **O que foi feito:**
+  - A variante `producao` passou a ser assinada pela chave de envio (`celsopix-envio.keystore`, `assinatura-play.properties`), separada da chave dos APKs de teste. As duas variantes agora escolhem a assinatura no próprio `productFlavors`, e o `release` não força mais a chave de debug.
+  - `.gitignore` cobre `android/assinatura*.properties`, além de `*.keystore` e `*.jks`.
+  - Gerados o AAB (versão 0.8.0, código 9), o ícone 512, o gráfico de destaque e 5 capturas de tela em `entregas/play/`.
+- **Como evitar:** a Play só aceita AAB e guarda a primeira chave para sempre. Nunca assine o pacote da Play com a chave de teste, e cada envio precisa de `versionCode` maior. Lição de gradle: um bloco que lê `signingConfigs.findByName` precisa vir depois do bloco que cria a assinatura, senão devolve nulo sem aviso.
+
 ### A-020 · 01/11/2026 · Aceitar CPF/CNPJ inválido na versão de teste
 - **Pedido do cliente:** "Na versão teste deixa colocar CPF e CNPJ não válido, mas dê o aviso que é teste."
 - **O que foi feito:**

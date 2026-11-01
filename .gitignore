@@ -13,5 +13,5 @@ android/app/src/*/assets/
 entregas/
 android/*.keystore
 android/*.jks
-android/assinatura.properties
+android/assinatura*.properties
 android/.kotlin/
