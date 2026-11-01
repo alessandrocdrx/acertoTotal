@@ -147,6 +147,80 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   await tocar('.sheet [data-act=close]');
   ok('T6 · Cancelar não muda nada', JSON.stringify(await estado()) === JSON.stringify(S6));
 
+  // ===== Tarefa 7: clientes antigos sem CPF/CNPJ (vindos da versão anterior) não podem ficar assim
+  const hoje = new Date().toISOString().slice(0, 10);
+  await p.evaluate(h => localStorage.setItem('baixa-pix-v2', JSON.stringify({ clientes: [
+    { id: 'a1', nome: 'Marina Alves', telefone: '', email: '' }, { id: 'a2', nome: 'Descrição', telefone: '', email: '' }, { id: 'a3', nome: 'E-mail', telefone: '', email: '' },
+    { id: 'a4', nome: 'Rui Costa', doc: '52998224725', telefone: '', email: '' }],
+    contas: [{ id: 'k1', clienteId: 'a1', descricao: 'Mensalidade', valor: 180, venc: h, pagoEm: null, comprovante: null }], ultimoBackup: null })), hoje);
+  await p.reload(); await p.waitForSelector('#screen'); await p.waitForTimeout(300);
+  await inicio();
+  await tocar('button[data-tab=clientes]');
+  ok('T7 · Clientes sem CPF/CNPJ: aviso no topo, sem rolar, com a contagem', await visivelSemRolar('#aviso-semdoc') && /3 clientes estão sem CPF\/CNPJ/.test(await p.locator('#aviso-semdoc').innerText()));
+  await p.click('.row:has-text("Marina Alves")');
+  ok('T7 · Ficha de cliente sem CPF/CNPJ: não oferece "Nova conta" nem "Atualizar pelo Excel", só "Completar cadastro"', await p.locator('.sheet [data-act=nova-conta-cli]').count() === 0 && await p.locator('.sheet [data-act=editar-xl-cli]').count() === 0 && await p.locator('.sheet button.primary[data-act=editar-cliente]').count() === 1);
+  await inicio();
+  await p.click('[data-act=nova-conta]');
+  ok('T7 · Nova conta: cliente sem CPF/CNPJ aparece desativado na lista', await p.locator('#nc-cli option:has-text("Marina Alves")').isDisabled() && /falta CPF\/CNPJ/.test(await p.locator('#nc-cli option:has-text("Marina Alves")').innerText()) && !(await p.locator('#nc-cli option:has-text("Rui Costa")').isDisabled()));
+  await inicio();
+  await p.click('button[data-tab=planilha]'); await p.click('[data-act=import-abrir]');
+  await enviar('legado.xlsx', await xlsx([['CPF/CNPJ', 'Nome', 'Descrição', 'Valor', 'Vencimento'], ['', 'Marina Alves', 'Extra', 50, '10/12/2026']]));
+  ok('T7 · Planilha sem CPF/CNPJ para cliente antigo é recusada e explica como completar', await p.locator('[data-act=import-confirm]').isDisabled() && /“Marina Alves” está no app sem CPF\/CNPJ: preencha o CPF ou CNPJ nesta linha/.test(await p.locator('.sheet').innerText()));
+  await inicio();
+  await tocar('button[data-tab=clientes]');
+  await tocar('[data-act=completar-docs]');
+  ok('T7 · "Completar agora" abre o primeiro, com o CPF/CNPJ em foco', /Completar cadastro/.test(await p.locator('.sheet h2').innerText()) && await p.evaluate(() => document.activeElement.id === 'n-doc'));
+  ok('T7 · Cliente sem contas (lixo de planilha) pode ser excluído ali mesmo', /Descrição/.test(await p.locator('.sheet .sub').innerText()) && await p.locator('.sheet [data-act=excluir-cliente]').count() === 1);
+  await tocar('.sheet [data-act=excluir-cliente]');
+  ok('T7 · Ao excluir, já abre o próximo da fila', /E-mail/.test(await p.locator('.sheet .sub').innerText()));
+  await tocar('.sheet [data-act=excluir-cliente]');
+  ok('T7 · Cliente com contas não oferece excluir', /Marina Alves/.test(await p.locator('.sheet .sub').innerText()) && await p.locator('.sheet [data-act=excluir-cliente]').count() === 0);
+  await p.fill('#n-doc', '52998224725'); await tocar('.sheet [data-act=salvar-cliente]');
+  ok('T7 · CPF que já é de outro cliente é recusado', /já é de Rui Costa/.test(await p.locator('#n-doc-err').innerText()));
+  await p.fill('#n-doc', cpf('123456789')); await tocar('.sheet [data-act=salvar-cliente]');
+  const S7 = await estado();
+  ok('T7 · No fim, todos os clientes têm CPF/CNPJ e o aviso some', S7.clientes.length === 2 && S7.clientes.every(c => c.doc) && await p.locator('#aviso-semdoc').count() === 0 && await p.locator('.sheet').count() === 0);
+  ok(`T7 · 3 cadastros resolvidos em ${toques} toques (meta: até 7)`, toques <= 7, `${toques}`);
+
+  // ===== Tarefa 8: "Apagar tudo" na versão de teste, confirmado com o CPF/CNPJ do dono
+  const aval0 = await p.evaluate(() => localStorage.getItem('celsopix-avaliacao'));
+  await inicio();
+  await tocar('button[data-tab=planilha]');
+  ok('T8 · Versão de teste: "Apagar tudo…" fica no fim da aba Planilha, separado das tarefas', await p.locator('.perigo [data-act=apagar-abrir]').count() === 1 && await p.locator('.opcoes [data-act=apagar-abrir]').count() === 0);
+  await tocar('[data-act=apagar-abrir]');
+  ok('T8 · Na primeira vez, pede o CPF/CNPJ do dono do app', await p.locator('#dono-doc').count() === 1);
+  await p.fill('#dono-doc', '111.111.111-11'); await p.click('[data-act=apagar-dono]');
+  ok('T8 · CPF inválido do dono é recusado no campo', /CPF inválido/.test(await p.locator('#dono-doc-err').innerText()));
+  const DONO = cpf('987654321');
+  await p.fill('#dono-doc', DONO); await tocar('[data-act=apagar-dono]');
+  const tela8 = await p.locator('.sheet').innerText();
+  ok('T8 · A confirmação diz o que será apagado e lembra da cópia de segurança', /2 clientes/.test(tela8) && /1 conta\b/.test(tela8) && /não pode ser desfeito/.test(tela8) && await p.locator('.sheet [data-act=export-backup]').count() === 1, tela8);
+  ok('T8 · "Apagar tudo" começa desativado', await p.locator('[data-act=apagar-sim]').isDisabled());
+  await p.fill('#apagar-doc', cpf('123456789'));
+  ok('T8 · Outro CPF (até o de um cliente) não libera o botão', await p.locator('[data-act=apagar-sim]').isDisabled());
+  await p.fill('#apagar-doc', DONO.replace(/\D/g, ''));
+  ok('T8 · O CPF do dono, com ou sem pontos, libera o botão', !(await p.locator('[data-act=apagar-sim]').isDisabled()));
+  await tocar('[data-act=apagar-sim]');
+  const S8 = await estado();
+  ok('T8 · Tudo apagado: sem clientes, contas nem histórico', S8.clientes.length === 0 && S8.contas.length === 0 && (S8.importacoes || []).length === 0);
+  ok('T8 · Apagar tudo não reinicia a avaliação de 7 dias', await p.evaluate(() => localStorage.getItem('celsopix-avaliacao')) === aval0);
+  await p.reload(); await p.waitForSelector('#screen'); await p.waitForTimeout(300);
+  ok('T8 · Depois de reabrir, o app continua vazio (não volta o exemplo)', (await estado()).clientes.length === 0 && /Nenhuma|Comece|nenhuma/.test(await p.locator('#screen').innerText()));
+  ok(`T8 · Apagar em ${toques} toques (meta: até 5)`, toques <= 5, `${toques}`);
+  await inicio();
+  await p.click('button[data-tab=planilha]'); await p.click('[data-act=apagar-abrir]');
+  ok('T8 · Na segunda vez, vai direto à confirmação', await p.locator('#apagar-doc').count() === 1 && await p.locator('#dono-doc').count() === 0);
+  await p.screenshot({ path: __dirname + '/capturas/tarefas-apagar.png' });
+
+  // Produção não tem "Apagar tudo"
+  const pp = await ctx.newPage();
+  await pp.addInitScript(() => { window.CELSOPIX_AMBIENTE = 'producao'; window.CELSOPIX_LIMITE_DIAS = 0; });
+  await pp.route('**/*', r => r.request().url().startsWith('file://') ? r.continue() : r.fulfill({ status: 200, body: '' }));
+  await pp.goto('file://' + __dirname + '/.build/page.html'); await pp.waitForSelector('#screen');
+  await pp.click('button[data-tab=planilha]');
+  ok('T8 · Produção: não existe "Apagar tudo"', await pp.locator('[data-act=apagar-abrir]').count() === 0);
+  await pp.close();
+
   ok('Sem erros de JavaScript', errs.length === 0, errs.join(' | '));
   await b.close();
   console.log(out.join('\n'));

@@ -101,10 +101,27 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R56. Telas de escolha são organizadas pelo objetivo da pessoa ("O que você quer fazer?"): Importar planilha, Atualizar pelo Excel, Exportar relatório e Cópia de segurança. As opções cabem na tela sem rolar. Os filtros abrem limpos e não herdam escolhas de outra tarefa. [importacao, tarefas]
 - R57. Toda pergunta do cliente do tipo "como faço X?" vira uma tarefa na suíte `tarefas`. A tarefa tem uma meta de toques, confere que o caminho aparece sem rolar e confere o resultado gravado. [tarefas]
 - R58. Depois de mudar o layout, olhe as capturas de tela. Exemplo: grid num `<li>` com negrito e texto solto quebra uma palavra por linha. Envolva o conteúdo num `<span>`. O teste mede a largura dos textos da janela. [importacao]
+- R59. Nenhum cliente fica sem CPF/CNPJ. Cadastro, edição e planilha exigem o número. Cliente antigo sem ele aparece num aviso no topo de Clientes com "Completar agora", que abre um por um, e cliente sem contas pode ser excluído ali mesmo. Enquanto não for completado, não recebe conta nova (fica desativado na lista) e a planilha recusa a linha dele sem CPF/CNPJ, explicando que preencher o número completa o cadastro. [tarefas]
+- R60. Ação que apaga tudo pede uma confirmação digitada, como o GitHub pede o nome do repositório: a pessoa digita o próprio CPF/CNPJ, cadastrado na primeira vez, e o botão só ativa quando confere. Antes, a tela diz quantos clientes, contas, comprovantes e importações serão apagados e oferece a cópia de segurança. Só existe na versão de teste, fica separado das tarefas comuns e não reinicia a avaliação. [tarefas]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-019 · 01/11/2026 · Clientes sem CPF/CNPJ no aparelho; falta "Apagar tudo"
+- **Relato do cliente** (captura do APK 0.6.0): a lista de Clientes mostrava 14 clientes "Sem CPF/CNPJ", entre eles "Descrição", "E-mail" e "Pago em", com 0 contas. "Não deve ser possível cadastrar alguém sem CPF ou CNPJ. Como a versão é de teste, deve haver um botão de apagar tudo, estilo GitHub: para limpar todo o sistema, o usuário coloca seu CPF ou CNPJ para confirmar."
+- **Causa:**
+  - Os dados vieram da versão 0.5.0, quando o CPF/CNPJ não existia. A 0.6.0 passou a exigir o número só para cadastros novos e deixou os antigos como estavam, apenas com o rótulo "Sem CPF/CNPJ". Eles ainda recebiam contas e a planilha ainda os achava pelo nome.
+  - "Descrição", "E-mail" e "Pago em" são títulos de coluna: na 0.5.0, a aba de instruções de uma planilha foi importada como se fossem clientes. Hoje essa linha seria recusada, porque não tem CPF/CNPJ, mas os clientes já estavam gravados e não havia como excluir um cliente.
+  - A pendência "falta um botão Começar do zero" já estava registrada e não tinha sido feita.
+- **O que foi feito:**
+  - Aviso no topo de Clientes com a contagem e "Completar agora", que abre um cliente depois do outro, com o campo CPF/CNPJ em foco. Cliente sem contas tem "Excluir este cliente".
+  - Cliente sem CPF/CNPJ não recebe conta nova: some o botão na ficha, a opção fica desativada em Nova conta e o salvamento recusa.
+  - A planilha não acha mais cliente antigo pelo nome: a linha sem CPF/CNPJ é recusada com a explicação, e a linha com CPF/CNPJ completa o cadastro.
+  - "Excluir cliente" para clientes sem contas, com Desfazer.
+  - "Apagar tudo…" no fim da aba Planilha, só na versão de teste. Na primeira vez pede o CPF/CNPJ do dono, que fica guardado à parte dos dados. Depois mostra o que será apagado, oferece a cópia de segurança e só ativa o botão quando o CPF/CNPJ digitado confere. Não reinicia a avaliação, e o app reabre vazio, sem voltar o exemplo.
+- **Como evitar:** regras R59 e R60; tarefas T7 e T8 na suíte `tarefas`. Quando uma regra nova de cadastro entrar, ela vale também para os dados que já estão no aparelho: planeje a migração junto.
+
 
 ### A-018 · 01/11/2026 · Importar, atualizar e exportar ainda confusos; chave do cliente
 - **Relato do cliente:** "Não achei como importar clientes, atualizar e exportar. Como importar um cliente com 8 contas? E como atualizar 5 contas de um cliente? Qual a chave única do cliente? Vamos por CPF ou CNPJ."
@@ -348,6 +365,6 @@ As entradas mais recentes ficam no topo.
 - Lint: três bibliotecas AndroidX têm versões mais novas (activity, core, webkit). Atualizar exige compileSdk 36 e uma versão nova do AGP.
 - O app guarda os dados no armazenamento da WebView. Se o app for desinstalado, os dados se perdem. A cópia de segurança em Excel é a proteção.
 - Os comprovantes (fotos e PDFs) não vão na cópia de segurança em Excel, porque a planilha não guarda arquivos. Restaurar num celular novo traz as baixas, mas não os comprovantes.
-- Clientes cadastrados antes do CPF/CNPJ aparecem como "Sem CPF/CNPJ". Na planilha, ainda são achados pelo nome, com um aviso, até que o cadastro seja completado.
-- O APK abre com os dados de exemplo. Falta um botão "Começar do zero" para uso real.
+- O APK abre com os dados de exemplo. Na versão de teste, "Apagar tudo" deixa o app vazio. A versão de produção ainda precisa decidir se abre vazia.
+- O CPF/CNPJ do dono só serve para confirmar "Apagar tudo". Quem tem o celular desbloqueado e sabe o número consegue apagar; a cópia de segurança continua sendo a proteção.
 - Os dados de exemplo dos meses anteriores têm valores parecidos, então as barras do gráfico mensal saem quase iguais.
