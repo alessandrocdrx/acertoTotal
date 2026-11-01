@@ -14,6 +14,8 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   const semLinks = html.replace(/http:\/\/www\.w3\.org\/2000\/svg/g, '').replace(/https:\/\/play\.google\.com\/store\/apps\/details\?id=io\.github\.alessandrocdrx\.acertototal/g, '').replace(/https:\/\/github\.com\/alessandrocdrx(\/acertoTotal)?/g, '');
   ok('Links do Menu só existem como links (não como script, estilo ou imagem)', !/<(script|link|img)[^>]+(github|play\.google)/.test(html));
   ok('APK não depende de internet: nenhum endereço externo na página', !/https?:\/\//.test(semLinks), (semLinks.match(/https?:\/\/[^"' )]+/g) || []).join(', '));
+  const kt = fs.readFileSync(path.join(SRC, 'main', 'java', 'io', 'github', 'alessandrocdrx', 'acertototal', 'MainActivity.kt'), 'utf8');
+  ok('Botão Voltar do Android usa window.acertoVoltar (fecha janela, sai do Menu, depois sai do app)', /JS_FECHAR_JANELA =\s*"\(function\(\)\{return !!\(window\.acertoVoltar&&window\.acertoVoltar\(\)\)\}\)\(\)"/.test(kt) && /window\.acertoVoltar=function/.test(html));
   ok('Leitor de Excel vai dentro do APK', fs.statSync(path.join(ASSETS, 'xlsx.full.min.js')).size > 500000);
   ok('Página do APK declara idioma pt-BR e viewport de celular', /<html lang="pt-BR">/.test(html) && /name="viewport"/.test(html));
 

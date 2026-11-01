@@ -41,7 +41,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   const enviar = async (nome, bytes) => { toques++; await p.setInputFiles('#xl', { name: nome, mimeType: 'application/octet-stream', buffer: Buffer.from(bytes) }); await p.waitForSelector('.sheet h2:has-text("Prévia")'); await p.waitForTimeout(250); };
   const xlsx = aoa => p.evaluate(a => { const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(a), 'S'); return Array.from(new Uint8Array(XLSX.write(wb, { type: 'array', bookType: 'xlsx' }))); }, aoa);
   const lerSalvo = async () => { await p.waitForFunction(() => window.__salvo); const r = await p.evaluate(() => { const w = XLSX.read(new Uint8Array(window.__salvo.d), { type: 'array' }); return { nome: window.__salvo.nome, aoa: XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]], { header: 1, defval: '' }), d: window.__salvo.d }; }); await p.evaluate(() => { window.__salvo = null; }); return r; };
-  const inicio = async () => { await p.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))); await p.click('button[data-tab=contas]'); toques = 0; };
+  const inicio = async () => { await p.evaluate(() => { for (let i = 0; i < 3 && window.acertoVoltar(); i++); }); await p.click('button[data-tab=contas]'); toques = 0; };
 
   // ===== Tarefa 1: "Como importar um cliente com 8 contas?"
   await inicio();
@@ -185,8 +185,8 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   // ===== Tarefa 8: "Apagar tudo" na versão de teste, confirmado com o CPF/CNPJ do dono
   const aval0 = await p.evaluate(() => localStorage.getItem('acertototal-avaliacao'));
   await inicio();
-  await tocar('button[data-tab=planilha]');
-  ok('T8 · Versão de teste: "Apagar tudo…" fica no fim da aba Planilha, separado das tarefas', await p.locator('.perigo [data-act=apagar-abrir]').count() === 1 && await p.locator('.opcoes [data-act=apagar-abrir]').count() === 0);
+  await tocar('.head [data-act=abrir-menu]');
+  ok('T8 · Versão de teste: "Apagar tudo…" fica no fim do Menu, separado das opções (como nos apps Android)', await p.locator('.perigo [data-act=apagar-abrir]').count() === 1 && await p.locator('.opcoes [data-act=apagar-abrir]').count() === 0);
   await tocar('[data-act=apagar-abrir]');
   ok('T8 · Na primeira vez, pede o CPF/CNPJ do dono do app', await p.locator('#dono-doc').count() === 1);
   await p.fill('#dono-doc', '111.111.111'); await p.click('[data-act=apagar-dono]');
@@ -208,7 +208,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   ok('T8 · Depois de reabrir, o app continua vazio (não volta o exemplo)', (await estado()).clientes.length === 0 && /Nenhuma|Comece|nenhuma/.test(await p.locator('#screen').innerText()));
   ok(`T8 · Apagar em ${toques} toques (meta: até 5)`, toques <= 5, `${toques}`);
   await inicio();
-  await p.click('button[data-tab=planilha]'); await p.click('[data-act=apagar-abrir]');
+  await p.click('.head [data-act=abrir-menu]'); await p.click('[data-act=apagar-abrir]');
   ok('T8 · Na segunda vez, vai direto à confirmação', await p.locator('#apagar-doc').count() === 1 && await p.locator('#dono-doc').count() === 0);
   await p.screenshot({ path: __dirname + '/capturas/tarefas-apagar.png' });
 
@@ -231,8 +231,9 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
 
   // ===== Tarefa 9: "Quem fez o app?" e o Menu (padrão do geoTotal)
   await inicio();
-  ok('T9 · Rodapé com 5 ícones, o último é o Menu', (await p.locator('.tabs button').count()) === 5 && await visivelSemRolar('button[data-tab=menu]'));
-  await tocar('button[data-tab=menu]');
+  ok('T9 · Ícone ☰ do Menu visível no topo, em qualquer aba', await visivelSemRolar('.head [data-act=abrir-menu]'));
+  await tocar('.head [data-act=abrir-menu]');
+  ok('T9 · O Menu é uma tela própria: título "Menu", seta de voltar e sem o rodapé', /Menu/.test(await p.locator('#title').innerText()) && (await p.locator('.head [data-act=voltar]').count()) === 1 && !(await p.locator('#tabs').isVisible()));
   const menu = await p.locator('#screen').innerText();
   ok('T9 · O Menu mostra a marca, o autor (@alessandrocdrx) e a versão logo no topo', /acertoTotal/.test(menu) && /Criado por @alessandrocdrx · versão protótipo/.test(menu));
   ok('T9 · O Menu tem Assinatura, Tema, Cópia de segurança, Avaliar, Relatar problema, Privacidade e Sobre', ['Assinatura', 'Tema e paleta', 'Cópia de segurança', 'Restaurar uma cópia', 'Avaliar o acertoTotal', 'Relatar problema ou sugestão', 'Política de privacidade', 'Sobre o acertoTotal'].every(t => menu.includes(t)), menu);
@@ -245,6 +246,11 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   await tocar('#screen [data-act=aparencia]');
   ok('T9 · Tema e paleta abre pelo Menu', /Tema e paleta/.test(await p.locator('.sheet h2').innerText()));
   await p.keyboard.press('Escape');
+  ok('T9 · Voltar (Esc/botão do Android) fecha a janela e continua no Menu', (await p.locator('.sheet').count()) === 0 && /Menu/.test(await p.locator('#title').innerText()));
+  await p.keyboard.press('Escape');
+  ok('T9 · Voltar de novo sai do Menu e mostra o rodapé', /Contas/.test(await p.locator('#title').innerText()) && await p.locator('#tabs').isVisible());
+  await p.click('button[data-tab=clientes]'); await p.click('.head [data-act=abrir-menu]'); await p.click('.head [data-act=voltar]');
+  ok('T9 · A seta de voltar devolve à aba de onde a pessoa veio (Clientes)', /Clientes/.test(await p.locator('#title').innerText()));
 
   ok('Sem erros de JavaScript', errs.length === 0, errs.join(' | '));
   await b.close();

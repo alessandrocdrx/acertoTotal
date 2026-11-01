@@ -122,7 +122,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Voltar fecha a janela aberta no app; sem janela aberta, sai do app.
+        // Voltar fecha a janela aberta no app; no Menu, volta à aba de antes; senão, sai do app.
         onBackPressedDispatcher.addCallback(this) {
             web.evaluateJavascript(JS_FECHAR_JANELA) { fechou ->
                 if (fechou != "true") finish()
@@ -167,8 +167,6 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val ORIGEM_HOST = "appassets.androidplatform.net"
         const val JS_FECHAR_JANELA =
-            "(function(){var l=document.getElementById('layer');" +
-                "if(l&&l.firstChild){document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));return true}" +
-                "return false})()"
+            "(function(){return !!(window.acertoVoltar&&window.acertoVoltar())})()"
     }
 }

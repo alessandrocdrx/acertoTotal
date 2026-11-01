@@ -36,7 +36,8 @@ async function newPage(browser, opts = {}) {
 }
 const st = page => page.evaluate(() => JSON.parse(localStorage.getItem('baixa-pix-v2')));
 const chipN = async (page, label) => +(await page.locator('.chip', { hasText: label }).innerText()).match(/\d+/)[0];
-const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
+// 'menu' não é aba do rodapé: abre pelo ícone ☰ no topo.
+const go = async (page, tab) => { if (tab === 'menu') return page.click('[data-act=abrir-menu]'); await page.evaluate(() => { while (window.acertoVoltar && window.acertoVoltar()); }); return page.click(`button[data-act=go][data-tab=${tab}]`); };
 
 (async () => {
   const browser = await chromium.launch();
@@ -204,13 +205,13 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
       const v = r.violations.filter(x => !['region', 'landmark-one-main', 'page-has-heading-one', 'document-title', 'html-has-lang'].includes(x.id));
       rec('Acessibilidade', `axe (${theme}) — ${label}`, v.length === 0, v.map(x => `${x.id}(${x.nodes.length}): ${x.help}`).join(' | '), 'FAIL');
     };
-    for (const tab of ['contas', 'clientes', 'numeros', 'planilha']) {
+    for (const tab of ['contas', 'clientes', 'numeros', 'planilha', 'menu']) {
       await go(page, tab);
       await page.screenshot({ path: `${shots}/${tab}-${theme}.png` });
       await axeRun('aba ' + tab);
       // alvos de toque
-      const small = await page.evaluate(() => [...document.querySelectorAll('#phone button, #phone input, #phone select, #phone textarea, #phone a')].filter(e => e.offsetParent && e.type !== 'hidden').map(e => { const r = e.getBoundingClientRect(); return { n: (e.innerText || e.getAttribute('aria-label') || e.id || e.tagName).trim().slice(0, 28), w: Math.round(r.width), h: Math.round(r.height) }; }).filter(x => x.h < 44 || x.w < 44));
-      if (!dark) rec('Usabilidade', `Alvos de toque ≥ 44 px — aba ${tab}`, small.length === 0, small.map(s => `${s.n} ${s.w}x${s.h}`).join('; '), 'WARN');
+      const small = await page.evaluate(() => [...document.querySelectorAll('#phone button, #phone input, #phone select, #phone textarea, #phone a')].filter(e => e.offsetParent && e.type !== 'hidden').map(e => { const r = e.getBoundingClientRect(); return { n: (e.innerText || e.getAttribute('aria-label') || e.id || e.tagName).trim().slice(0, 28), w: Math.round(r.width), h: Math.round(r.height) }; }).filter(x => x.h < 48 || x.w < 48));
+      if (!dark) rec('Usabilidade', `Alvos de toque ≥ 48 px (Material 3) — ${tab}`, small.length === 0, small.map(s => `${s.n} ${s.w}x${s.h}`).join('; '), 'WARN');
     }
     await go(page, 'contas');
     await page.locator('.crow .btn.primary').first().click();
@@ -230,7 +231,7 @@ const go = (page, tab) => page.click(`button[data-act=go][data-tab=${tab}]`);
   // Layout em larguras diferentes
   for (const w of [320, 360, 390, 768, 1280]) {
     const { page, ctx } = await newPage(browser, { viewport: { width: w, height: 800 } });
-    for (const tab of ['contas', 'clientes', 'numeros', 'planilha']) {
+    for (const tab of ['contas', 'clientes', 'numeros', 'planilha', 'menu']) {
       await go(page, tab);
       const o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       rec('Layout', `Sem rolagem horizontal em ${w}px — ${tab}`, o <= 0, `${o}px a mais`);

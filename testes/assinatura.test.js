@@ -45,8 +45,10 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
   {
     const { p, ctx } = await abrir(3);
     await p.click('button[data-tab=planilha]');
-    ok('Aba Planilha tem o cartão "Assinatura" com os dias do teste', /Assinatura/.test(await p.locator('.assin').innerText()) && /faltam 4 dias/.test(await p.locator('.assin').innerText()));
-    ok('O cartão fica abaixo das 4 tarefas, que continuam cabendo sem rolar', await visivelSemRolar(p, '[data-act=export-backup]') && (await p.locator('.opcoes .opcao').count()) === 4);
+    ok('A aba Planilha só tem tarefas de planilha (a assinatura fica no Menu)', (await p.locator('#screen .assin').count()) === 0);
+    await p.click('[data-act=abrir-menu]');
+    ok('O Menu tem o cartão "Assinatura" com os dias do teste', /Assinatura/.test(await p.locator('.assin').innerText()) && /faltam 4 dias/.test(await p.locator('.assin').innerText()));
+    ok('O cartão Assinatura aparece no Menu sem rolar', await visivelSemRolar(p, '.assin [data-act=planos]'));
     await p.click('.assin [data-act=planos]');
     const tela = (await p.locator('.sheet').innerText()).replace(/ /g, ' ');
     ok('Janela "Assinar" lista os 4 planos', (await p.locator('.plano').count()) === 4 && /Semanal/.test(tela) && /Mensal/.test(tela) && /Semestral/.test(tela) && /Anual/.test(tela));
@@ -64,7 +66,7 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
     await p.click('#bt-assinar'); await p.waitForTimeout(150);
     ok('Assinar (simulado): fecha a janela, avisa e o cartão mostra "Ativa"', (await p.locator('.sheet').count()) === 0 && /simulada ativada/.test(await p.locator('.toast').innerText()) && /Ativa/.test(await p.locator('.assin').innerText()));
     ok('Com assinatura, a faixa do teste grátis some', !/Teste grátis/.test(await p.locator('#ambiente').innerText()));
-    await p.reload(); await p.waitForSelector('.crow'); await p.click('button[data-tab=planilha]');
+    await p.reload(); await p.waitForSelector('.crow'); await p.click('[data-act=abrir-menu]');
     ok('A assinatura continua depois de reabrir o app', /Ativa/.test(await p.locator('.assin').innerText()));
     await p.click('.assin [data-act=planos]');
     ok('Assinante vê "Sua assinatura" e como gerenciar, sem a lista de planos', /Sua assinatura/.test(await p.locator('.sheet h2').innerText()) && (await p.locator('.plano').count()) === 0 && (await p.locator('[data-act=gerenciar-assin]').count()) === 1);
@@ -99,7 +101,7 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
   // ===== Layout em 320 px
   {
     const { p, ctx } = await abrir(2, { largura: 320 });
-    await p.click('button[data-tab=planilha]'); await p.click('.assin [data-act=planos]');
+    await p.click('[data-act=abrir-menu]'); await p.click('.assin [data-act=planos]');
     ok('Em 320 px: sem rolagem lateral e texto dos planos sem quebrar por palavra', await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth && [...document.querySelectorAll('.plano .pn b, .plano .pv')].every(e => e.getBoundingClientRect().width > 40)));
     await ctx.close();
   }

@@ -23,7 +23,7 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R1. Cada tela tem uma tarefa só. Duas telas que mostram a mesma coisa confundem. Exemplo: o Início repetia a lista de Contas. [usabilidade]
 - R2. A ação principal fica visível na lista. Exemplo: "Dar baixa" aparece em cada conta em aberto, e não escondido num menu. [app]
 - R3. A situação vem sempre escrita, e a cor só reforça. Exemplo: "Atrasada há 5 dias", e não apenas uma bolinha vermelha. [app]
-- R4. No rodapé, 4 tarefas mais o **Menu** (5 ícones, como no geoTotal, por decisão do cliente em 01/11/2026). Ajustes, ajuda e o "Sobre" ficam no Menu, e não em mais abas. No máximo 4 filtros, numa linha só (Lei de Hick). [usabilidade, tarefas]
+- R4. No rodapé, só destinos de trabalho: Contas, Clientes, Números e Planilha (Material 3: de 3 a 5 destinos). Assinatura, tema, cópia, ajuda, "Sobre" e "Apagar tudo" ficam na tela **Menu**, aberta pelo ícone ☰ no canto superior direito (pedido do cliente; conta e ajustes no topo, como nos apps do Google). No Menu, o rodapé some e a seta (ou o Voltar do Android) devolve à aba de onde a pessoa veio. No máximo 4 filtros, numa linha só (Lei de Hick). [usabilidade, tarefas]
 - R5. Desfazer é melhor que perguntar "tem certeza?". Baixa, desfazer baixa e exclusão mostram um aviso com o botão "Desfazer" por 6 segundos. [usabilidade]
 - R6. Tela vazia sempre oferece uma saída: "Limpar busca", "Ver todas" ou "Toque em + Nova conta". [usabilidade]
 - R7. Mostrar primeiro o que importa para a decisão. Exemplo: a lista de clientes mostra quanto cada um deve, ou "Em dia". [usabilidade]
@@ -37,7 +37,7 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 ### Toque, leitura e acessibilidade
 
-- R12. Toda área de toque tem pelo menos 44 px, e o botão principal tem pelo menos 48 px, largo e embaixo, perto do polegar (Lei de Fitts). [app, usabilidade]
+- R12. Toda área de toque tem pelo menos 48 px (Material 3, 48 dp), e o botão principal é largo e fica embaixo, perto do polegar (Lei de Fitts). O botão flutuante é estendido no topo da lista e encolhe para só o "+" (56×56) quando a pessoa rola, para não cobrir o "Dar baixa". [app, usabilidade]
 - R13. Contraste mínimo de 4,5:1 nos dois temas. Nunca usar `opacity` em texto, porque ela derruba o contraste sem que se perceba. [app (axe), tema]
 - R14. Janelas têm nome para o leitor de tela, recebem o foco ao abrir, fecham com Esc e devolvem o foco ao botão de origem. [app]
 - R15. A página declara o idioma `pt-BR`. [usabilidade]
@@ -109,11 +109,35 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R64. Assinatura: um produto (`acertototal_premium`) com 4 planos base (`semanal`, `mensal`, `semestral`, `anual`). Os preços saem da Play, e o app só calcula o equivalente por mês e a economia (semestral 5%, anual 10%). O ID do produto e dos planos é o mesmo no Console, na página e na casca Android. [assinatura]
 - R65. Só o app da Play cobra de verdade (`COBRANCA_REAL`). O protótipo e o app de teste simulam a assinatura, avisam isso na janela e nunca cobram. A última resposta da Play fica guardada no aparelho, para quem já assinou abrir o app liberado sem internet. Sem servidor, essa checagem só vale no aparelho, como o teste grátis (R43). [assinatura]
 - R66. Texto de privacidade e ficha da loja prometem só o que o pacote final confere. O Play Billing traz as permissões de internet e de cobrança sozinho: depois de acrescentar uma biblioteca, leia as permissões do pacote montado (`aapt2 dump permissions`) antes de escrever "sem internet". [assinatura]
+- R68. A barra de navegação segue o Material 3: indicador em pílula de 56×32 atrás do ícone da aba ativa, ícones de 24 px, rótulo sempre visível e altura de pelo menos 64 px. Uma faixa de aviso tem no máximo 2 linhas. [usabilidade]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-029 · 01/11/2026 · "Menu embaixo não é intuitivo"
+- **Relato do cliente:** "Pedi para completar embaixo, mas menu embaixo não é intuitivo, né?" Ele pediu para analisar documentos de usabilidade de apps Android de gestão, importação, exportação e atualização de contas e clientes, e as melhores práticas de cores, ícones, tamanhos e disposição, aplicando e retestando em ciclo.
+- **O que a pesquisa mostrou:**
+  - Material 3 (Google): a barra de navegação serve para 3 a 5 **destinos** de mesma importância. Ajustes e conta ficam no topo, à direita (Gmail, Drive, Play). Indicador em pílula de 56×32, ícones de 24 dp, toque de 48 dp. O botão flutuante estendido encolhe ao rolar.
+  - Nielsen Norman Group (179 pessoas): navegação escondida atrás de "Menu" reduz a descoberta do conteúdo em mais de 20% e alonga as tarefas em cerca de 15% no celular. A recomendação é mostrar até 4 links principais visíveis.
+  - Importação de planilha: prévia antes de gravar, erros por linha e coluna com a correção sugerida, e resumo de novos, atualizados e erros. O app já fazia isso (A-015, A-017, A-018).
+- **Causa:** a 5ª aba "Menu" era uma gaveta de itens sem relação entre si, com um nome que não diz o que tem dentro (fere o reconhecimento em vez de memorização). A aba existia para completar 5 ícones, e não por ser um destino de trabalho. Além disso, a aba Planilha tinha o cartão de assinatura e o "Apagar tudo", que não têm a ver com planilha (R1).
+- **O que foi feito:**
+  - O rodapé ficou com os 4 destinos de trabalho, no estilo do Material 3: pílula na aba ativa, ícones de 24 px e 72 px de altura.
+  - O ícone ☰ **Menu** no topo, à direita, abre uma tela própria (primeiro foi uma engrenagem "Ajustes"; o cliente pediu o ícone de menu), com seta de voltar e sem rodapé. A tela tem a marca com o @ e a versão, Assinatura, Tema, Cópia e Restaurar, Ajuda, Sobre e, no fim, o "Apagar tudo" da versão de teste.
+  - O botão de tema saiu do cabeçalho e foi para o Menu.
+  - O Voltar do Android passou a chamar `window.acertoVoltar`: fecha a janela aberta, depois sai do Menu, e só então sai do app.
+  - Os toques passaram para 48 px.
+  - O botão flutuante encolhe para "+" ao rolar.
+  - A faixa de teste ficou com 2 linhas.
+- **Problemas achados nas voltas de revisão (fotos em 360×780 e 320×640, claro e escuro):**
+  - O rodapé continuava aparecendo no Menu, porque o `display:grid` anulava o `hidden`. Corrigido com `.tabs[hidden]{display:none}`.
+  - A marca ficava desalinhada ao lado da seta de voltar. No Menu, a marca do cabeçalho some, porque já aparece no cartão do autor.
+  - Os testes antigos tocavam no rodapé estando no Menu. Agora voltam antes, como a pessoa faria.
+  - Em 320 px, o filtro "Em aberto" quebrava em 2 linhas. Agora o rótulo não quebra, com fonte de 12 px abaixo de 340 px.
+  - Em celular baixo, o botão flutuante estendido cobria o primeiro "Dar baixa". Agora começa como "+" e deixa pelo menos 48 px do botão livres.
+- **Como evitar:** regras R4 e R12 revistas e R68 nova; testes novos em `usabilidade` (rodapé, pílula, ícone ☰, botão flutuante), `tarefas` T8 e T9 (Menu, voltar), `app` (toque ≥ 48 px e axe no Menu) e `android` (Voltar).
 
 ### A-028 · 01/11/2026 · Rodapé com 4 ícones, sem menu e sem autor
 - **Relato do cliente:** "Me incomoda os ícones do rodapé não serem 5, não ter menu e, nos moldes do geoTotal, não ter meu @ e quem sou."

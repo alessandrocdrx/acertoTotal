@@ -34,14 +34,18 @@ button{cursor:pointer}
 .pitch li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
 .pitch li b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:13px}
 .pitch .note{font-size:13px;margin-top:16px}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;min-height:44px;padding:10px 16px;font-weight:500}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;min-height:48px;padding:10px 16px;font-weight:500}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);font-weight:600}
 .btn:disabled{background:var(--surface2);border-color:var(--line);color:var(--muted);cursor:progress}
 .btn.danger{color:var(--bad)}
 .btn.block{width:100%;min-height:50px;font-size:16px}
 .phone{font-size:16px;position:relative;width:390px;height:min(800px,calc(100dvh - 32px));background:var(--surface);border:10px solid var(--frame);border-radius:38px;overflow:hidden;display:flex;flex-direction:column}
-.head{padding:16px 18px 10px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-.ambiente{background:var(--warn-bg);color:var(--warn);font-size:13px;font-weight:700;text-align:center;padding:7px 16px;line-height:1.3;border-bottom:1px solid var(--line)}
+.head{padding:16px 18px 10px;display:flex;align-items:flex-end;gap:12px}
+.headmain{flex:1;min-width:0}
+#headBack:empty{display:none}
+#headBack{align-self:center}
+.iconbtn.voltar{border-color:transparent;margin-left:-8px}
+.ambiente{background:var(--warn-bg);color:var(--warn);font-size:13px;font-weight:600;text-align:center;padding:6px 16px;line-height:1.35;border-bottom:1px solid var(--line)}
 .ambiente span{display:block}
 .ambiente.fim{background:var(--bad-bg);color:var(--bad)}
 .brand{display:flex;align-items:center;gap:7px;margin-bottom:6px;font-family:var(--font-d);font-weight:700;font-size:15px;color:var(--accent)}
@@ -49,10 +53,16 @@ button{cursor:pointer}
 .head h2{font-family:var(--font-d);font-size:28px;margin:0;line-height:1.1}
 .head small{color:var(--muted)}
 .screen{flex:1;min-height:0;overflow-y:auto;padding:4px 18px 88px}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface)}
-.tabs button{border:0;background:none;min-height:62px;padding:10px 4px 10px;font-size:13px;color:var(--muted);display:grid;gap:3px;justify-items:center;align-content:center;font-weight:500}
-.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.tabs button[aria-current="true"]{color:var(--accent);font-weight:600;box-shadow:inset 0 3px 0 var(--accent)}
+/* Barra de navegação do Material 3: 3 a 5 destinos, indicador em pílula 56×32 atrás do ícone, rótulo sempre visível. */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{border:0;background:none;min-height:72px;padding:10px 4px 12px;font-size:13px;color:var(--muted);display:grid;gap:4px;justify-items:center;align-content:center;font-weight:500}
+.tabs[hidden]{display:none}
+.head.sub .brand{display:none}
+.tabs .ind{display:grid;place-items:center;width:56px;height:32px;border-radius:16px}
+.tabs button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button[aria-current="true"]{color:var(--fg);font-weight:700}
+.tabs button[aria-current="true"] .ind{background:var(--accent-soft);color:var(--accent)}
+.tabs button[aria-current="true"] svg{stroke-width:2.3}
 .sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .sum .big{grid-column:1/-1;background:var(--accent);color:var(--accent-fg);border-radius:16px;padding:16px}
 .sum .big span{font-size:14px}
@@ -77,10 +87,12 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .chips.four{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .four .chip{display:grid;justify-items:center;align-content:center;gap:1px;padding:6px 2px;border-radius:14px;font-size:13px;line-height:1.2}
 .four .chip b{font-size:17px}
-.iconbtn{flex:none;width:44px;height:44px;border:1px solid var(--line);background:var(--surface);border-radius:12px;display:grid;place-items:center;padding:0;color:var(--fg)}
+.four .chip span{white-space:nowrap;letter-spacing:-.01em}
+@media (max-width:340px){.four .chip{font-size:12px}}
+.iconbtn{flex:none;width:48px;height:48px;border:1px solid var(--line);background:var(--surface);border-radius:12px;display:grid;place-items:center;padding:0;color:var(--fg)}
 .iconbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--surface2);padding:4px;border-radius:14px;margin:12px 0 4px}
-.seg button{min-height:44px;border:0;border-radius:10px;background:none;font-weight:600;color:var(--muted)}
+.seg button{min-height:48px;border:0;border-radius:10px;background:none;font-weight:600;color:var(--muted)}
 .seg button[aria-checked="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .pal{display:grid;gap:8px}
 .pal-h,.pal-r{display:grid;grid-template-columns:minmax(0,1fr) 80px 80px;gap:8px;align-items:center}
@@ -144,14 +156,17 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .cmain .s{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
 .cside{display:grid;justify-items:end;gap:6px}
 .cside .v{font-weight:600;font-variant-numeric:tabular-nums}
-.btn.sm{padding:6px 14px;min-height:44px;font-size:14px}
+.btn.sm{padding:6px 14px;min-height:48px;font-size:14px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;min-height:44px;padding:7px 16px;font-size:14px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;min-height:48px;padding:7px 16px;font-size:14px}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .field{display:grid;gap:4px;margin-bottom:12px}
 .field label{font-size:14px;color:var(--fg);font-weight:600}
 .field input,.field select,.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:12px;font-size:16px;min-height:48px;padding:11px 14px;width:100%;min-width:0}
-.fab{position:absolute;right:18px;bottom:82px;height:52px;padding:0 20px;border-radius:26px;border:0;background:var(--accent);color:var(--accent-fg);font-size:16px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.fab{position:absolute;right:16px;bottom:88px;height:56px;min-width:56px;padding:0 20px 0 16px;border-radius:16px;border:0;background:var(--accent);color:var(--accent-fg);font-size:16px;font-weight:600;box-shadow:0 3px 10px rgba(0,0,0,.28);display:flex;align-items:center;gap:8px;z-index:2}
+.fab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;flex:none}
+.fab.mini{padding:0;justify-content:center;width:56px}
+.fab.mini .fab-t{display:none}
 .sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;z-index:5}
 .sheet{background:var(--surface);width:100%;max-height:88%;overflow-y:auto;border-radius:22px 22px 0 0;padding:18px}
 .sheet::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 14px}
@@ -308,7 +323,7 @@ a.opcao{color:inherit;text-decoration:none}
 
   <div class="phone" id="phone">
     <div class="ambiente" id="ambiente" role="note" hidden></div>
-    <header class="head"><div><div class="brand"><svg viewBox="0 0 108 108" aria-hidden="true"><rect width="108" height="108" rx="24" fill="var(--accent)"/><path d="M73.97,48.51 A21,21 0 1 1 56.92,34.20" fill="none" stroke="var(--accent-fg)" stroke-width="7.5" stroke-linecap="round"/><path d="M41.5,55.5 L50.5,64.5 L76.5,35.5" fill="none" stroke="var(--sol)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>acertoTotal</span></div><h2 id="title"></h2><small id="subtitle"></small></div><div id="headAction"></div></header>
+    <header class="head"><div id="headBack"></div><div class="headmain"><div class="brand"><svg viewBox="0 0 108 108" aria-hidden="true"><rect width="108" height="108" rx="24" fill="var(--accent)"/><path d="M73.97,48.51 A21,21 0 1 1 56.92,34.20" fill="none" stroke="var(--accent-fg)" stroke-width="7.5" stroke-linecap="round"/><path d="M41.5,55.5 L50.5,64.5 L76.5,35.5" fill="none" stroke="var(--sol)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>acertoTotal</span></div><h2 id="title"></h2><small id="subtitle"></small></div><div id="headAction"></div></header>
     <main class="screen" id="screen"></main>
     <nav class="tabs" id="tabs"></nav>
     <div id="layer"></div>
@@ -433,14 +448,20 @@ function sheet(html){
   d.focus();
 }
 function closeSheet(){$('layer').innerHTML='';pendingComp=null;if(opener&&opener.isConnected)opener.focus();opener=null}
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&$('layer').firstChild)closeSheet()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&window.acertoVoltar)window.acertoVoltar()});
 
 var ICON={
  contas:'<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
  clientes:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
  planilha:'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>'};
-var TABS=[['contas','Contas'],['clientes','Clientes'],['numeros','Números'],['planilha','Planilha'],['menu','Menu']];
+ICON.voltar='<svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>';
+var TABS=[['contas','Contas'],['clientes','Clientes'],['numeros','Números'],['planilha','Planilha']];
 
+var MAIS='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+// O botão flutuante fica estendido no topo da lista e encolhe para só o "+" quando a pessoa rola (padrão do Material 3).
+// Em tela baixa (celular pequeno), começa já como "+" para não cobrir a primeira conta.
+function ajustaFab(){var f=document.querySelector('.fab'),sc=$('screen');if(f)f.classList.toggle('mini',sc.scrollTop>24||sc.clientHeight<540)}
+$('screen').addEventListener('scroll',ajustaFab,{passive:true});
 function contaRow(c,semNome){
   semNome=semNome===true;
   var s=status(c),cl=cli(c.clienteId),info,d;
@@ -486,7 +507,7 @@ function viewContas(){
   return resumoContas()+'<div class="field"><input id="q" type="search" placeholder="Buscar cliente ou descrição" value="'+esc(query)+'" aria-label="Buscar"></div>'
    +'<div class="chips four" role="group" aria-label="Filtrar contas">'+f.map(function(x){return '<button class="chip" data-act="filter" data-f="'+x[0]+'" aria-pressed="'+(filter===x[0])+'"><span>'+x[1]+'</span><b>'+n[x[0]]+'</b></button>'}).join('')+'</div>'
    +(list.length?list.map(function(c){return contaRow(c)}).join(''):emptyContas())
-   +(somenteLeitura()?'':'<button class="fab" data-act="nova-conta" aria-label="Nova conta">+ Nova conta</button>');
+   +(somenteLeitura()?'':'<button class="fab" data-act="nova-conta" aria-label="Nova conta">'+MAIS+'<span class="fab-t">Nova conta</span></button>');
 }
 function viewClientes(){
   var q=queryC.trim().toLowerCase(),qd=soDig(q);
@@ -500,7 +521,7 @@ function viewClientes(){
     var atr=cs.filter(function(x){return status(x)==='atrasada'}).length;
     return '<button class="row" data-act="cliente" data-id="'+c.id+'"><span class="t">'+esc(c.nome)+'</span><span class="v"'+(ab?'':' style="color:var(--ok)"')+'>'+(ab?brl.format(ab):'Em dia')+'</span><span class="s">'+(c.doc?tipoDoc(c.doc)+' '+fmtDoc(c.doc)+(docOk(c.doc)?'':' <span class="semdoc">inválido (teste)</span>'):'<span class="semdoc">Sem CPF/CNPJ</span>')+' · '+cs.length+' conta'+(cs.length===1?'':'s')+'</span><span class="p">'+(atr?'<span class="pill atrasada">'+atr+' atrasada'+(atr>1?'s':'')+'</span>':'')+'</span></button>';
   }).join(''):(q?'<div class="empty">Nenhum cliente encontrado para “'+esc(queryC.trim())+'”.<br><button class="btn" data-act="limpar-busca-c">Limpar busca</button></div>':'<div class="empty">Nenhum cliente ainda. Toque em “+ Novo cliente” ou importe uma planilha.</div>');
-  return h+(somenteLeitura()?'':'<button class="fab" data-act="novo-cliente" aria-label="Novo cliente">+ Novo cliente</button>');
+  return h+(somenteLeitura()?'':'<button class="fab" data-act="novo-cliente" aria-label="Novo cliente">'+MAIS+'<span class="fab-t">Novo cliente</span></button>');
 }
 // Exportar tem dois formatos: relatório (para ler ou enviar) e planilha para editar (volta pela importação).
 var expPadrao={formato:'relatorio',status:'atrasadas',cliente:'',de:'',ate:''},expF=Object.assign({},expPadrao);
@@ -563,9 +584,9 @@ function viewPlanilha(){
    +opcao('atualizar-abrir','editar','Atualizar pelo Excel','Mudar valores, vencimentos e baixas de várias contas')
    +opcao('export-abrir','exportar','Exportar relatório','Contas em Excel para ler ou mandar a alguém')
    +opcao('export-backup','backup','Cópia de segurança','Tudo numa planilha, para guardar ou trocar de celular','<span class="pill '+b.cls+'">'+b.txt+'</span>')
-   +'</nav>'+assinCard()+historicoImport()+zonaPerigo();
+   +'</nav>'+historicoImport();
 }
-// ===== Assinatura: planos, cartão na aba Planilha e janela "Assinar"
+// ===== Assinatura: planos, cartão no Menu e janela "Assinar"
 var PLANOS=[
   {id:'semanal',nome:'Semanal',ciclo:'a cada semana',preco:2.99,porMes:2.99*52/12},
   {id:'mensal',nome:'Mensal',ciclo:'todo mês',preco:9.99,porMes:9.99},
@@ -767,16 +788,16 @@ function viewNumeros(){
    +'<div class="tile"><span>Vencem em 7 dias</span><strong>'+brl.format(sum(s.prox))+'</strong><small>'+s.prox.length+' conta'+(s.prox.length===1?'':'s')+'</small></div></div>';
   return h;
 }
-var TITLES={contas:['Contas',''],clientes:['Clientes',S.clientes.length+' cadastrados'],numeros:['Estatísticas','Seus números'],planilha:['Planilha','Importar e exportar'],menu:['Menu','Ajustes, ajuda e sobre']};
+var TITLES={contas:['Contas',''],clientes:['Clientes',S.clientes.length+' cadastrados'],numeros:['Estatísticas','Seus números'],planilha:['Planilha','Importar e exportar'],menu:['Menu','Conta, aparência, dados e ajuda']};
 function fimTxt(){return fmtD(iso(new Date(AV.fim)))}
 function atualizaFaixa(){
   var f=$('ambiente'),l=[],fim=somenteLeitura(),cta='';
   if(fim){l.push(AV.relogio?'O relógio do aparelho foi atrasado. O teste grátis foi encerrado e o app está só para consulta.':'Teste grátis encerrado em '+fimTxt()+'. O app está só para consulta: dá para ver tudo, mas não cadastrar, dar baixa, importar ou exportar.');cta='Assinar'}
   else{
-    if(AMBIENTE!=='producao')l.push('Ambiente de teste: os dados podem ser apagados a qualquer momento.');
+    if(AMBIENTE!=='producao')l.push('Ambiente de teste: os dados podem ser apagados.');
     if(LIMITE_DIAS>0&&!ASSIN.ativa){
       var d=diasRestantes();
-      // No app oficial, o aviso só aparece nos últimos 3 dias; antes disso a contagem fica na aba Planilha.
+      // No app oficial, o aviso só aparece nos últimos 3 dias; antes disso a contagem fica no cartão Assinatura, no Menu.
       if(AMBIENTE!=='producao'||d<=3){l.push('Teste grátis: '+(d<=1?'termina hoje':'faltam '+d+' dias')+' (até '+fimTxt()+').');if(d<=3)cta='Ver planos'}
     }
   }
@@ -787,30 +808,39 @@ function render(){
   atualizaFaixa();
   TITLES.contas[1]='Hoje, '+fmtD(today);TITLES.clientes[1]=S.clientes.length+' cadastrados';TITLES.numeros[1]=PERIODOS[statsPeriod];
   $('title').textContent=TITLES[tab][0];$('subtitle').textContent=TITLES[tab][1];
-  $('headAction').innerHTML=(tab==='contas'&&!somenteLeitura()?'<button class="btn" data-act="export-filtrado" aria-label="Exportar contas em Excel">Exportar</button>':'')+(tab==='clientes'&&!somenteLeitura()?'<button class="btn" data-act="import-abrir" aria-label="Importar clientes de uma planilha">Importar</button>':'')+'<button class="iconbtn" data-act="aparencia" aria-label="Tema e paleta"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>';
+  $('headAction').innerHTML=(tab==='contas'&&!somenteLeitura()?'<button class="btn" data-act="export-filtrado" aria-label="Exportar contas em Excel">Exportar</button>':'')+(tab==='clientes'&&!somenteLeitura()?'<button class="btn" data-act="import-abrir" aria-label="Importar clientes de uma planilha">Importar</button>':'')+(tab==='menu'?'':'<button class="iconbtn" data-act="abrir-menu" aria-label="Menu" title="Menu">'+ICON.menu+'</button>');
+  document.querySelector('.head').classList.toggle('sub',tab==='menu');
+  $('headBack').innerHTML=tab==='menu'?'<button class="iconbtn voltar" data-act="voltar" aria-label="Voltar">'+ICON.voltar+'</button>':'';
   var v={contas:viewContas,clientes:viewClientes,numeros:viewNumeros,planilha:viewPlanilha,menu:viewMenu}[tab]();
   var sc=$('screen'),pos=sc.scrollTop;sc.innerHTML=v;sc.scrollTop=pos;
-  $('tabs').innerHTML=TABS.map(function(t){return '<button data-act="go" data-tab="'+t[0]+'" aria-current="'+(tab===t[0])+'">'+ICON[t[0]]+t[1]+'</button>'}).join('');
+  $('tabs').innerHTML=TABS.map(function(t){return '<button data-act="go" data-tab="'+t[0]+'" aria-current="'+(tab===t[0])+'"><span class="ind" aria-hidden="true">'+ICON[t[0]]+'</span>'+t[1]+'</button>'}).join('');
+  $('tabs').hidden=tab==='menu';
+  ajustaFab();
   [['q','query'],['qc','queryC']].forEach(function(x){var q=$(x[0]);if(q)q.addEventListener('input',function(){if(x[1]==='query')query=q.value;else queryC=q.value;var p=q.selectionStart;render();var n=$(x[0]);n.focus();n.setSelectionRange(p,p)})});
 }
 
-// ===== Menu (5ª aba), no padrão do geoTotal: uma página só, com grupos, e o "Sobre" com autor e versão.
+// ===== Menu: abre pelo ícone ☰ no topo (pedido do cliente), como nos apps do Google, que deixam conta e ajustes no topo.
+// O rodapé fica só com os 4 destinos de trabalho (Material 3: a barra é para destinos, não para ajustes).
+// Uma página só, com grupos, e o "Sobre" com autor e versão, no padrão do geoTotal.
+var tabAntes='contas';
+function voltar(){tab=tabAntes||'contas';$('screen').scrollTop=0;render()}
+// Botão Voltar do Android: fecha a janela aberta; sem janela, sai do Menu; senão, deixa o Android sair do app.
+window.acertoVoltar=function(){if($('layer').firstChild){closeSheet();return true}if(tab==='menu'){voltar();return true}return false};
 var AUTOR='alessandrocdrx',PERFIL='https://github.com/alessandrocdrx',REPO='https://github.com/alessandrocdrx/acertoTotal';
 var LINK_LOJA='https://play.google.com/store/apps/details?id=io.github.alessandrocdrx.acertototal';
 var SIMBOLO=function(px){return '<svg width="'+px+'" height="'+px+'" viewBox="0 0 108 108" aria-hidden="true"><rect width="108" height="108" rx="24" fill="var(--accent)"/><path d="M73.97,48.51 A21,21 0 1 1 56.92,34.20" fill="none" stroke="var(--accent-fg)" stroke-width="7.5" stroke-linecap="round"/><path d="M41.5,55.5 L50.5,64.5 L76.5,35.5" fill="none" stroke="var(--sol)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
 function versaoApp(){return window.ACERTO_VERSAO||'protótipo'}
 function opcaoLink(href,ic,titulo,texto){return '<a class="opcao" href="'+href+'" target="_blank" rel="noopener"><span class="ic" aria-hidden="true">'+ICON[ic]+'</span><span class="ot"><b>'+titulo+'</b><span>'+texto+'</span></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>'}
 function viewMenu(){
-  var t=ASSIN.ativa?'Ativa. Obrigado por assinar!':(somenteLeitura()?'Teste grátis encerrado':(LIMITE_DIAS>0?'Teste grátis até '+fimTxt():'Ver os planos'));
   return '<button class="menu-marca" data-act="sobre">'+SIMBOLO(52)+'<span><b class="wm">acerto<span>Total</span></b><small>Criado por @'+AUTOR+' · versão '+esc(versaoApp())+'</small></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>'
-   +'<h3>Conta</h3><nav class="opcoes" aria-label="Conta">'+opcao('planos','assin','Assinatura',t)+'</nav>'
+   +'<h3>Conta</h3>'+assinCard()
    +'<h3>Aparência</h3><nav class="opcoes" aria-label="Aparência">'+opcao('aparencia','tema','Tema e paleta','Claro, escuro ou igual ao celular')+'</nav>'
    +(somenteLeitura()?'':'<h3>Seus dados</h3><nav class="opcoes" aria-label="Seus dados">'+opcao('export-backup','backup','Cópia de segurança','Tudo numa planilha, para guardar ou trocar de celular')+opcao('import-abrir','restaurar','Restaurar uma cópia','Traga de volta os dados de uma cópia de segurança')+'</nav>')
    +'<h3>Ajuda</h3><nav class="opcoes" aria-label="Ajuda">'
    +opcaoLink(LINK_LOJA,'avaliar','Avaliar o acertoTotal','Na Play Store · ajuda muito o app a crescer')
    +opcaoLink(REPO+'/issues/new','conversa','Relatar problema ou sugestão','Abre a página do projeto')
    +opcaoLink(REPO+'/blob/main/PRIVACIDADE.md','privacidade','Política de privacidade','Seus dados ficam só no aparelho')
-   +opcao('sobre','sobre','Sobre o acertoTotal','Versão, autor e créditos')+'</nav>';
+   +opcao('sobre','sobre','Sobre o acertoTotal','Versão, autor e créditos')+'</nav>'+zonaPerigo();
 }
 function sheetSobre(){
   sheet('<div class="sobre">'+SIMBOLO(88)+'<h2><span class="wm">acerto<span>Total</span></span></h2><p class="sobre-tag">Contas a receber, acertadas.</p>'
@@ -1385,7 +1415,9 @@ document.addEventListener('click',function(e){
   if(somenteLeitura()&&ACOES_ESCRITA.indexOf(a)>-1){e.preventDefault();toast(MSG_LEITURA);return}
   if(a==='close-bg'){if(e.target!==el)return;closeSheet();return}
   e.preventDefault();
-  if(a==='go'){closeSheet();tab=el.dataset.tab;render()}
+  if(a==='go'){closeSheet();tab=el.dataset.tab;$('screen').scrollTop=0;render()}
+  else if(a==='abrir-menu'){closeSheet();if(tab!=='menu')tabAntes=tab;tab='menu';$('screen').scrollTop=0;render()}
+  else if(a==='voltar'){voltar()}
   else if(a==='filter'){filter=el.dataset.f;render()}
   else if(a==='conta')sheetConta(el.dataset.id);
   else if(a==='cliente'){filaDoc=false;sheetCliente(el.dataset.id)}

@@ -7,8 +7,8 @@ for(const os of ['light','dark']){
  const bg=()=>p.evaluate(()=>getComputedStyle(document.body).backgroundColor);
  const initial=await bg();
  ok(`Tema claro é o padrão, mesmo com celular no ${os==='dark'?'escuro':'claro'}`, initial==='rgb(240, 248, 247)',initial);
- await p.click('.iconbtn');await p.waitForSelector('.sheet .seg');await p.waitForTimeout(400);
- ok(`Botão de tema abre a janela com 3 opções (${os})`,(await p.locator('.seg button').count())===3);
+ await p.click('[data-act=abrir-menu]');await p.click('#screen [data-act=aparencia]');await p.waitForSelector('.sheet .seg');await p.waitForTimeout(400);
+ ok(`Menu › Tema e paleta abre a janela com 3 opções (${os})`,(await p.locator('.seg button').count())===3);
  ok(`Paleta lista 9 cores nos dois temas (${os})`,(await p.locator('.pal-r').count())===9);
  await p.click('.seg button[data-t=dark]');await p.waitForTimeout(100);
  ok(`Escuro força o tema escuro (${os})`,(await bg())==='rgb(6, 18, 19)'&&(await p.locator('.seg button[data-t=dark]').getAttribute('aria-checked'))==='true',await bg());

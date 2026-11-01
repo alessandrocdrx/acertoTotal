@@ -84,7 +84,7 @@ const DIA = 864e5;
     await p.click('button[data-tab=planilha]');
     const pl = await p.locator('#screen').innerText();
     ok('Planilha: cartão "Só consulta" explica, sem importar nem exportar', /Só consulta/i.test(pl) && /Assine para voltar a importar/.test(pl) && (await p.locator('[data-act=pick-xl], [data-act=import-abrir], [data-act=export-abrir], [data-act=export-backup], [data-act=import-modelo]').count()) === 0);
-    await p.click('.iconbtn[data-act=aparencia]');
+    await p.click('[data-act=abrir-menu]'); await p.click('#screen [data-act=aparencia]');
     await p.click('.seg button[data-t=dark]');
     ok('Tema continua podendo ser trocado (não mexe nos dados)', (await p.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'dark');
     await p.keyboard.press('Escape');
@@ -122,7 +122,7 @@ const DIA = 864e5;
   {
     const { p, ctx } = await abrir(5, { url: PROD });
     ok('APK de produção: teste de 32 dias, sem a faixa "Ambiente de teste" e sem aviso logo no começo', !(await p.locator('#ambiente').isVisible()) && (await p.locator('.fab').count()) === 1);
-    ok('APK de produção: a aba Planilha mostra quantos dias faltam do teste (27)', await (async () => { await p.click('button[data-tab=planilha]'); return /Teste grátis: faltam 27 dias/.test(await p.locator('.assin').innerText()); })());
+    ok('APK de produção: o Menu mostra quantos dias faltam do teste (27)', await (async () => { await p.click('[data-act=abrir-menu]'); return /Teste grátis: faltam 27 dias/.test(await p.locator('.assin').innerText()); })());
     await ctx.close();
   }
   {

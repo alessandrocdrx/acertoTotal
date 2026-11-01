@@ -24,7 +24,27 @@ const ok = (tecnica, nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} 
   const espera = () => p.waitForTimeout(80);
 
   // Lei de Hick e de Jakob: poucas escolhas, padrões do Android
-  ok('Lei de Hick', 'Menu inferior com 4 tarefas e o Menu (5 ícones, decisão do cliente)', (await p.locator('.tabs button').count()) === 5 && (await p.locator('.tabs button').last().innerText()).trim() === 'Menu');
+  // Material 3: a barra de navegação tem de 3 a 5 destinos de trabalho; conta e ajustes ficam no Menu, aberto pelo ícone ☰ do topo.
+  ok('Lei de Hick + Material 3', 'Rodapé com os 4 destinos de trabalho, sem "Menu"', (await p.locator('.tabs button').count()) === 4 && !/Menu/.test(await p.locator('.tabs').innerText()));
+  ok('Lei de Jakob', 'Menu no ícone ☰ do topo, à direita, com nome para leitor de tela', await p.evaluate(() => { const g = document.querySelector('.head [data-act=abrir-menu]'); if (!g) return false; const r = g.getBoundingClientRect(); return g.getAttribute('aria-label') === 'Menu' && g.innerHTML.includes('M4 7h16M4 12h16M4 17h16') && r.right > innerWidth - 60 && r.top < 260; }));
+  ok('Material 3', 'Aba ativa com indicador em pílula (56×32) atrás do ícone', await p.evaluate(() => { const i = document.querySelector('.tabs [aria-current=true] .ind'); const r = i && i.getBoundingClientRect(); return !!r && Math.round(r.width) === 56 && Math.round(r.height) === 32 && getComputedStyle(i).backgroundColor !== 'rgba(0, 0, 0, 0)'; }));
+  ok('Material 3', 'Rodapé com pelo menos 64 px de altura e ícones de 24 px', await p.evaluate(() => document.querySelector('.tabs').getBoundingClientRect().height >= 64 && document.querySelector('.tabs svg').getBoundingClientRect().width === 24));
+  {
+    const fab = p.locator('.fab');
+    ok('Material 3', 'Botão flutuante estendido ("Nova conta") no topo da lista', /Nova conta/.test(await fab.innerText()) && (await fab.boundingBox()).width > 100);
+    await p.evaluate(() => { const s = document.getElementById('screen'); s.scrollTop = 300; s.dispatchEvent(new Event('scroll')); });
+    await p.waitForTimeout(60);
+    const bx = await fab.boundingBox();
+    ok('Material 3', 'Ao rolar, o botão flutuante encolhe para só o "+" (56×56) e para de cobrir o "Dar baixa"', Math.round(bx.width) === 56 && Math.round(bx.height) === 56 && (await fab.getAttribute('aria-label')) === 'Nova conta', JSON.stringify(bx));
+    await p.evaluate(() => { const s = document.getElementById('screen'); s.scrollTop = 0; s.dispatchEvent(new Event('scroll')); });
+    const pq = await b.newPage({ viewport: { width: 320, height: 640 } });
+    await pq.route('**/*', r => r.request().url().startsWith('file://') || r.request().url().includes('xlsx') ? r.continue() : r.fulfill({ status: 200, body: '' }));
+    await pq.goto('file://' + __dirname + '/.build/page.html'); await pq.waitForSelector('.crow');
+    // Largura do primeiro "Dar baixa" que sobra livre para o dedo, ao lado do botão flutuante
+    const livre = await pq.evaluate(() => { const f = document.querySelector('.fab').getBoundingClientRect(), d = document.querySelector('.crow .btn.primary').getBoundingClientRect(); const cruza = !(f.bottom < d.top || f.top > d.bottom); return cruza ? Math.max(0, Math.min(d.right, f.left) - d.left) : d.width; });
+    ok('Material 3', `Celular pequeno (320×640): botão flutuante começa como "+" e deixa ≥ 48 px do "Dar baixa" livres (${Math.round(livre)} px)`, (await pq.locator('.fab.mini').count()) === 1 && livre >= 48, String(livre));
+    await pq.close();
+  }
   ok('Lei de Hick', 'Filtros de contas em 4 botões numa linha só', await p.evaluate(() => { const t = [...document.querySelectorAll('.four .chip')].map(c => c.getBoundingClientRect().top); return t.length === 4 && new Set(t).size === 1; }));
   ok('Lei de Jakob', 'Botão flutuante, menu inferior e janela de baixo, como nos apps Android', (await p.locator('.fab').count()) === 1 && (await p.locator('nav.tabs').count()) === 1);
   ok('Identidade', 'Nome acertoTotal aparece dentro do app', (await p.locator('.brand').innerText()).includes('acertoTotal'));
