@@ -127,11 +127,23 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R83. A prévia da importação avisa quando uma linha **sem código** parece mudança de conta que o app já tem (mesmo cliente, mesma descrição, conta em aberto, outro vencimento), com o botão "Ir para Atualizar pelo Excel". O aviso não bloqueia. A cópia de segurança mostra o que vai dentro (clientes e contas), e não a tabela de códigos. [importacao, experiencia]
 - R84. O que se toca parece tocável em **todo** o app: sanfona (`details`) sempre com setinha (para baixo fechada, para cima aberta), botão só de texto colorido e sublinhado, linha de lista com seta, cartão que filtra com ícone. Nada que seja botão pode ter cara de rótulo. [experiencia]
 - R85. A contagem do teste grátis só existe nos apps empacotados (o APK define `ACERTO_LIMITE_DIAS`): 32 dias no app da Play na aprovação, 7 no app de teste. O protótipo no artefato, sem a variável, não conta dias: a faixa só diz "Ambiente de teste" e a assinatura mostra "Escolha um plano quando quiser". Os testes que precisam do limite o ligam de propósito. [avaliacao, assinatura]
+- R86. Teste que imita a casca Android só vale se imitar o que o Kotlin **realmente** produz. Todo campo e estado da ponte (`Assinatura.estado()`) tem um teste de contrato na suíte `android`, que lê o código Kotlin e confere que a página trata cada valor. Antes de dizer que um erro "foi corrigido", reproduza o estado real, e não o que se supõe. [android, assinatura]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-042 · 02/11/2026 · O erro dos planos voltou: "Não consegui falar com a Google Play. Confira a internet"
+- **Relato do cliente** (3 capturas do app 0.9.6): ao tocar em "Assinar", o aviso mandava conferir a internet, o mesmo erro que a 0.9.5 dizia ter corrigido. Também não aparecia "Cobrar no WhatsApp", porque o celular estava com a 0.9.6, e o WhatsApp só entrou na 0.9.7.
+- **Causa de verdade:** na correção da A-032 eu escrevi que, sem o produto no Console, a Play "responde com `pronto` e sem preços". O código Android faz o contrário: `pronto = precos.isNotEmpty()`, então sem produto vem **`pronto: false`**. A página só reconhecia "pronto e sem preços", um estado que nunca acontece, e caía na mensagem da internet. O teste passou porque a ponte falsa imitava o estado que eu supunha, e não o que o Kotlin produz. Eu não li o Kotlin antes de afirmar a causa.
+- **O que foi feito:**
+  - A casca agora diz o motivo: `motivo` = `""` (tudo certo), `"sem_planos"` (a Play respondeu, mas o produto não existe no Console) ou `"play"` (não deu para falar com a Play).
+  - A página escolhe o aviso pelo motivo e, ao tocar em "Assinar", lê o estado de novo. Há um terceiro aviso, "ainda está carregando os planos".
+  - Os testes de assinatura usam agora os estados exatos do Kotlin. Rodei os testes novos contra a versão antiga do app: 5 falham, com a mesma mensagem do celular do cliente.
+  - Teste de contrato na suíte `android`: lê `Assinatura.kt` e confere campos e motivos.
+- **Como evitar:** regra R86.
+- **Para os testadores:** enquanto o produto `acertototal_premium` não for criado no Console, todo "Assinar" mostra "Os planos ainda não estão à venda". Isso é o esperado nesta fase.
 
 ### A-041 · 02/11/2026 · Capturas e textos da loja para a 0.9.7
 - **Pedido do cliente:** novas imagens para subir na Play.

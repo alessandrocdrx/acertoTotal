@@ -466,7 +466,7 @@ function daysBetween(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+
 var LIMITE_DIAS=0,AV={inicio:0,fim:0,relogio:false};
 // Assinatura: ativa libera o app depois do teste grátis. "real" = cobrança da Google Play (APK de produção);
 // sem ela, a assinatura é simulada (protótipo e APK de teste: ninguém é cobrado).
-var ASSIN={ativa:false,real:false,pronto:false,precos:{},plano:''};
+var ASSIN={ativa:false,real:false,pronto:false,precos:{},plano:'',motivo:''};
 function somenteLeitura(){return LIMITE_DIAS>0&&(AV.relogio||Date.now()>=AV.fim)&&!ASSIN.ativa}
 function diasRestantes(){return Math.max(0,Math.ceil((AV.fim-Date.now())/864e5))}
 var MSG_LEITURA='Teste grátis encerrado: o app está só para consulta. Assine para continuar.';
@@ -672,7 +672,15 @@ var PLANOS=[
 ];
 var planoSel='mensal';
 // A Play respondeu, mas não tem os planos (produto ainda não criado ou não aprovado no Console).
-function planosForaDaLoja(){return ASSIN.real&&ASSIN.pronto&&!Object.keys(ASSIN.precos||{}).length}
+// Por que não dá para assinar agora, como a casca Android informa em "motivo": "sem_planos" = a Play respondeu, mas o produto
+// ainda não existe no Console; "play" = não deu para falar com a Play; "" = sem problema (ou ainda carregando).
+function planosForaDaLoja(){return ASSIN.real&&ASSIN.motivo==='sem_planos'}
+function semConexaoPlay(){return ASSIN.real&&ASSIN.motivo==='play'}
+function avisoAssinar(){
+  if(planosForaDaLoja())return 'Os planos ainda não estão à venda na Google Play. Tente de novo mais tarde.';
+  if(semConexaoPlay())return 'Não consegui falar com a Google Play. Confira a internet e tente de novo.';
+  return 'A Google Play ainda está carregando os planos. Tente de novo em instantes.';
+}
 function precoPlano(p){return ASSIN.real&&ASSIN.precos&&ASSIN.precos[p.id]?ASSIN.precos[p.id]:brl.format(p.preco)}
 function assinCard(){
   var t,b='Ver planos';
@@ -693,7 +701,7 @@ function sheetPlanos(){
   }
   var enc=somenteLeitura();
   h+='<h2>Assinar acertoTotal</h2><p class="sub">'+(enc?'Seu teste grátis terminou. Assine para voltar a cadastrar, dar baixa, importar e exportar. Seus dados continuam guardados.':'Seu teste grátis vai até '+fimTxt()+'. Você pode assinar agora ou depois: escolha o plano.')+'</p>'
-   +(planosForaDaLoja()?'<div class="alerta info" id="aviso-planos">Os planos ainda não estão à venda na Google Play. Seu teste grátis continua valendo'+(somenteLeitura()?'':' até '+fimTxt())+'. Tente de novo mais tarde.</div>':'')
+   +(planosForaDaLoja()?'<div class="alerta info" id="aviso-planos">Os planos ainda não estão à venda na Google Play. Seu teste grátis continua valendo'+(somenteLeitura()?'':' até '+fimTxt())+'. Tente de novo mais tarde.</div>':(semConexaoPlay()?'<div class="alerta info" id="aviso-planos">Não consegui falar com a Google Play agora. Confira a internet. Seu teste grátis continua valendo'+(somenteLeitura()?'':' até '+fimTxt())+'.</div>':''))
    +(sim?'<div class="alerta info">Versão de teste: a assinatura é simulada e ninguém é cobrado.</div>':'')
    +'<div class="planos" role="radiogroup" aria-label="Plano de assinatura">'+PLANOS.map(function(p){
       var on=p.id===planoSel;
@@ -714,7 +722,7 @@ function assinInicial(){
   try{var m=JSON.parse(localStorage.getItem(SIM_KEY)||'null');if(m&&m.plano){ASSIN.ativa=true;ASSIN.plano=m.plano}}catch(e){}
 }
 function aplicaAssin(j){
-  ASSIN.real=true;ASSIN.ativa=!!j.ativa;ASSIN.pronto=!!j.pronto;ASSIN.precos=j.precos||{};ASSIN.plano=j.plano||'';
+  ASSIN.real=true;ASSIN.ativa=!!j.ativa;ASSIN.pronto=!!j.pronto;ASSIN.precos=j.precos||{};ASSIN.plano=j.plano||'';ASSIN.motivo=j.motivo||'';
   if(typeof render==='function'&&S){render();if(document.querySelector('#layer [data-planos]'))sheetPlanos()}
 }
 // A casca Android avisa por aqui quando a Google Play muda a situação da assinatura.
@@ -1675,7 +1683,11 @@ document.addEventListener('click',function(e){
   else if(a==='assinar'){
     if(ASSIN.real){
       var rr='';try{rr=window.acertoTotalAndroid.assinar(planoSel)}catch(err){rr='indisponivel'}
-      if(rr!=='ok')toast(planosForaDaLoja()?'Os planos ainda não estão à venda na Google Play. Tente de novo mais tarde.':'Não consegui falar com a Google Play. Confira a internet e tente de novo.');
+      if(rr!=='ok'){
+        // Lê o estado de novo: a Play pode ter respondido depois de a janela abrir.
+        try{var t2=window.acertoTotalAndroid.assinaturaEstado();if(t2){var j2=JSON.parse(t2);ASSIN.motivo=j2.motivo||'';ASSIN.pronto=!!j2.pronto;ASSIN.precos=j2.precos||{}}}catch(err){}
+        toast(avisoAssinar());
+      }
     }else{
       try{localStorage.setItem(SIM_KEY,JSON.stringify({plano:planoSel,quando:Date.now()}))}catch(err){}
       ASSIN.ativa=true;ASSIN.plano=planoSel;closeSheet();render();toast('Assinatura simulada ativada. Nesta versão de teste ninguém é cobrado.');

@@ -20,6 +20,15 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   ok('Ponte Android salva comprovantes na pasta Downloads (jpg, png e pdf)', ['"jpg" to "image/jpeg"', '"png" to "image/png"', '"pdf" to "application/pdf"'].every(x => ponte.includes(x)));
   const manif = fs.readFileSync(path.join(SRC, 'main', 'AndroidManifest.xml'), 'utf8');
   ok('Comprovante abre e é compartilhado pelos apps do celular (FileProvider, sem permissão de armazenamento)', /fun abrirArquivo\(/.test(ponte) && /fun compartilharArquivo\(/.test(ponte) && /androidx\.core\.content\.FileProvider/.test(manif) && /android:exported="false"/.test(manif.split('<provider')[1] || '') && fs.existsSync(path.join(SRC, 'main', 'res', 'xml', 'arquivos.xml')) && !/STORAGE/.test(manif));
+  // Contrato entre a casca Android e a página (a falha de 02/11 passou porque o teste imitava um estado que o Kotlin nunca produz):
+  const assin = fs.readFileSync(path.join(SRC, 'main', 'java', 'io', 'github', 'alessandrocdrx', 'acertototal', 'Assinatura.kt'), 'utf8');
+  const estadoKt = (assin.match(/fun estado\(\)[\s\S]*?\.toString\(\)/) || [''])[0];
+  const camposKt = [...estadoKt.matchAll(/\.put\("(\w+)"/g)].map(m => m[1]).sort();
+  const lidos = ['real', 'ativa', 'pronto', 'precos', 'plano', 'motivo'];
+  ok('Contrato: o JSON do Kotlin traz os campos que a página lê (ativa, pronto, precos, motivo)', ['real', 'ativa', 'pronto', 'precos', 'motivo'].every(c => camposKt.includes(c)), camposKt.join(','));
+  const motivosKt = [...new Set([...assin.matchAll(/motivo = (?:if \(pronto\) "" else )?"(\w*)"/g)].map(m => m[1]))].sort();
+  ok('Contrato: os motivos que o Kotlin produz ("", "play", "sem_planos") são todos tratados pela página', JSON.stringify(motivosKt) === JSON.stringify(['', 'play', 'sem_planos']) && /motivo==='sem_planos'/.test(html) && /motivo==='play'/.test(html), motivosKt.join('|'));
+  ok('Contrato: só quando não há planos, o Kotlin diz "pronto: false" com motivo "sem_planos" (a página não depende de pronto=true com preços vazios)', /pronto = precos\.isNotEmpty\(\)/.test(assin) && /motivo = if \(pronto\) "" else "sem_planos"/.test(assin) && !/function planosForaDaLoja\(\)\{return ASSIN\.real&&ASSIN\.pronto/.test(html));
   ok('Leitor de Excel vai dentro do APK', fs.statSync(path.join(ASSETS, 'xlsx.full.min.js')).size > 500000);
   ok('Página do APK declara idioma pt-BR e viewport de celular', /<html lang="pt-BR">/.test(html) && /name="viewport"/.test(html));
 

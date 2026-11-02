@@ -41,6 +41,10 @@ class Assinatura(
     @Volatile private var pronto = false
     @Volatile private var erro = ""
 
+    /** Por que não dá para assinar agora: "" (tudo certo), "sem_planos" (a Play respondeu, mas o produto não existe/está
+     *  inativo no Console) ou "play" (não deu para falar com a Play). A página escolhe o aviso por este código. */
+    @Volatile private var motivo = ""
+
     /** Conecta na Play (se preciso), busca os preços e confere as compras da conta. */
     fun iniciar() {
         if (cliente.isReady) {
@@ -52,10 +56,12 @@ class Assinatura(
             override fun onBillingSetupFinished(r: BillingResult) {
                 if (r.responseCode == BillingClient.BillingResponseCode.OK) {
                     erro = ""
+                    motivo = ""
                     buscarPrecos()
                     conferirCompras()
                 } else {
                     pronto = false
+                    motivo = "play"
                     erro = "A Google Play não respondeu (${r.responseCode})."
                     avisar()
                 }
@@ -63,6 +69,7 @@ class Assinatura(
 
             override fun onBillingServiceDisconnected() {
                 pronto = false
+                motivo = "play"
             }
         })
     }
@@ -77,6 +84,7 @@ class Assinatura(
         .put("ativa", prefs.getBoolean(CHAVE_ATIVA, false))
         .put("pronto", pronto)
         .put("erro", erro)
+        .put("motivo", motivo)
         .put("precos", JSONObject(precos))
         .toString()
 
@@ -132,8 +140,10 @@ class Assinatura(
                     ?.associate { it.basePlanId to it.pricingPhases.pricingPhaseList.last().formattedPrice }
                     .orEmpty()
                 pronto = precos.isNotEmpty()
+                motivo = if (pronto) "" else "sem_planos"
                 if (!pronto) erro = "Os planos ainda não estão disponíveis na Google Play."
             } else {
+                motivo = "play"
                 erro = "Não consegui buscar os preços na Google Play (${r.responseCode})."
             }
             avisar()

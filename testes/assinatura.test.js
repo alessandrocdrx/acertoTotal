@@ -150,22 +150,34 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
     ok('Play: assinante abre o app liberado, mesmo sem internet', (await p.locator('.fab').count()) === 1 && !(await p.locator('#ambiente').isVisible()));
     await ctx.close();
   }
-  {
-    // A Play não respondeu a compra
-    const { p, ctx } = await abrir(40, { url: PROD, ponte: PONTE({ real: true, ativa: false, pronto: false, precos: {} }).replace("return 'ok'", "return 'indisponivel'") });
-    await p.click('#ambiente [data-act=planos]'); await p.click('#bt-assinar');
-    ok('Play sem resposta: o aviso pede para conferir a internet', /Não consegui falar com a Google Play\. Confira a internet/.test(await p.locator('.toast').innerText()));
+  // Os estados abaixo são os que Assinatura.kt realmente produz (conferidos também pelo teste de contrato na suíte android):
+  //   tudo certo                → pronto:true,  precos cheios, motivo ''
+  //   Play respondeu, sem produto → pronto:false, precos {},    motivo 'sem_planos'   (relato do cliente, 02/11: foi o que apareceu no celular)
+  //   não falou com a Play      → pronto:false, precos {},    motivo 'play'
+  //   ainda carregando          → pronto:false, precos {},    motivo ''
+  const FALHA = "return 'ok'", NAO = "return 'indisponivel'";
+  for (const [rotulo, estado, achar, evitar] of [
+    ['Play sem planos (o produto ainda não existe no Console)', { real: true, ativa: false, pronto: false, precos: {}, motivo: 'sem_planos', erro: 'Os planos ainda não estão disponíveis na Google Play.' }, /ainda não estão à venda/, /internet/],
+    ['Play sem conexão', { real: true, ativa: false, pronto: false, precos: {}, motivo: 'play', erro: 'A Google Play não respondeu (3).' }, /Não consegui falar com a Google Play\. Confira a internet/, /à venda/],
+    ['Play ainda carregando', { real: true, ativa: false, pronto: false, precos: {}, motivo: '' }, /ainda está carregando os planos/, /internet|à venda/],
+  ]) {
+    const { p, ctx } = await abrir(3, { url: PROD, ponte: PONTE(estado).replace(FALHA, NAO) });
+    await p.click('[data-act=abrir-menu]'); await p.click('.assin [data-act=planos]');
+    if (estado.motivo) ok(`${rotulo}: a janela avisa e lembra que o teste grátis continua`, await p.locator('#aviso-planos').count() === 1 && /continua valendo até/.test(await p.locator('#aviso-planos').innerText()), await p.locator('.sheet').innerText());
+    else ok(`${rotulo}: a janela não mostra aviso de erro`, await p.locator('#aviso-planos').count() === 0);
+    await p.click('#bt-assinar');
+    const t = await p.locator('.toast').innerText();
+    ok(`${rotulo}: "Assinar" explica o motivo certo`, achar.test(t) && !evitar.test(t), t);
+    ok(`${rotulo}: sem erros de JavaScript`, p.errs.length === 0, p.errs.join(' | '));
     await ctx.close();
   }
   {
-    // Relato do cliente (02/11): a Play respondeu, mas o produto de assinatura ainda não existe no Console.
-    // O aviso antigo mandava "conferir a internet", o que estava errado.
-    const { p, ctx } = await abrir(3, { url: PROD, ponte: PONTE({ real: true, ativa: false, pronto: true, precos: {} }).replace("return 'ok'", "return 'indisponivel'") });
+    // A Play responde depois de a janela abrir: o toque em "Assinar" lê o estado de novo
+    const { p, ctx } = await abrir(3, { url: PROD, ponte: PONTE({ real: true, ativa: false, pronto: false, precos: {}, motivo: '' }).replace(FALHA, NAO) });
     await p.click('[data-act=abrir-menu]'); await p.click('.assin [data-act=planos]');
-    ok('Play sem planos à venda: a janela avisa e lembra que o teste grátis continua', /ainda não estão à venda na Google Play/.test(await p.locator('#aviso-planos').innerText()) && /continua valendo até/.test(await p.locator('#aviso-planos').innerText()));
+    await p.evaluate(() => { window.__estado = { real: true, ativa: false, pronto: false, precos: {}, motivo: 'sem_planos' }; });
     await p.click('#bt-assinar');
-    const t = await p.locator('.toast').innerText();
-    ok('Play sem planos à venda: "Assinar" explica o motivo certo, sem falar de internet', /ainda não estão à venda/.test(t) && !/internet/.test(t), t);
+    ok('Se a Play responde "sem planos" depois de a janela abrir, o aviso do toque já é o certo', /ainda não estão à venda/.test(await p.locator('.toast').innerText()));
     await ctx.close();
   }
 
