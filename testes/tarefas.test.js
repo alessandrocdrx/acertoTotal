@@ -187,34 +187,31 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   ok('T7 · No fim, todos os clientes têm CPF/CNPJ e o aviso some', S7.clientes.length === 2 && S7.clientes.every(c => c.doc) && await p.locator('#aviso-semdoc').count() === 0 && await p.locator('.sheet').count() === 0);
   ok(`T7 · 3 cadastros resolvidos em ${toques} toques (meta: até 7)`, toques <= 7, `${toques}`);
 
-  // ===== Tarefa 8: "Apagar tudo" na versão de teste, confirmado com o CPF/CNPJ do dono
+  // ===== Tarefa 8: "Apagar tudo" na versão de teste, confirmado digitando APAGAR
   const aval0 = await p.evaluate(() => localStorage.getItem('acertototal-avaliacao'));
   await inicio();
   await tocar('.head [data-act=abrir-menu]');
   ok('T8 · Versão de teste: "Apagar tudo…" fica no fim do Menu, separado das opções (como nos apps Android)', await p.locator('.perigo [data-act=apagar-abrir]').count() === 1 && await p.locator('.opcoes [data-act=apagar-abrir]').count() === 0);
   await tocar('[data-act=apagar-abrir]');
-  ok('T8 · Na primeira vez, pede o CPF/CNPJ do dono do app', await p.locator('#dono-doc').count() === 1);
-  await p.fill('#dono-doc', '111.111.111'); await p.click('[data-act=apagar-dono]');
-  ok('T8 · CPF incompleto do dono é recusado no campo', /CPF tem 11 números/.test(await p.locator('#dono-doc-err').innerText()));
-  const DONO = cpf('987654321');
-  await p.fill('#dono-doc', DONO); await tocar('[data-act=apagar-dono]');
   const tela8 = await p.locator('.sheet').innerText();
-  ok('T8 · A confirmação diz o que será apagado e lembra da cópia de segurança', /2 clientes/.test(tela8) && /1 conta\b/.test(tela8) && /não pode ser desfeito/.test(tela8) && await p.locator('.sheet [data-act=export-backup]').count() === 1, tela8);
+  ok('T8 · A confirmação diz o que será apagado, lembra da cópia de segurança e pede para digitar APAGAR (sem cadastrar CPF antes)', /2 clientes/.test(tela8) && /1 conta\b/.test(tela8) && /não pode ser desfeito/.test(tela8) && /digite APAGAR/.test(tela8) && await p.locator('#dono-doc').count() === 0 && await p.locator('.sheet [data-act=export-backup]').count() === 1, tela8);
   ok('T8 · "Apagar tudo" começa desativado', await p.locator('[data-act=apagar-sim]').isDisabled());
-  await p.fill('#apagar-doc', cpf('123456789'));
-  ok('T8 · Outro CPF (até o de um cliente) não libera o botão', await p.locator('[data-act=apagar-sim]').isDisabled());
-  await p.fill('#apagar-doc', DONO.replace(/\D/g, ''));
-  ok('T8 · O CPF do dono, com ou sem pontos, libera o botão', !(await p.locator('[data-act=apagar-sim]').isDisabled()));
+  await p.fill('#apagar-txt', 'apaga');
+  ok('T8 · Palavra incompleta ("apaga") não libera o botão', await p.locator('[data-act=apagar-sim]').isDisabled());
+  await p.fill('#apagar-txt', '987.654.321-00');
+  ok('T8 · Um CPF não libera mais o botão (a confirmação agora é a palavra)', await p.locator('[data-act=apagar-sim]').isDisabled());
+  await p.fill('#apagar-txt', '  apagar ');
+  ok('T8 · "apagar" em minúsculas, com espaços nas pontas, libera o botão', !(await p.locator('[data-act=apagar-sim]').isDisabled()));
   await tocar('[data-act=apagar-sim]');
   const S8 = await estado();
   ok('T8 · Tudo apagado: sem clientes, contas nem histórico', S8.clientes.length === 0 && S8.contas.length === 0 && (S8.importacoes || []).length === 0);
   ok('T8 · Apagar tudo não reinicia a avaliação de 7 dias', await p.evaluate(() => localStorage.getItem('acertototal-avaliacao')) === aval0);
   await p.reload(); await p.waitForSelector('#screen'); await p.waitForTimeout(300);
   ok('T8 · Depois de reabrir, o app continua vazio (não volta o exemplo)', (await estado()).clientes.length === 0 && /Nenhuma|Comece|nenhuma/.test(await p.locator('#screen').innerText()));
-  ok(`T8 · Apagar em ${toques} toques (meta: até 5)`, toques <= 5, `${toques}`);
+  ok(`T8 · Apagar em ${toques} toques (meta: até 4)`, toques <= 4, `${toques}`);
   await inicio();
   await p.click('.head [data-act=abrir-menu]'); await p.click('[data-act=apagar-abrir]');
-  ok('T8 · Na segunda vez, vai direto à confirmação', await p.locator('#apagar-doc').count() === 1 && await p.locator('#dono-doc').count() === 0);
+  ok('T8 · Na segunda vez, a confirmação é a mesma (nada guardado)', await p.locator('#apagar-txt').count() === 1);
   await p.screenshot({ path: __dirname + '/capturas/tarefas-apagar.png' });
 
   // Produção não tem "Apagar tudo"

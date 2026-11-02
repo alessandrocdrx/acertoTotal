@@ -447,7 +447,7 @@ var ASSIN={ativa:false,real:false,pronto:false,precos:{},plano:''};
 function somenteLeitura(){return LIMITE_DIAS>0&&(AV.relogio||Date.now()>=AV.fim)&&!ASSIN.ativa}
 function diasRestantes(){return Math.max(0,Math.ceil((AV.fim-Date.now())/864e5))}
 var MSG_LEITURA='Teste grátis encerrado: o app está só para consulta. Assine para continuar.';
-var ACOES_ESCRITA=['editar-conta','salvar-edicao','baixa','desfazer','excluir-conta','salvar-conta','salvar-cliente','nova-conta','nova-conta-cli','novo-cliente','editar-cliente','pick-comp','pick-xl','import-sample','import-confirm','export-custom','export-backup','xlsx-export','copy-export','import-abrir','import-modelo','imp-colunas','imp-map-ok','imp-erros','imp-desfazer','imp-desfazer-sim','export-abrir','editar-xl','editar-xl-cli','enviar-editada','xf-voltar','xf-formato','atualizar-abrir','completar-docs','excluir-cliente','apagar-abrir','apagar-dono','apagar-sim'];
+var ACOES_ESCRITA=['editar-conta','salvar-edicao','baixa','desfazer','excluir-conta','salvar-conta','salvar-cliente','nova-conta','nova-conta-cli','novo-cliente','editar-cliente','pick-comp','pick-xl','import-sample','import-confirm','export-custom','export-backup','xlsx-export','copy-export','import-abrir','import-modelo','imp-colunas','imp-map-ok','imp-erros','imp-desfazer','imp-desfazer-sim','export-abrir','editar-xl','editar-xl-cli','enviar-editada','xf-voltar','xf-formato','atualizar-abrir','completar-docs','excluir-cliente','apagar-abrir','apagar-sim'];
 var tab='contas',filter='abertas',query='',queryC='',pendingComp=null,toastT;
 var $=function(id){return document.getElementById(id)};
 function toast(m,undo){
@@ -693,9 +693,9 @@ function aplicaAssin(j){
 }
 // A casca Android avisa por aqui quando a Google Play muda a situação da assinatura.
 window.acertoAssinatura=function(j){try{if(typeof j==='string')j=JSON.parse(j);aplicaAssin(j)}catch(e){}};
-// Só na versão de teste: apagar tudo, confirmado com o CPF/CNPJ do dono (como o GitHub pede o nome do repositório).
-var DONO_KEY='acertototal-dono';
-function donoDoc(){try{return localStorage.getItem(DONO_KEY)||''}catch(e){return ''}}
+// Só na versão de teste: apagar tudo, confirmado digitando APAGAR.
+var PALAVRA_APAGAR='APAGAR';
+function confereApagar(v){return String(v||'').trim().toUpperCase()===PALAVRA_APAGAR}
 function zonaPerigo(){
   if(AMBIENTE==='producao')return '';
   return '<section class="perigo" aria-labelledby="perigo-t"><h3 id="perigo-t">Versão de teste</h3><p>Para recomeçar do zero: apaga todos os clientes, contas, comprovantes e importações deste aparelho.</p><button class="btn block danger" data-act="apagar-abrir">Apagar tudo…</button></section>';
@@ -705,19 +705,13 @@ function contagemTudo(){
   return '<ul class="contagem"><li>'+ncl+' cliente'+(ncl===1?'':'s')+'</li><li>'+nc+' conta'+(nc===1?'':'s')+'</li><li>'+nk+' comprovante'+(nk===1?'':'s')+'</li><li>'+ni+' importaç'+(ni===1?'ão':'ões')+' no histórico</li></ul>';
 }
 function sheetApagar(){
-  var dn=donoDoc(),b=backupInfo();
-  if(!dn){
-    sheet('<h2>Apagar tudo</h2><p class="sub">Primeiro, cadastre o seu CPF ou CNPJ. Ele será pedido sempre que alguém quiser apagar tudo, para ninguém apagar por engano.</p>'
-     +'<div class="field"><label for="dono-doc">Seu CPF ou CNPJ</label><span class="hint" id="dono-doc-h">O seu, de quem usa o app. Não é o de um cliente.</span><input id="dono-doc" inputmode="numeric" autocomplete="off" aria-describedby="dono-doc-h"></div>'
-     +'<div class="actions"><button class="btn primary block" data-act="apagar-dono">Continuar</button><button class="btn block" data-act="close">Cancelar</button></div>');
-    return;
-  }
+  var b=backupInfo();
   sheet('<h2>Apagar tudo</h2><p class="sub">Isto não pode ser desfeito. Serão apagados:</p>'+contagemTudo()
    +'<div class="alerta">Depois de apagar, só dá para recuperar com uma cópia de segurança. Última cópia: '+esc(b.txt.toLowerCase())+'.</div>'
-   +'<div class="field"><label for="apagar-doc">Para confirmar, digite o seu '+tipoDoc(dn)+'</label><span class="hint" id="apagar-doc-h">O mesmo cadastrado aqui, terminado em '+dn.slice(-2)+'. Com ou sem pontos.</span><input id="apagar-doc" inputmode="numeric" autocomplete="off" aria-describedby="apagar-doc-h"></div>'
+   +'<div class="field"><label for="apagar-txt">Para confirmar, digite '+PALAVRA_APAGAR+'</label><span class="hint" id="apagar-txt-h">Pode ser em letras maiúsculas ou minúsculas.</span><input id="apagar-txt" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="apagar-txt-h"></div>'
    +'<div class="actions fixo"><button class="btn block apagar" data-act="apagar-sim" disabled>Apagar tudo</button><button class="btn block" data-act="export-backup">Fazer cópia de segurança antes</button><button class="btn block" data-act="close">Cancelar</button></div>');
-  var i=$('apagar-doc'),bt=document.querySelector('[data-act=apagar-sim]');
-  i.addEventListener('input',function(){bt.disabled=soDig(i.value)!==dn});
+  var i=$('apagar-txt'),bt=document.querySelector('[data-act=apagar-sim]');
+  i.addEventListener('input',function(){bt.disabled=!confereApagar(i.value)});
 }
 function apagarTudo(){
   S={clientes:[],contas:[],ultimoBackup:null,importacoes:[]};
@@ -1616,16 +1610,8 @@ document.addEventListener('click',function(e){
     if(!proximoSemDoc())toast('Cliente excluído',function(){S.clientes.splice(ix,0,cx);save();render()});
   }
   else if(a==='apagar-abrir')sheetApagar();
-  else if(a==='apagar-dono'){
-    var od=soDig($('dono-doc').value);
-    if(!od){fieldError('dono-doc','Informe o seu CPF ou CNPJ');return}
-    if(!docAceito(od)){fieldError('dono-doc',(od.length===11||od.length===14?tipoDoc(od)+' inválido':'CPF tem 11 números e CNPJ tem 14')+'. Confira os números.');return}
-    try{localStorage.setItem(DONO_KEY,od)}catch(e){}
-    sheetApagar();
-  }
   else if(a==='apagar-sim'){
-    var dd2=soDig(($('apagar-doc')||{}).value||'');
-    if(dd2!==donoDoc()){fieldError('apagar-doc','Não confere com o CPF/CNPJ cadastrado. Confira os números.');return}
+    if(!confereApagar(($('apagar-txt')||{}).value)){fieldError('apagar-txt','Digite '+PALAVRA_APAGAR+' para confirmar.');return}
     apagarTudo();
   }
   else if(a==='editar-conta')sheetEditarConta(el.dataset.id);

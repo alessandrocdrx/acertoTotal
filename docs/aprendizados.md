@@ -102,7 +102,7 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R57. Toda pergunta do cliente do tipo "como faço X?" vira uma tarefa na suíte `tarefas`. A tarefa tem uma meta de toques, confere que o caminho aparece sem rolar e confere o resultado gravado. [tarefas]
 - R58. Depois de mudar o layout, olhe as capturas de tela. Exemplo: grid num `<li>` com negrito e texto solto quebra uma palavra por linha. Envolva o conteúdo num `<span>`. O teste mede a largura dos textos da janela. [importacao]
 - R59. Nenhum cliente fica sem CPF/CNPJ. Cadastro, edição e planilha exigem o número. Cliente antigo sem ele aparece num aviso no topo de Clientes com "Completar agora", que abre um por um, e cliente sem contas pode ser excluído ali mesmo. Enquanto não for completado, não recebe conta nova (fica desativado na lista) e a planilha recusa a linha dele sem CPF/CNPJ, explicando que preencher o número completa o cadastro. [tarefas]
-- R60. Ação que apaga tudo pede uma confirmação digitada, como o GitHub pede o nome do repositório: a pessoa digita o próprio CPF/CNPJ, cadastrado na primeira vez, e o botão só ativa quando confere. Antes, a tela diz quantos clientes, contas, comprovantes e importações serão apagados e oferece a cópia de segurança. Só existe na versão de teste, fica separado das tarefas comuns e não reinicia a avaliação. [tarefas]
+- R60. Ação que apaga tudo pede uma confirmação digitada: a pessoa digita **APAGAR** (maiúsculas ou minúsculas), e o botão só ativa quando confere. Não há cadastro de CPF antes (decisão do cliente em 02/11/2026, no lugar do CPF/CNPJ do dono). Antes, a tela diz quantos clientes, contas, comprovantes e importações serão apagados e oferece a cópia de segurança. Só existe na versão de teste, fica separado das tarefas comuns e não reinicia a avaliação. [tarefas]
 - R61. Na versão de teste, CPF/CNPJ com dígito errado é aceito (desde que tenha 11 ou 14 números), sempre com aviso: no formulário enquanto digita, no aviso ao salvar, na linha da planilha e com o rótulo "inválido (teste)" na lista. Repetido continua barrado. A produção só aceita número válido. [tarefas, importacao, app]
 - R62. Um aviso que aparece ou some embaixo de um campo não pode mudar no `blur`. O `blur` acontece no mesmo toque do botão Salvar: a janela muda de altura, o botão sai do lugar e o toque se perde. Atualize o aviso enquanto a pessoa digita. [app, tarefas]
 - R63. Teste de layout não usa limite fixo em pixels que dependa da fonte ("y > 600"). Cada máquina tem fontes diferentes, e o texto muda de altura: o que passa no computador falha no GitHub. A régua é a própria janela ou outro elemento da tela (por exemplo, o fundo da barra de botões perto do fundo da janela). [importacao]
@@ -127,6 +127,12 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-035 · 02/11/2026 · "Apagar tudo" confirmado com a palavra APAGAR
+- **Pedido do cliente** (Bloco B da revisão de UX): "na opção apagar tudo o usuário tem que digitar apagar".
+- **Causa:** a confirmação pedia o CPF/CNPJ do dono, cadastrado antes na primeira vez. O PDF de UX apontou que cadastrar o próprio CPF numa ação de reiniciar é confuso.
+- **O que foi feito:** tirei o cadastro do CPF do dono e a chave guardada à parte. A janela agora diz o que será apagado e pede "digite APAGAR" (aceita minúsculas e espaços nas pontas). O botão só ativa quando confere, e um CPF não libera mais nada.
+- **Como evitar:** regra R60 revista; teste T8 da suíte `tarefas` refeito (palavra incompleta, CPF, minúsculas, 4 toques).
 
 ### A-034 · 02/11/2026 · Revisão de UX (PDF acertoTotalUx): Bloco A
 - **Origem:** análise de UX com 59 capturas, entregue pelo cliente em PDF (Drive). Pontos e prioridades revisados com o cliente, que aprovou o **Bloco A** (mudanças sem conflito com regras). O Bloco B (CPF opcional, Planilha no Menu, Cobrar pelo WhatsApp, lembretes, parcelas, pagamento parcial, menos planos) ficou para decisão do cliente.
@@ -554,5 +560,5 @@ As entradas mais recentes ficam no topo.
 - O app guarda os dados no armazenamento da WebView. Se o app for desinstalado, os dados se perdem. A cópia de segurança em Excel é a proteção.
 - Os comprovantes (fotos e PDFs) não vão na cópia de segurança em Excel, porque a planilha não guarda arquivos. Restaurar num celular novo traz as baixas, mas não os comprovantes.
 - O APK abre com os dados de exemplo. Na versão de teste, "Apagar tudo" deixa o app vazio. A versão de produção ainda precisa decidir se abre vazia.
-- O CPF/CNPJ do dono só serve para confirmar "Apagar tudo". Quem tem o celular desbloqueado e sabe o número consegue apagar; a cópia de segurança continua sendo a proteção.
+- "Apagar tudo" é confirmado digitando APAGAR. Quem tem o celular desbloqueado consegue apagar; a cópia de segurança continua sendo a proteção.
 - Os dados de exemplo dos meses anteriores têm valores parecidos, então as barras do gráfico mensal saem quase iguais.
