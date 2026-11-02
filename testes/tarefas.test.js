@@ -254,6 +254,16 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   await p.click('button[data-tab=clientes]'); await p.click('.head [data-act=abrir-menu]'); await p.click('.head [data-act=voltar]');
   ok('T9 · A seta de voltar devolve à aba de onde a pessoa veio (Clientes)', /Clientes/.test(await p.locator('#title').innerText()));
 
+  // ===== Tarefa 10: "Cobrar no WhatsApp quem está atrasado"
+  await p.evaluate(() => document.getElementById('reset').click()); await p.waitForTimeout(150);
+  await inicio();
+  await tocar('[data-act=filter][data-f=atrasadas]');
+  await tocar('.crow .cmain');
+  ok('T10 · "Cobrar no WhatsApp" aparece na conta atrasada, sem rolar', await visivelSemRolar('.sheet [data-act=cobrar]'));
+  await tocar('.sheet [data-act=cobrar]');
+  ok('T10 · O link do WhatsApp já vem pronto, sem rolar', await visivelSemRolar('#cob-wa'));
+  ok(`T10 · Chegar ao botão do WhatsApp em ${toques} toques (meta: até 4)`, toques <= 4, `${toques}`);
+
   ok('Sem erros de JavaScript', errs.length === 0, errs.join(' | '));
   await b.close();
   console.log(out.join('\n'));

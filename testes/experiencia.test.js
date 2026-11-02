@@ -32,6 +32,9 @@ const TELAS = [
   ['Planos', async p => { await p.click('[data-act=abrir-menu]'); await p.click('.assin [data-act=planos]'); }],
   ['Tema e paleta', async p => { await p.click('[data-act=abrir-menu]'); await p.click('#screen [data-act=aparencia]'); }],
   ['Sobre', async p => { await p.click('[data-act=abrir-menu]'); await p.click('.menu-marca'); }],
+  ['Cobrar pelo WhatsApp', async p => { await p.click('.crow .cmain'); await p.click('[data-act=cobrar]'); }],
+  ['Cobrar um cliente', async p => { await p.click('.tabs [data-tab=clientes]'); await p.click('#screen .row'); await p.click('.sheet [data-act=cobrar]'); }],
+  ['Meu negócio', async p => { await p.click('[data-act=abrir-menu]'); await p.click('#screen [data-act=negocio]'); }],
   ['Apagar tudo', async p => { await p.click('[data-act=abrir-menu]'); await p.click('[data-act=apagar-abrir]'); }],
 ];
 
@@ -188,8 +191,36 @@ const medir = () => {
   await p.click('.tabs [data-tab=contas]'); await p.click('.crow .btn.primary');
   ok('Dar baixa: o botão diz "Marcar como paga" (sem o jargão "baixa" entre parênteses)', /^Marcar como paga$/.test((await p.locator('.sheet [data-act=baixa]').innerText()).trim()));
   await p.keyboard.press('Escape');
+  // Cobrar pelo WhatsApp (Bloco B): mensagem pronta, com Pix e nome do negócio vindos de "Meu negócio"
+  await p.click('.tabs [data-tab=contas]'); await p.click('.crow .cmain'); await p.click('.sheet [data-act=cobrar]');
+  ok('Cobrar: mensagem pronta com nome, valor, vencimento, dias de atraso e "Abrir no WhatsApp"', await p.evaluate(() => { const t = document.getElementById('cob-txt').value; return /^Olá, \S+!/.test(t) && /R\$ [\d.]+,\d\d/.test(t) && /venceu em \d\d\/\d\d \(há \d+ dias?\)/.test(t) && !!document.getElementById('cob-wa'); }));
+  ok('Cobrar: sem Pix cadastrado, a tela avisa e oferece "Cadastrar agora"', (await p.locator('#aviso-pix [data-act=negocio]').count()) === 1);
+  await p.click('#aviso-pix [data-act=negocio]'); await p.fill('#neg-nome', 'Padaria Bom Pão'); await p.fill('#neg-pix', 'pix@bompao.com.br'); await p.click('[data-act=salvar-negocio]');
+  ok('Meu negócio: salva e mostra no Menu o nome e a chave Pix', (await p.locator('.toast').innerText()).includes('negócio salvos') && await (async () => { await p.click('[data-act=abrir-menu]'); const t = await p.locator('#screen [data-act=negocio]').innerText(); await p.click('.head [data-act=voltar]'); return /Padaria Bom Pão/.test(t) && /Pix pix@bompao/.test(t); })());
+  await p.click('.crow .cmain'); await p.click('.sheet [data-act=cobrar]');
+  const wa = await p.evaluate(() => { const a = document.getElementById('cob-wa'); return { href: a.href, alvo: a.target, txt: decodeURIComponent(a.href.split('?text=')[1] || '') }; });
+  ok('Cobrar: o link abre o WhatsApp do cliente (55 + DDD + número, só dígitos) com a mensagem já escrita', /^https:\/\/wa\.me\/55\d{10,11}\?text=/.test(wa.href) && wa.alvo === '_blank');
+  ok('Cobrar: a mensagem leva a chave Pix e o nome do negócio no fim', /Pode pagar pelo Pix: pix@bompao\.com\.br/.test(wa.txt) && /Padaria Bom Pão$/.test(wa.txt) && !/\u00a0/.test(wa.txt), wa.txt);
+  await p.fill('#cob-txt', 'Oi, tudo certo? Passa aqui hoje.');
+  ok('Cobrar: se a pessoa mudar o texto, o link leva o texto novo', await p.evaluate(() => decodeURIComponent(document.getElementById('cob-wa').href.split('?text=')[1]) === 'Oi, tudo certo? Passa aqui hoje.'));
+  await p.evaluate(() => { window.__copiado = null; navigator.clipboard.writeText = async t => { window.__copiado = t; }; });
+  await p.click('.sheet [data-act=copiar-cobranca]'); await p.waitForFunction(() => window.__copiado);
+  ok('Cobrar: "Copiar mensagem" copia o texto da caixa e avisa', (await p.evaluate(() => window.__copiado)) === 'Oi, tudo certo? Passa aqui hoje.' && /Mensagem copiada/.test(await p.locator('.toast').innerText()));
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  // Cliente com várias contas: uma só mensagem com a lista e o total
+  await p.click('.tabs [data-tab=clientes]'); await p.locator('#screen .row', { hasText: 'Carlos' }).first().click();
+  ok('Ficha do cliente com contas a receber: "Cobrar no WhatsApp" é o botão principal, no topo', /Cobrar no WhatsApp/.test(await p.locator('.sheet .actions .btn.primary').first().innerText()));
+  await p.click('.sheet [data-act=cobrar]');
+  const msgC = await p.evaluate(() => document.getElementById('cob-txt').value);
+  ok('Cobrar um cliente: lista as contas (uma por linha) e o total', /Passando para lembrar de \d+ contas em aberto/.test(msgC) && (msgC.match(/^• /gm) || []).length >= 2 && /Total: R\$ [\d.]+,\d\d\./.test(msgC), msgC);
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  // Sem telefone com DDD: não há link quebrado, a tela explica e dá a saída
+  await p.evaluate(() => { const S = JSON.parse(localStorage.getItem('baixa-pix-v2')); S.clientes.forEach(c => { if (/Carlos/.test(c.nome)) c.telefone = '12345'; }); localStorage.setItem('baixa-pix-v2', JSON.stringify(S)); });
+  await p.reload(); await p.waitForSelector('.crow'); await p.click('.tabs [data-tab=clientes]'); await p.locator('#screen .row', { hasText: 'Carlos' }).first().click(); await p.click('.sheet [data-act=cobrar]');
+  ok('Sem telefone válido: não existe link do WhatsApp, a tela avisa "Falta o telefone com DDD" e oferece Editar dados e Copiar', (await p.locator('#cob-wa').count()) === 0 && /Falta o telefone com DDD/.test(await p.locator('#aviso-tel').innerText()) && (await p.locator('#aviso-tel [data-act=editar-cliente]').count()) === 1 && (await p.locator('[data-act=copiar-cobranca]').count()) === 1);
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
   // Editar conta: muda valor e vencimento, avisa e permite desfazer
-  await p.click('.crow .cmain');
+  await p.click('.tabs [data-tab=contas]'); await p.click('.crow .cmain');
   const antes = await p.evaluate(() => document.querySelector('.sheet .kv').innerText);
   await p.click('.sheet [data-act=editar-conta]');
   ok('Editar conta: abre com cliente, descrição, valor e vencimento preenchidos', (await p.inputValue('#ec-desc')).length > 0 && /^\d+,\d\d$/.test(await p.inputValue('#ec-val')) && /^\d{4}-\d\d-\d\d$/.test(await p.inputValue('#ec-venc')) && (await p.locator('#ec-cli').inputValue()).length > 0);
@@ -263,4 +294,4 @@ const medir = () => {
   const f = out.filter(l => l.startsWith('✖')).length;
   console.log(`\n${out.length - f} de ${out.length} passaram`);
   process.exit(f ? 1 : 0);
-})().catch(e => { console.error('ERRO NO TESTE', e.message); process.exit(1); });
+})().catch(e => { console.error('ERRO NO TESTE', e.message.split('\n')[0], '| linha:', (e.stack || '').split('\n').filter(l => l.includes('experiencia.test')).slice(0, 2).join(' ')); process.exit(1); });

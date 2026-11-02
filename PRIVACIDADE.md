@@ -8,6 +8,8 @@ O acertoTotal é um aplicativo de contas a receber, criado por **alessandrocdrx*
 
 **Dados que o app envia:** nenhum. Os seus clientes, contas, comprovantes e planilhas nunca saem do aparelho. O app não usa anúncios nem ferramentas de análise e não compartilha dados com ninguém.
 
+**Cobrar pelo WhatsApp:** quando você toca em “Cobrar no WhatsApp”, o app monta a mensagem no próprio aparelho e abre o WhatsApp com ela. O envio é feito por você, no WhatsApp. O app não envia a mensagem nem os dados do cliente a ninguém. O seu nome e a sua chave Pix (“Meu negócio”) ficam só no aparelho.
+
 **Assinatura:** o app tem teste grátis e assinatura paga. A compra é feita e cobrada pela Google Play, e o app só pergunta à Google Play se a sua conta tem assinatura ativa. O acertoTotal não recebe nem guarda dados de cartão ou de pagamento. Por isso o app declara permissão de internet: ela vem da biblioteca de cobrança da Google Play, e só a Google Play a usa. Os dados da compra seguem a política de privacidade da Google.
 
 **Arquivos que você escolhe:** o app só lê planilhas e comprovantes que você seleciona, e só grava no seu aparelho os arquivos de relatório e de cópia de segurança que você pede. Para onde enviar esses arquivos é decisão sua.

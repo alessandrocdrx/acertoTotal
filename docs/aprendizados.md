@@ -122,11 +122,25 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R78. O topo da lista é só o essencial: nada de data do dia, botão de exportar nem aviso fixo. A cópia de segurança pendente aparece como ponto vermelho no ☰ e como situação dentro do Menu. [experiencia]
 - R79. O botão "+" sai da frente ao rolar para baixo e volta ao rolar para cima, para nunca cobrir o "Dar baixa". Seu estilo não pode herdar o dos cartões (`.compacto`, e não `.mini`). [experiencia]
 - R80. Todo dado errado tem como corrigir sem apagar: a conta tem "Editar conta", com "Desfazer" no aviso. [experiencia]
+- R81. "Cobrar no WhatsApp" monta a mensagem no aparelho (nome, valor, vencimento, dias de atraso, chave Pix e nome do negócio) e abre o WhatsApp só quando a pessoa toca. O telefone vira `55` + DDD + número; sem telefone válido, não há link quebrado: a tela explica e oferece "Editar dados" e "Copiar mensagem". O app não envia nada sozinho, e a política de privacidade diz isso. [experiencia, tarefas]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-036 · 02/11/2026 · Cobrar pelo WhatsApp e "Meu negócio" (Bloco B, item 1)
+- **Origem:** o PDF de UX apontou que um app de cobrança não tinha como cobrar: o telefone era só texto. O cliente seguiu a ordem proposta: primeiro Cobrar pelo WhatsApp, depois esperar o retorno dos testadores.
+- **O que foi feito:**
+  - **Cobrar no WhatsApp:** botão na conta a receber e, no topo da ficha do cliente, quando ele tem contas a receber. A tela mostra a mensagem pronta e editável, com "Abrir no WhatsApp" e "Copiar mensagem". Um cliente com várias contas recebe uma mensagem com a lista e o total.
+  - **Meu negócio** (Menu): nome e chave Pix, que vão na mensagem. Ficam só no aparelho e não são apagados por "Apagar tudo".
+  - Política de privacidade com o parágrafo novo. Não pede nenhuma permissão nova.
+- **Problemas achados:**
+  - Um erro de sintaxe (aspa faltando na ficha do cliente) deixou o app em branco. O teste mostrou na hora, e foi corrigido.
+  - O link com `a.btn` saiu sublinhado e fora do padrão dos botões.
+  - O teste "sem endereço externo no APK" acusou o `wa.me`. Ele só abre quando a pessoa toca, no WhatsApp, e passou a ser permitido como os links do Menu.
+  - Um teste da suíte `experiencia` supunha estar na aba Contas depois do bloco novo.
+- **Como evitar:** regra R81; suíte `experiencia` com 84 checagens e T10 na `tarefas` (chegar ao botão do WhatsApp em até 4 toques).
 
 ### A-035 · 02/11/2026 · "Apagar tudo" confirmado com a palavra APAGAR
 - **Pedido do cliente** (Bloco B da revisão de UX): "na opção apagar tudo o usuário tem que digitar apagar".
