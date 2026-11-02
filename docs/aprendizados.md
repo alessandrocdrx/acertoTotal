@@ -123,11 +123,20 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R79. O botão "+" sai da frente ao rolar para baixo e volta ao rolar para cima, para nunca cobrir o "Dar baixa". Seu estilo não pode herdar o dos cartões (`.compacto`, e não `.mini`). [experiencia]
 - R80. Todo dado errado tem como corrigir sem apagar: a conta tem "Editar conta", com "Desfazer" no aviso. [experiencia]
 - R81. "Cobrar no WhatsApp" monta a mensagem no aparelho (nome, valor, vencimento, dias de atraso, chave Pix e nome do negócio) e abre o WhatsApp só quando a pessoa toca. O telefone vira `55` + DDD + número; sem telefone válido, não há link quebrado: a tela explica e oferece "Editar dados" e "Copiar mensagem". O app não envia nada sozinho, e a política de privacidade diz isso. [experiencia, tarefas]
+- R82. Tudo o que se toca ou se digita precisa **parecer** tocável: caixa de digitar e botão de contorno têm borda com contraste de pelo menos 3:1 sobre o fundo (`--campo-borda`, WCAG 1.4.11), e a caixa tem um fundo levemente marcado. Cartão que filtra mostra um ícone de filtro (e um "x" quando está marcado) e a lista oferece "Ver tudo". [experiencia]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-037 · 02/11/2026 · "Difícil saber que é uma caixa para digitar" e "nem percebi que dava para clicar"
+- **Relato do cliente** (três capturas): "Aqui e em vários locais fica difícil saber que é uma caixa para digitar, parece mais um espaço vazio". "Nem percebi que dava para clicar" (os 3 cartões do topo de Contas). O terceiro print mostrava o campo de data e o botão "Anexar foto ou PDF", com a mesma borda quase invisível.
+- **Causa:** a borda de campos e botões usava `--line`, a cor das linhas divisórias: contraste de **1,3:1** com o fundo (o mínimo para componentes é 3:1). Os cartões que filtram não tinham nada que os diferenciasse de um bloco de informação.
+- **O que foi feito:**
+  - Token novo `--campo-borda` (3,7:1 no claro, 4,8:1 no escuro) e `--campo-bg`. Borda de 1,5 px em caixas de digitar, botões de contorno, chips e no ☰. Foco com contorno de cor. Marcador de texto (placeholder) legível.
+  - Cartões de filtro com borda, um ícone de filtro no canto, um "x" quando marcados e o botão **Ver tudo** ao lado do título da lista.
+- **Como evitar:** regra R82; a suíte `experiencia` agora mede o contraste da borda de toda caixa de digitar e de todo botão de contorno, em todas as telas, nos dois temas e em dois tamanhos de celular.
 
 ### A-036 · 02/11/2026 · Cobrar pelo WhatsApp e "Meu negócio" (Bloco B, item 1)
 - **Origem:** o PDF de UX apontou que um app de cobrança não tinha como cobrar: o telefone era só texto. O cliente seguiu a ordem proposta: primeiro Cobrar pelo WhatsApp, depois esperar o retorno dos testadores.

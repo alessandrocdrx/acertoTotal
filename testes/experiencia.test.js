@@ -69,12 +69,20 @@ const medir = () => {
   const pequena = [...raiz.querySelectorAll('*')].filter(vis).filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()) && parseFloat(getComputedStyle(e).fontSize) < 11).map(e => `${nome(e)} ${getComputedStyle(e).fontSize}`);
   // 5) Pedaços que não podem quebrar no meio (data do vencimento, "7 contas").
   const quebra = [...raiz.querySelectorAll('.nw')].filter(vis).filter(e => e.getClientRects().length > 1).map(nome);
+  // 5b) Caixa de digitar com borda visível: contraste de pelo menos 3:1 entre a borda e o fundo em que ela está (WCAG 1.4.11).
+  const rgb = c => (c.match(/[\d.]+/g) || []).slice(0, 4).map(Number);
+  const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+  const fundoDe = e => { for (let n = e.parentElement; n; n = n.parentElement) { const c = rgb(getComputedStyle(n).backgroundColor); if (c.length >= 3 && (c[3] === undefined || c[3] > .9)) return c; } return [255, 255, 255]; };
+  // Vale também para os botões de contorno (os cheios têm cor própria e os "quietos" são só texto).
+  const campo = [...raiz.querySelectorAll('input:not([type=file]):not([type=checkbox]):not([type=radio]):not([type=hidden]), select, textarea, .btn:not(.primary):not(.quiet):not(.apagar):not(:disabled), .iconbtn:not(.voltar)')].filter(vis)
+    .map(e => { const cs = getComputedStyle(e), a = lum(rgb(cs.borderTopColor)), b = lum(fundoDe(e)); return { n: nome(e) || e.id, r: Math.round((Math.max(a, b) + .05) / (Math.min(a, b) + .05) * 10) / 10, w: parseFloat(cs.borderTopWidth) }; })
+    .filter(x => x.r < 3 || x.w < 1).map(x => `${x.n} (contraste ${x.r}:1, borda ${x.w}px)`);
   // 6) Rolagem lateral da página.
   const lateral = document.documentElement.scrollWidth - document.documentElement.clientWidth;
   // 7) Janela tem saída visível (Fechar, Cancelar, Agora não, Voltar).
   const sheet = document.querySelector('#layer .sheet');
   const saida = !sheet || [...sheet.querySelectorAll('button')].some(b => /^(Fechar|Cancelar|Agora não|Voltar aos filtros)$/.test(b.innerText.trim()));
-  return { toque, cortado, sob: [...new Set(sob)], pequena: [...new Set(pequena)], quebra, lateral, saida };
+  return { toque, campo, cortado, sob: [...new Set(sob)], pequena: [...new Set(pequena)], quebra, lateral, saida };
 };
 
 (async () => {
@@ -104,13 +112,13 @@ const medir = () => {
   for (const [w, h, tema] of [[360, 780, 'light'], [320, 640, 'light'], [360, 780, 'dark']]) {
     const { p, ctx } = await abrir(w, h, tema);
     const tag = `${w}×${h} ${tema === 'dark' ? 'escuro' : 'claro'}`;
-    const prob = { toque: [], cortado: [], sob: [], pequena: [], quebra: [], lateral: [], saida: [], axe: [] };
+    const prob = { toque: [], campo: [], cortado: [], sob: [], pequena: [], quebra: [], lateral: [], saida: [], axe: [] };
     for (const [nome, ir] of TELAS) {
       try { await inicio(p); await ir(p); } catch (e) { prob.saida.push(`${nome}: não abriu (${e.message.split('\n')[0]})`); continue; }
       await p.waitForTimeout(450);
       await p.screenshot({ path: path.join(FOTOS, `${w}x${h}-${tema}-${nome.replace(/[^\wÀ-ú]+/g, '-')}.png`) });
       const m = await p.evaluate(medir);
-      for (const k of ['toque', 'cortado', 'sob', 'pequena', 'quebra']) m[k].forEach(x => prob[k].push(`${nome}: ${x}`));
+      for (const k of ['toque', 'campo', 'cortado', 'sob', 'pequena', 'quebra']) m[k].forEach(x => prob[k].push(`${nome}: ${x}`));
       if (m.lateral > 0) prob.lateral.push(`${nome}: ${m.lateral}px`);
       if (!m.saida) prob.saida.push(`${nome}: sem Fechar/Cancelar`);
       if (w === 360) { // contraste pelo axe em cada tela e janela, nos dois temas
@@ -120,6 +128,7 @@ const medir = () => {
       }
     }
     ok(`[${tag}] Toque de 48 px em todos os botões, campos e links das ${TELAS.length} telas`, !prob.toque.length, prob.toque.slice(0, 8).join(' | '));
+    ok(`[${tag}] Toda caixa de digitar e todo botão de contorno têm borda visível (contraste ≥ 3:1), não parece espaço vazio`, !prob.campo.length, prob.campo.slice(0, 6).join(' | '));
     ok(`[${tag}] Nenhum texto cortado`, !prob.cortado.length, prob.cortado.slice(0, 8).join(' | '));
     ok(`[${tag}] Nada se sobrepõe dentro de cartões e linhas (selo × botão, valor × texto)`, !prob.sob.length, prob.sob.slice(0, 8).join(' | '));
     ok(`[${tag}] Nenhuma letra abaixo de 11 px`, !prob.pequena.length, prob.pequena.slice(0, 8).join(' | '));
