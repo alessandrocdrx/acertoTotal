@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -27,27 +27,12 @@ jobs:
           playwright install --with-deps chromium
       - name: Testes automatizados (11 suítes)
         run: bash testes/rodar.sh
-      - name: APK de teste
+      # Só confere que o APK de teste compila. Ele não é publicado em lugar nenhum: o repositório é público,
+      # e o APK de teste tem a assinatura simulada, que liberaria o app de graça para quem baixasse.
+      - name: Compilar o APK de teste (só conferência)
         run: |
           cd android
           ./gradlew --no-daemon assembleHomologRelease
-          cp app/build/outputs/apk/homolog/release/app-homolog-release.apk ../acertototal.apk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: acertototal-teste-apk
-          path: acertototal.apk
-      # Na main, publica o APK de teste solto (sem zip) numa Release.
-      # Link fixo para a mais recente:
-      # https://github.com/alessandrocdrx/acertoTotal/releases/latest/download/acertototal.apk
-      - name: Publicar Release de teste
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[release]')
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: build-${{ github.run_number }}
-          name: acertoTotal (build ${{ github.run_number }})
-          body: APK de teste gerado automaticamente a partir da main (${{ github.sha }}).
-          files: acertototal.apk
-          make_latest: true
 
   # Lançamento na Play Store: commit na main com "[release]" na mensagem.
   # Precisa dos Secrets ACERTOTOTAL_KEYSTORE_BASE64, ACERTOTOTAL_KEYSTORE_PASSWORD e ACERTOTOTAL_KEY_ALIAS
@@ -77,28 +62,17 @@ jobs:
           done
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/envio.keystore"
           printf 'arquivo=%s\nalias=%s\nsenha=%s\n' "$RUNNER_TEMP/envio.keystore" "$ALIAS" "$SENHA" > android/assinatura-play.properties
-      - name: Compilar APK e AAB assinados
+      - name: Compilar o AAB assinado
         run: |
           bash android/preparar-assets.sh
           cd android
-          ./gradlew --no-daemon assembleProducaoRelease bundleProducaoRelease
-          # confere que saiu assinado com a chave de envio, e não sem assinatura
-          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify app/build/outputs/apk/producao/release/app-producao-release.apk
-          cp app/build/outputs/apk/producao/release/app-producao-release.apk ../acertototal.apk
+          ./gradlew --no-daemon bundleProducaoRelease
           cp app/build/outputs/bundle/producaoRelease/app-producao-release.aab ../acertototal.aab
-      - name: Versão do app
-        id: ver
-        run: echo "tag=v$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' android/app/build.gradle.kts)" >> "$GITHUB_OUTPUT"
-      - name: Publicar na página de Releases
-        uses: softprops/action-gh-release@v2
+      # O pacote vai como artefato do workflow (guardado por 14 dias), e não como Release pública. O repositório é
+      # público: um APK de produção solto deixaria o teste grátis ser reiniciado sem fim, limpando os dados do app.
+      - name: Guardar o AAB para enviar ao Play Console
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ steps.ver.outputs.tag }}
-          target_commitish: ${{ github.sha }}
-          name: acertoTotal ${{ steps.ver.outputs.tag }}
-          body: |
-            `acertototal.aab` é o pacote para enviar ao Google Play Console.
-            `acertototal.apk` é a mesma versão para instalar e testar no celular antes de enviar.
-          make_latest: true
-          files: |
-            acertototal.apk
-            acertototal.aab
+          name: acertototal-aab
+          path: acertototal.aab
+          retention-days: 14

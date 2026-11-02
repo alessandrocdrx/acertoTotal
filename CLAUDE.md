@@ -20,9 +20,10 @@ Mesmo padrão do geoTotal e do calcTotal: nome `palavraTotal` em camelCase, repo
 
 ## Branches, CI e lançamento
 
-- A `main` é a versão aprovada. O trabalho de cada sessão vai numa branch própria e só entra na `main` depois dos testes verdes e da aprovação do Alessandro.
-- `.github/workflows/android.yml` roda as 11 suítes e compila o APK de teste a cada push. Na `main`, publica o APK numa Release (link fixo: `https://github.com/alessandrocdrx/acertoTotal/releases/latest/download/acertototal.apk`).
-- Lançar na Play Store: aumentar `versionCode`/`versionName` em `android/app/build.gradle.kts` e pôr `[release]` na mensagem do commit na `main`. O workflow gera o AAB assinado com a chave de envio, a partir dos Secrets `ACERTOTOTAL_KEYSTORE_BASE64`, `ACERTOTOTAL_KEYSTORE_PASSWORD` e `ACERTOTOTAL_KEY_ALIAS`. Sem os Secrets, ele para com erro. Passo a passo em `playstore/FICHA.md`.
+- **Fluxo de aprovação (decisão do Alessandro):** 1) fazer a mudança e rodar as 11 suítes; 2) publicar o artefato (`prototipo/acertototal.html`, mesma URL) para o Alessandro olhar; 3) enquanto ele não aprova, o trabalho fica **só na branch `aprovacao`** (commit e push nela, não na `main`); 4) quando ele aprova, a `aprovacao` entra na `main`. O artefato é sempre igual à última versão do protótipo, no modo de teste (é só para visualizar). Mudanças que o artefato não mostra (Android, textos da loja, processo) esperam a aprovação do mesmo jeito, e o Alessandro olha o pacote ou o texto.
+- A `main` é a versão aprovada.
+- `.github/workflows/android.yml` roda as 11 suítes e confere que o APK de teste compila, a cada push. **Nenhum APK é publicado**: o repositório é público e o APK de teste tem a assinatura simulada (libera o app de graça). Quem testa instala pela Play Store.
+- Lançar na Play Store (opção pelo GitHub; o jeito usado até agora é gerar o AAB localmente e enviar ao Alessandro): aumentar `versionCode`/`versionName` em `android/app/build.gradle.kts` e pôr `[release]` na mensagem do commit na `main`. O workflow gera o AAB assinado com a chave de envio e o guarda como artefato do workflow (14 dias), a partir dos Secrets `ACERTOTOTAL_KEYSTORE_BASE64`, `ACERTOTOTAL_KEYSTORE_PASSWORD` e `ACERTOTOTAL_KEY_ALIAS`. Sem os Secrets, ele para com erro. Passo a passo em `playstore/FICHA.md`.
 
 ## Regras de trabalho
 
@@ -31,5 +32,5 @@ Mesmo padrão do geoTotal e do calcTotal: nome `palavraTotal` em camelCase, repo
 - Toda correção ganha um teste em `testes/`.
 - Todo problema achado, seja por teste, pelo cliente ou numa revisão, vira uma entrada em `docs/aprendizados.md` com causa, correção e como evitar.
 - Publique o artefato só com todas as suítes passando.
-- **O artefato acompanha o protótipo, sempre.** Toda mudança em `prototipo/acertototal.html` é publicada logo depois dos testes verdes e do commit, na mesma URL (https://claude.ai/artifact/AmxvF5aaQtretFKakGHWLA), sem esperar pedido. Antes de dizer que terminou, confira que a versão publicada é a do último commit.
+- **O artefato acompanha o protótipo, sempre.** Toda mudança em `prototipo/acertototal.html` é publicada no artefato (https://claude.ai/artifact/AmxvF5aaQtretFKakGHWLA, mesma URL) assim que as suítes passam, **antes** do commit na `main` e sem esperar pedido. Antes de dizer que terminou, confira que a versão publicada é a do protótipo atual.
 - Os textos da interface ficam em português do Brasil simples: uma ação por botão, erro que explica como resolver.
