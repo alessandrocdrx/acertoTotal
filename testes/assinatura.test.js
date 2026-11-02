@@ -17,6 +17,8 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
     p.setDefaultTimeout(6000);
     p.errs = [];
     p.on('pageerror', e => p.errs.push(e.message));
+    // O protótipo sem variáveis não conta teste grátis (artefato só para olhar); aqui ligamos os 7 dias do app de teste. Nos apps empacotados, o script da página vem depois e decide.
+    await p.addInitScript(() => { if (window.ACERTO_LIMITE_DIAS == null) window.ACERTO_LIMITE_DIAS = 7; });
     await p.route('**/*', r => {
       const u = r.request().url();
       if (u.includes('xlsx')) return r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(__dirname + '/vendor/xlsx.js', 'utf8') });

@@ -15,6 +15,8 @@ const DIA = 864e5;
     p.setDefaultTimeout(6000);
     p.errs = [];
     p.on('pageerror', e => p.errs.push(e.message));
+    // O protótipo sem variáveis não conta teste grátis (artefato só para olhar); aqui ligamos os 7 dias do app de teste. Nos apps empacotados, o script da página vem depois e decide.
+    await p.addInitScript(() => { if (window.ACERTO_LIMITE_DIAS == null) window.ACERTO_LIMITE_DIAS = 7; });
     await p.route('**/*', r => {
       const u = r.request().url();
       if (u.includes('xlsx')) return r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(__dirname + '/vendor/xlsx.js', 'utf8') });
@@ -33,6 +35,20 @@ const DIA = 864e5;
     return { p, ctx };
   };
   const faixa = p => p.locator('#ambiente').innerText();
+
+  // O artefato (protótipo sem variáveis) é só para olhar: sem contagem de teste grátis, e a assinatura não fala em dias
+  {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, timezoneId: 'America/Sao_Paulo', locale: 'pt-BR' });
+    const p = await ctx.newPage(); p.setDefaultTimeout(6000);
+    await p.route('**/*', r => { const u = r.request().url(); if (u.includes('xlsx')) return r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(__dirname + '/vendor/xlsx.js', 'utf8') }); if (u.startsWith('file://')) return r.continue(); return r.fulfill({ status: 200, body: '' }); });
+    await p.goto('file://' + __dirname + '/.build/page.html'); await p.waitForSelector('.crow');
+    const f0 = await p.locator('#ambiente').innerText();
+    ok('Artefato: a faixa só diz "Ambiente de teste", sem contagem de dias do teste grátis', /Ambiente de teste/.test(f0) && !/Teste grátis|faltam/.test(f0), f0);
+    await p.click('[data-act=abrir-menu]');
+    const as0 = await p.locator('.assin').innerText();
+    ok('Artefato: o cartão Assinatura não conta dias ("Escolha um plano quando quiser")', /Escolha um plano quando quiser/.test(as0) && !/faltam|dias/.test(as0), as0);
+    await ctx.close();
+  }
 
   // Primeiro uso
   {

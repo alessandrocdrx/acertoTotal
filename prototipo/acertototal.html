@@ -1793,7 +1793,8 @@ var AMBIENTE=window.ACERTO_AMBIENTE||'teste';
 // Período de avaliação: conta a partir do primeiro uso neste aparelho. Depois dele, o app fica só
 // para consulta, até haver uma assinatura. ACERTO_LIMITE_DIAS são os dias de teste grátis (APK de produção: 32 na
 // aprovação da Play, 7 na versão final; 0 desliga o limite).
-LIMITE_DIAS=window.ACERTO_LIMITE_DIAS!=null?+window.ACERTO_LIMITE_DIAS:7;
+// Sem a variável (o protótipo no artefato, só para olhar), não há contagem de teste grátis: ela só vale nos apps empacotados.
+LIMITE_DIAS=window.ACERTO_LIMITE_DIAS!=null?+window.ACERTO_LIMITE_DIAS:0;
 AV=(function(){
   var k='acertototal-avaliacao',a=null,agora=Date.now();
   try{a=JSON.parse(localStorage.getItem(k)||'null')}catch(e){}

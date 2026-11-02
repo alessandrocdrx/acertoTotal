@@ -126,11 +126,18 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R82. Tudo o que se toca ou se digita precisa **parecer** tocável: caixa de digitar e botão de contorno têm borda com contraste de pelo menos 3:1 sobre o fundo (`--campo-borda`, WCAG 1.4.11), e a caixa tem um fundo levemente marcado. Cartão que filtra mostra um ícone de filtro (e um "x" quando está marcado) e a lista oferece "Ver tudo". [experiencia]
 - R83. A prévia da importação avisa quando uma linha **sem código** parece mudança de conta que o app já tem (mesmo cliente, mesma descrição, conta em aberto, outro vencimento), com o botão "Ir para Atualizar pelo Excel". O aviso não bloqueia. A cópia de segurança mostra o que vai dentro (clientes e contas), e não a tabela de códigos. [importacao, experiencia]
 - R84. O que se toca parece tocável em **todo** o app: sanfona (`details`) sempre com setinha (para baixo fechada, para cima aberta), botão só de texto colorido e sublinhado, linha de lista com seta, cartão que filtra com ícone. Nada que seja botão pode ter cara de rótulo. [experiencia]
+- R85. A contagem do teste grátis só existe nos apps empacotados (o APK define `ACERTO_LIMITE_DIAS`): 32 dias no app da Play na aprovação, 7 no app de teste. O protótipo no artefato, sem a variável, não conta dias: a faixa só diz "Ambiente de teste" e a assinatura mostra "Escolha um plano quando quiser". Os testes que precisam do limite o ligam de propósito. [avaliacao, assinatura]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-040 · 02/11/2026 · "Faltam 7 dias" no artefato, que só vale no app em produção
+- **Relato do cliente:** "a mensagem de teste grátis diz que faltam 7 dias, mas isso só vai valer com o app em produção".
+- **Causa:** o protótipo usava 7 dias quando a página não definia o limite. Como o artefato é só para olhar, ele mostrava uma contagem que não vale ali (e que ainda diferia dos 32 dias do app da Play na aprovação).
+- **O que foi feito:** sem a variável `ACERTO_LIMITE_DIAS`, o protótipo não conta dias. O app de teste (7 dias) e o da Play (32 dias) continuam injetando o valor pelo script de preparo. Os testes de avaliação e assinatura ligam os 7 dias de propósito, e há 2 testes novos para o artefato.
+- **Como evitar:** regra R85.
 
 ### A-039 · 02/11/2026 · "Achei que tinha resolvido os botões que parecem texto"
 - **Relato do cliente** (captura de "Como montar a planilha?"): as sanfonas "Um cliente com várias contas", "Atualizar contas que já existem" e "Só cadastrar clientes, sem contas" pareciam rótulos de texto.
