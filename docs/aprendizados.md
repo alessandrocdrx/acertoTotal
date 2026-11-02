@@ -133,6 +133,18 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 As entradas mais recentes ficam no topo.
 
+### A-041 · 02/11/2026 · Capturas e textos da loja para a 0.9.7
+- **Pedido do cliente:** novas imagens para subir na Play.
+- **O que foi feito:**
+  - `playstore/gerar-capturas.js` ajustado à tela nova. O filtro "Em aberto" não existe mais e o gerador quebrava nele.
+  - Captura nova **"Cobre no WhatsApp, texto já pronto."** na 2ª posição, com "Meu negócio" preenchido para o Pix aparecer.
+  - Clientes com o título "Quanto cada cliente deve." (a lista não mostra mais o CPF) e Importar com "Como montar a planilha?" aberto.
+  - A ficha da loja ganhou a seção "COBRE PELO WHATSAPP" e a frase sobre editar conta, e os filtros passaram a ter os nomes novos. Descrição curta com 69 caracteres.
+- **Problemas achados na revisão por foto:**
+  - O título "Cobre pelo WhatsApp com a mensagem pronta." ocupava 4 linhas e encostava no celular. Foi encurtado.
+  - A captura de Nova conta saía com o filtro de Pagas marcado ao fundo.
+- **Como evitar:** a regra R74 vale também quando a tela muda. Rode o gerador e revise as 8 capturas antes de entregar.
+
 ### A-040 · 02/11/2026 · "Faltam 7 dias" no artefato, que só vale no app em produção
 - **Relato do cliente:** "a mensagem de teste grátis diz que faltam 7 dias, mas isso só vai valer com o app em produção".
 - **Causa:** o protótipo usava 7 dias quando a página não definia o limite. Como o artefato é só para olhar, ele mostrava uma contagem que não vale ali (e que ainda diferia dos 32 dias do app da Play na aprovação).

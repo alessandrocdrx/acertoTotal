@@ -41,8 +41,8 @@ Sai em `android/app/build/outputs/bundle/producaoRelease/app-producao-release.aa
 
 **Nome (até 30):** `acertoTotal: Contas a Receber`
 
-**Descrição curta (até 80, esta tem 77):**
-Saiba quem te deve e há quanto tempo. Dê baixa com comprovante e use o Excel.
+**Descrição curta (até 80, esta tem 69):**
+Saiba quem te deve, cobre pelo WhatsApp e dê baixa com o comprovante.
 
 **Descrição completa (até 4.000):**
 Chega de caderninho de fiado e de planilha bagunçada. O acertoTotal mostra, numa tela só, quem te deve, quanto e desde quando. É feito para quem vende e cobra depois: autônomos, pequenas lojas, academias, escolas, entregadores e prestadores de serviço.
@@ -50,11 +50,16 @@ Chega de caderninho de fiado e de planilha bagunçada. O acertoTotal mostra, num
 QUEM DEVE, NA HORA
 • Veja o total em aberto, o que está em atraso e o que entrou no mês.
 • Cada conta diz a situação por escrito: "Atrasada há 5 dias", "Vence em 3 dias", "Paga em 02/11".
-• Filtre por Em aberto, Atrasadas, Pagas ou Todas, e busque pelo nome do cliente.
+• Toque em A vencer, Atrasadas ou Pagas no mês para filtrar, e busque pelo nome do cliente ou pela descrição.
+
+COBRE PELO WHATSAPP
+• Toque em "Cobrar no WhatsApp" e a mensagem já vem pronta: o que o cliente deve, o vencimento e há quantos dias está atrasado.
+• Cadastre a sua chave Pix uma vez e ela vai em toda cobrança.
+• Confira e mude o texto antes de mandar. Quem envia é você, no seu WhatsApp.
 
 CLIENTES PELO CPF OU CNPJ
 • Cada cliente é identificado pelo CPF ou CNPJ, sem cadastro repetido.
-• Abra o cliente e veja todas as contas dele, quanto deve e o contato.
+• Abra o cliente e veja todas as contas dele, quanto deve e o contato. Errou um valor? Edite a conta.
 
 DÊ BAIXA COM O COMPROVANTE
 • Marque a conta como paga com um toque.
@@ -82,7 +87,7 @@ Use todos os recursos de graça no período de teste. Depois, o app continua abe
 
 O acertoTotal não movimenta dinheiro: ele não faz nem recebe pagamentos. Ele organiza o que você tem a receber.
 
-**Imagens** (em `playstore/`): `icone-512.png`, `grafico-destaque-1024x500.png` e as 8 capturas de `capturas/` (1080×1920), nesta ordem: Contas, Clientes, Números, Planilha, Importar, Comprovante, Cliente, Nova conta.
+**Imagens** (em `playstore/`): `icone-512.png`, `grafico-destaque-1024x500.png` e as 8 capturas de `capturas/` (1080×1920), nesta ordem: Contas, Cobrar no WhatsApp, Comprovante, Clientes, Números, Planilha, Importar, Nova conta.
 
 ## 5. Segurança dos dados (respostas)
 

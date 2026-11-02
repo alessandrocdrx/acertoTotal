@@ -25,24 +25,24 @@ await a.click('.crow .btn.primary');
 await a.setInputFiles('#fcomp',{name:'comprovante-pix.jpg',mimeType:'image/jpeg',buffer:Buffer.from(jpg,'base64')});
 await a.waitForFunction(()=>/Anexado/.test(document.getElementById('compname').textContent));
 await a.click('[data-act=baixa]');await a.waitForTimeout(300);
-// Cópia de segurança feita hoje (some o aviso amarelo e o selo vermelho "Nunca feita")
-await a.evaluate(()=>{const s=JSON.parse(localStorage.getItem('baixa-pix-v2'));s.ultimoBackup=new Date().toISOString().slice(0,10);localStorage.setItem('baixa-pix-v2',JSON.stringify(s))});
+// Cópia de segurança feita hoje (sem ponto vermelho no ☰ nem "Nunca feita") e "Meu negócio" preenchido (a cobrança mostra o Pix)
+await a.evaluate(()=>{const s=JSON.parse(localStorage.getItem('baixa-pix-v2'));s.ultimoBackup=new Date().toISOString().slice(0,10);s.negocio={nome:'Ana Costa · Doces e Bolos',pix:'contato@anacostadoces.com.br'};localStorage.setItem('baixa-pix-v2',JSON.stringify(s))});
 await a.reload();await a.waitForSelector('.crow');await a.waitForTimeout(1500);
 const raw=[];const tela=async n=>{await a.waitForTimeout(600);const f=S+'raw3-'+n+'.png';await a.screenshot({path:f});raw.push(f)};
 const volta=async()=>{await a.evaluate(()=>{while(window.acertoVoltar&&window.acertoVoltar());document.getElementById('screen').scrollTop=0});await a.waitForTimeout(200)};
-await tela(1);                                                             // Contas
-await a.click('.tabs [data-tab=clientes]');await tela(2);                  // Clientes
-await a.click('.tabs [data-tab=numeros]');await a.click('[data-act=periodo][data-p="3"]');await tela(3); // Números, 3 meses
-await a.click('.tabs [data-tab=planilha]');await tela(4);                  // Planilha
-await a.click('#screen [data-act=import-abrir]');await tela(5);            // Importar
-await volta();await a.click('.tabs [data-tab=contas]');await a.click('[data-act=filter][data-f=pagas]');
-await a.click(`.cmain[data-id="${compId}"]`);await tela(6);                // Conta paga com comprovante
-await volta();await a.click('.tabs [data-tab=clientes]');await a.click('#screen .row');await tela(7); // Ficha do cliente
-await volta();await a.click('.tabs [data-tab=contas]');await a.click('[data-act=filter][data-f=abertas]');await a.click('.fab');
+// A ordem importa: as primeiras capturas são as que mais aparecem na loja.
+await tela(1);                                                                                   // 1 Contas
+await a.click('.crow .cmain');await a.click('.sheet [data-act=cobrar]');await tela(2);           // 2 Cobrar pelo WhatsApp
+await volta();await a.click('.strip [data-f=pagas]');await a.click(`.cmain[data-id="${compId}"]`);await tela(3); // 3 Comprovante
+await volta();await a.click('.tabs [data-tab=clientes]');await tela(4);                         // 4 Clientes
+await a.click('.tabs [data-tab=numeros]');await a.click('[data-act=periodo][data-p="3"]');await tela(5); // 5 Números, 3 meses
+await a.click('.tabs [data-tab=planilha]');await tela(6);                                       // 6 Planilha
+await a.click('#screen [data-act=import-abrir]');await a.click('details.como > summary');await a.evaluate(()=>{document.querySelector('.sheet').scrollTop=0});await tela(7); // 7 Importar
+await volta();await a.click('.tabs [data-tab=contas]');await a.click('.strip [data-f=pagas]');await a.click('.fab'); // tira o filtro de Pagas
 await a.selectOption('#nc-cli',{index:3});await a.fill('#nc-desc','Mensalidade de dezembro');await a.fill('#nc-val','150,00');
-await a.click('.sheet h2');await tela(8);                                  // Nova conta preenchida
-const TIT=[['Quem deve, quanto','e desde quando.'],['Cada cliente pelo','CPF ou CNPJ.'],['Quanto entrou','e quanto falta.'],['Excel de ida','e de volta.'],['Confira tudo','antes de gravar.'],['Dê baixa e guarde','o comprovante.'],['Tudo de cada','cliente numa tela.'],['Cadastre uma conta','em poucos toques.']];
-const NOMES=['contas','clientes','numeros','planilha','importar','comprovante','cliente','nova-conta'];
+await a.click('.sheet h2');await tela(8);                                                       // 8 Nova conta preenchida
+const TIT=[['Quem deve, quanto','e desde quando.'],['Cobre no WhatsApp,','texto já pronto.'],['Dê baixa e guarde','o comprovante.'],['Quanto cada','cliente deve.'],['Quanto entrou','e quanto falta.'],['Excel de ida','e de volta.'],['Confira tudo','antes de gravar.'],['Cadastre uma conta','em poucos toques.']];
+const NOMES=['contas','cobrar','comprovante','clientes','numeros','planilha','importar','nova-conta'];
 fs.readdirSync(OUT+'capturas').forEach(f=>fs.unlinkSync(OUT+'capturas/'+f));
 const p=await b.newPage({viewport:{width:1080,height:1920}});
 for(let i=0;i<8;i++){
