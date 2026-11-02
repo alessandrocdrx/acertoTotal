@@ -16,6 +16,8 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   ok('APK não depende de internet: nenhum endereço externo na página', !/https?:\/\//.test(semLinks), (semLinks.match(/https?:\/\/[^"' )]+/g) || []).join(', '));
   const kt = fs.readFileSync(path.join(SRC, 'main', 'java', 'io', 'github', 'alessandrocdrx', 'acertototal', 'MainActivity.kt'), 'utf8');
   ok('Botão Voltar do Android usa window.acertoVoltar (fecha janela, sai do Menu, depois sai do app)', /JS_FECHAR_JANELA =\s*"\(function\(\)\{return !!\(window\.acertoVoltar&&window\.acertoVoltar\(\)\)\}\)\(\)"/.test(kt) && /window\.acertoVoltar=function/.test(html));
+  const ponte = fs.readFileSync(path.join(SRC, 'main', 'java', 'io', 'github', 'alessandrocdrx', 'acertototal', 'Ponte.kt'), 'utf8');
+  ok('Ponte Android salva comprovantes na pasta Downloads (jpg, png e pdf)', ['"jpg" to "image/jpeg"', '"png" to "image/png"', '"pdf" to "application/pdf"'].every(x => ponte.includes(x)));
   ok('Leitor de Excel vai dentro do APK', fs.statSync(path.join(ASSETS, 'xlsx.full.min.js')).size > 500000);
   ok('Página do APK declara idioma pt-BR e viewport de celular', /<html lang="pt-BR">/.test(html) && /name="viewport"/.test(html));
 

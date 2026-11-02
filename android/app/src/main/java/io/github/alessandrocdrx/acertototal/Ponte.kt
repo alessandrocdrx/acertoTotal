@@ -15,7 +15,7 @@ import android.widget.Toast
 
 /**
  * Ponte chamada pela página (window.acertoTotalAndroid). Faz o papel da permissão de
- * download do artefato: recebe o Excel gerado e salva na pasta Downloads.
+ * download do artefato: recebe o Excel gerado (ou um comprovante) e salva na pasta Downloads.
  * Respostas seguem os códigos do protótipo: "saved", "rejected_extension", "unavailable".
  */
 class Ponte(
@@ -77,6 +77,10 @@ class Ponte(
         val MIMES = mapOf(
             "xlsx" to "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "csv" to "text/csv",
+            // Comprovantes que a pessoa salva da conta paga
+            "jpg" to "image/jpeg",
+            "png" to "image/png",
+            "pdf" to "application/pdf",
         )
     }
 }

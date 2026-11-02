@@ -110,11 +110,30 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R65. Só o app da Play cobra de verdade (`COBRANCA_REAL`). O protótipo e o app de teste simulam a assinatura, avisam isso na janela e nunca cobram. A última resposta da Play fica guardada no aparelho, para quem já assinou abrir o app liberado sem internet. Sem servidor, essa checagem só vale no aparelho, como o teste grátis (R43). [assinatura]
 - R66. Texto de privacidade e ficha da loja prometem só o que o pacote final confere. O Play Billing traz as permissões de internet e de cobrança sozinho: depois de acrescentar uma biblioteca, leia as permissões do pacote montado (`aapt2 dump permissions`) antes de escrever "sem internet". [assinatura]
 - R68. A barra de navegação segue o Material 3: indicador em pílula de 56×32 atrás do ícone da aba ativa, ícones de 24 px, rótulo sempre visível e altura de pelo menos 64 px. Uma faixa de aviso tem no máximo 2 linhas. [usabilidade]
+- R69. Toda janela tem saída escrita (Fechar, Cancelar ou Agora não), além do Voltar do Android. [experiencia]
+- R70. A ação principal aparece sem rolar: numa janela com prévia longa (exportar, cópia de segurança), os botões vêm antes da tabela. [experiencia]
+- R71. Pedaços que perdem o sentido se quebrarem ficam juntos (`.nw`): "venc. 23/10/2026", "7 contas". Selos dentro de cartões podem quebrar em 2 linhas, mas nunca encostar no botão. [experiencia]
+- R72. O título da tela é o mesmo rótulo da aba que a pessoa tocou ("Números", não "Estatísticas"). [experiencia]
+- R73. Tudo o que o app guarda pode sair dele: o comprovante (foto ou PDF) tem "Salvar comprovante no celular", que grava na pasta Downloads. A cópia de segurança avisa que não leva os comprovantes. [experiencia, android]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-030 · 02/11/2026 · Revisão de todas as telas por foto e suíte de experiência
+- **Pedido do cliente:** "Onde o comprovante fica salvo? Consigo ter acesso a ele? Melhor remover esse campo?" E: testes automatizados de experiência, usabilidade, disposição, filtros e cores; rever todas as telas por foto, corrigir e fotografar de novo até ficar bom.
+- **Comprovante, a resposta:** fica só dentro do app, no armazenamento do aparelho (junto com clientes e contas). A foto aparecia na conta paga, mas o PDF mostrava só o nome, e nenhum dos dois saía do app. A cópia de segurança em Excel também não leva os arquivos. O campo ficou, porque provar o pagamento é parte do acerto, mas agora tem saída: botão **Salvar comprovante no celular** (pasta Downloads, `comprovante-cliente-data.jpg/.pdf`), e a cópia de segurança avisa que não inclui comprovantes. A ponte Android aceita jpg, png e pdf.
+- **O que a revisão por foto achou** (25 telas e janelas em 360×780; depois 21 telas × 3 aparelhos e temas na suíte nova):
+  - "venc. 23/10/2026" e "7 contas" quebravam no meio da linha.
+  - Na ficha do cliente, o selo "Em aberto · vence em 27 dias" encostava no botão "Dar baixa".
+  - Telefone e e-mail do cliente vinham colados na mesma linha.
+  - A aba "Números" abria uma tela chamada "Estatísticas".
+  - Os 3 períodos dos Números ocupavam 2 linhas. Agora são "Este mês · 3 meses · 12 meses" numa linha, com o nome completo para o leitor de tela.
+  - Na cópia de segurança, o botão "Baixar Excel" ficava depois de 33 linhas de prévia.
+  - A janela Importar não tinha "Fechar".
+  - O "Desfazer" do aviso tinha 44 px, abaixo dos 48 do Material 3.
+- **Como evitar:** suíte nova `experiencia` (43 checagens) e regras R69 a R73. Ela confere em todas as telas: toque de 48 px, texto cortado, sobreposição dentro de cartões, letra mínima de 11 px, quebras proibidas, rolagem lateral, saída de cada janela e contraste pelo axe nos dois temas. Também confere os títulos, os números dos filtros contra a lista, a ação principal visível e o salvamento do comprovante.
 
 ### A-029 · 01/11/2026 · "Menu embaixo não é intuitivo"
 - **Relato do cliente:** "Pedi para completar embaixo, mas menu embaixo não é intuitivo, né?" Ele pediu para analisar documentos de usabilidade de apps Android de gestão, importação, exportação e atualização de contas e clientes, e as melhores práticas de cores, ícones, tamanhos e disposição, aplicando e retestando em ciclo.

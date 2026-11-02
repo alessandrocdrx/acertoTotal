@@ -25,7 +25,7 @@ jobs:
         run: |
           npm install -g playwright
           playwright install --with-deps chromium
-      - name: Testes automatizados (10 suítes)
+      - name: Testes automatizados (11 suítes)
         run: bash testes/rodar.sh
       - name: APK de teste
         run: |
