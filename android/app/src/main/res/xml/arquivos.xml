@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Comprovantes que a pessoa abre ou compartilha: cópia temporária no cache do app, entregue a outro app
+     (fotos, PDF, WhatsApp) só pelo FileProvider, com permissão de leitura daquele arquivo. -->
+<paths>
+    <cache-path name="comprovantes" path="comprovantes/" />
+</paths>

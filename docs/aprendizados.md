@@ -114,13 +114,29 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R70. A ação principal aparece sem rolar: numa janela com prévia longa (exportar, cópia de segurança), os botões vêm antes da tabela. [experiencia]
 - R71. Pedaços que perdem o sentido se quebrarem ficam juntos (`.nw`): "venc. 23/10/2026", "7 contas". Selos dentro de cartões podem quebrar em 2 linhas, mas nunca encostar no botão. [experiencia]
 - R72. O título da tela é o mesmo rótulo da aba que a pessoa tocou ("Números", não "Estatísticas"). [experiencia]
-- R73. Tudo o que o app guarda pode sair dele: o comprovante (foto ou PDF) tem "Salvar comprovante no celular", que grava na pasta Downloads. A cópia de segurança avisa que não leva os comprovantes. [experiencia, android]
+- R73. Tudo o que o app guarda pode ser visto e sair dele: o comprovante tem **Ver** (tela cheia ou app de fotos/PDF do celular), **Compartilhar** e **Salvar na pasta Downloads**. A cópia de segurança avisa que não leva os comprovantes. [experiencia, android]
 - R74. Capturas da loja saem de `playstore/gerar-capturas.js`, nunca à mão: versão de produção, datas em pt-BR (`LANG=pt_BR`), nenhum número ruim de demonstração (0%, "Nunca feita", aviso de cópia) e nenhum aviso de "assinatura simulada". Textos da ficha conferidos pelo limite da Play (nome 30, curta 80, completa 4.000).
+- R75. Aviso de erro diz a causa certa. Se a Play respondeu mas não tem os planos, o app diz que "os planos ainda não estão à venda", e não manda conferir a internet. [assinatura]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-032 · 02/11/2026 · Comprovante sem como ver e assinatura com aviso errado
+- **Relato do cliente** (app da Play):
+  - "A parte do comprovante ficou ruim. Eu salvei, mas como visualizo?" A conta de exemplo mostrava "Comprovante de exemplo, sem arquivo."
+  - Ao tocar em "Assinar", o app dizia: "Não consegui abrir a Google Play. Confira a internet."
+- **Causa:**
+  - O comprovante só podia ir para a pasta Downloads, e o app não tinha como abri-lo. Os dados de exemplo têm comprovante sem arquivo.
+  - O produto de assinatura `acertototal_premium` ainda não foi criado no Play Console. A Play responde (`pronto`) sem preços, e a casca devolve "indisponivel". O aviso culpava a internet.
+- **O que foi feito:**
+  - Cartão do comprovante com miniatura, **Ver** (tela cheia no protótipo; no celular, abre no app de fotos ou de PDF, com zoom) e **Compartilhar** (janela do Android: WhatsApp, e-mail, Drive), além de "Salvar na pasta Downloads". No Android, a casca usa `FileProvider` (sem permissão de armazenamento), com cópia temporária no cache.
+  - O comprovante de exemplo agora é desenhado na hora (ilustração marcada "de exemplo") e abre como os de verdade.
+  - Na revisão por foto, o "Fechar" da tela cheia estava branco sobre branco e o rodapé da ilustração saía cortado. Os dois foram corrigidos, e o contraste da tela cheia entrou no teste.
+  - Assinatura: se a Play não tem os planos, a janela avisa que eles ainda não estão à venda e que o teste grátis continua valendo.
+  - O teste de assinatura simulada falhou uma vez por esperar 150 ms fixos. Agora ele espera a confirmação.
+- **Como evitar:** regras R73 (revista) e R75; testes novos em `experiencia` (ver, tela cheia, voltar, compartilhar, exemplo, ponte Android), `android` (FileProvider) e `assinatura` (planos fora da loja).
 
 ### A-031 · 02/11/2026 · Capturas e textos da loja refeitos
 - **Pedido do cliente:** refazer as 8 capturas, o nome, a descrição curta e a longa, e o logo se precisasse.

@@ -157,14 +157,43 @@ const medir = () => {
   ok('Cópia de segurança: "Baixar Excel" aparece sem rolar, antes da prévia', await visivel('.sheet [data-act=xlsx-export]'));
   ok('Cópia de segurança: avisa que os comprovantes não vão na planilha e como salvá-los', /comprovante não vão na planilha/.test(await p.locator('#aviso-comp').innerText()));
   await p.keyboard.press('Escape');
-  // Comprovante: dá para salvar no celular (foto vira .jpg na pasta Downloads)
+  // Comprovante (relato do cliente: "salvei, mas como visualizo?"): ver em tela cheia, compartilhar e salvar
   await p.click('.tabs [data-tab=contas]'); await p.click('[data-act=filter][data-f=pagas]'); await p.click(`.cmain[data-id="${p.compId}"]`);
-  ok('Conta paga com comprovante: mostra a foto e o botão "Salvar comprovante no celular"', (await p.locator('.sheet .comp img').count()) === 1 && (await p.locator('.sheet [data-act=salvar-comp]').count()) === 1);
+  ok('Comprovante: miniatura da foto, botões "Ver" e "Compartilhar" lado a lado, e "Salvar na pasta Downloads"', (await p.locator('.sheet .comp-mini img').count()) === 1 && (await p.locator('.sheet .comp .lado [data-act=ver-comp]').innerText()).trim() === 'Ver' && (await p.locator('.sheet .comp .lado [data-act=enviar-comp]').innerText()).trim() === 'Compartilhar' && (await p.locator('.sheet [data-act=salvar-comp]').count()) === 1);
+  await p.click('.sheet .comp .lado [data-act=ver-comp]');
+  await p.addScriptTag({ content: AXE });
+  const axeVisor = await p.evaluate(async () => (await axe.run(document.getElementById('visor'), { runOnly: ['color-contrast'] })).violations.map(x => x.nodes.map(n => n.target.join(' ')).join(', ')));
+  ok('Tela cheia do comprovante: contraste mínimo (o "Fechar" se lê)', !axeVisor.length, axeVisor.join(' | '));
+  ok('Ver: abre o comprovante em tela cheia, com "Fechar"', await p.evaluate(() => { const v = document.getElementById('visor'), r = v && v.getBoundingClientRect(), ph = document.getElementById('phone').getBoundingClientRect(); return !!v && r.width === ph.width && r.height === ph.height && !!v.querySelector('img') && /Fechar/.test(v.innerText); }));
+  await p.keyboard.press('Escape');
+  ok('Voltar (Esc ou botão do Android) fecha só a tela cheia e volta para a conta', (await p.locator('#visor').count()) === 0 && (await p.locator('.sheet .comp').count()) === 1);
+  await p.click('.sheet .comp-mini');
+  ok('Tocar na miniatura também abre a tela cheia', (await p.locator('#visor img').count()) === 1);
+  await p.click('#visor [data-act=fechar-visor]');
+  await p.evaluate(() => { window.__share = null; navigator.canShare = () => true; navigator.share = async d => { window.__share = { nome: d.files[0].name, tipo: d.files[0].type, tam: d.files[0].size }; }; });
+  await p.click('.sheet [data-act=enviar-comp]'); await p.waitForFunction(() => window.__share);
+  const sh = await p.evaluate(() => window.__share);
+  ok('Compartilhar: entrega o arquivo de verdade (WhatsApp, e-mail, Drive)', /\.jpg$/.test(sh.nome) && sh.tipo === 'image/jpeg' && sh.tam > 100, JSON.stringify(sh));
   await p.click('.sheet [data-act=salvar-comp]');
   await p.waitForFunction(() => window.__salvo);
   const salvo = await p.evaluate(() => window.__salvo);
-  ok('Salvar comprovante: arquivo .jpg com o nome do cliente e a data, e bytes de JPEG', /^comprovante-[a-z0-9-]+-\d{4}-\d{2}-\d{2}\.jpg$/.test(salvo.nome) && salvo.bytes[0] === 0xFF && salvo.bytes[1] === 0xD8, salvo.nome);
-  ok('Salvar comprovante: avisa onde o arquivo foi parar', /Comprovante salvo/.test(await p.locator('.toast').innerText()));
+  ok('Salvar: arquivo .jpg com o nome do cliente e a data, e bytes de JPEG', /^comprovante-[a-z0-9-]+-\d{4}-\d{2}-\d{2}\.jpg$/.test(salvo.nome) && salvo.bytes[0] === 0xFF && salvo.bytes[1] === 0xD8, salvo.nome);
+  ok('Salvar: avisa onde o arquivo foi parar', /Comprovante salvo/.test(await p.locator('.toast').innerText()));
+  await p.keyboard.press('Escape');
+  // Dados de exemplo: o comprovante de exemplo não fica vazio ("sem arquivo"), aparece como ilustração e abre
+  const exId = await p.evaluate(() => { const S = JSON.parse(localStorage.getItem('baixa-pix-v2')); const c = S.contas.find(x => x.comprovante && !x.comprovante.data); return c && c.id; });
+  await p.click('[data-act=filter][data-f=todas]');
+  await p.evaluate(id => document.querySelector(`.cmain[data-id="${id}"]`).click(), exId);
+  ok('Comprovante de exemplo: mostra a ilustração, marcada como "de exemplo", sem "sem arquivo"', (await p.locator('.sheet .comp-mini img').count()) === 1 && /Comprovante de exemplo/.test(await p.locator('.sheet .comp-nome').innerText()) && !/sem arquivo/.test(await p.locator('.sheet').innerText()));
+  await p.click('.sheet .comp .lado [data-act=ver-comp]');
+  ok('Comprovante de exemplo: abre em tela cheia', (await p.locator('#visor img').count()) === 1);
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  // No app Android, "Ver" e "Compartilhar" usam os apps do celular (fotos, PDF, WhatsApp) pela ponte
+  await p.evaluate(() => { window.__ponte = []; window.acertoTotalAndroid = { abrirArquivo: (n, b) => { window.__ponte.push(['abrir', n, b.length]); return 'ok'; }, compartilharArquivo: (n, b) => { window.__ponte.push(['compartilhar', n, b.length]); return 'ok'; } }; });
+  await p.click('[data-act=filter][data-f=pagas]'); await p.click(`.cmain[data-id="${p.compId}"]`);
+  await p.click('.sheet .comp .lado [data-act=ver-comp]'); await p.click('.sheet [data-act=enviar-comp]');
+  const ponte = await p.evaluate(() => window.__ponte);
+  ok('Android: "Ver" abre no app de fotos/PDF e "Compartilhar" abre a janela do Android, com o arquivo inteiro', ponte.length === 2 && ponte[0][0] === 'abrir' && ponte[1][0] === 'compartilhar' && /\.jpg$/.test(ponte[0][1]) && ponte[0][2] > 100 && (await p.locator('#visor').count()) === 0, JSON.stringify(ponte));
   ok('Sem erros de JavaScript', !p.errs.length, p.errs.join(' | '));
   await ctx.close();
   await b.close();

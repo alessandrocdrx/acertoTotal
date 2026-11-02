@@ -63,12 +63,13 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
     await axe(p, 'janela Assinar');
     await p.click('.plano[data-p=anual]');
     ok('Escolher o anual troca a marcação e o botão, sem fechar a janela', (await p.locator('.plano[aria-checked=true]').getAttribute('data-p')) === 'anual' && /plano anual por R\$\s*107,90/.test((await p.locator('#bt-assinar').innerText()).replace(/ /g, ' ')) && (await p.locator('.sheet').count()) === 1);
-    await p.click('#bt-assinar'); await p.waitForTimeout(150);
+    // Espera a confirmação, e não um tempo fixo (150 ms falhou uma vez com a máquina carregada).
+    await p.click('#bt-assinar'); await p.waitForSelector('.toast:has-text("simulada ativada")');
     ok('Assinar (simulado): fecha a janela, avisa e o cartão mostra "Ativa"', (await p.locator('.sheet').count()) === 0 && /simulada ativada/.test(await p.locator('.toast').innerText()) && /Ativa/.test(await p.locator('.assin').innerText()));
     ok('Com assinatura, a faixa do teste grátis some', !/Teste grátis/.test(await p.locator('#ambiente').innerText()));
     await p.reload(); await p.waitForSelector('.crow'); await p.click('[data-act=abrir-menu]');
     ok('A assinatura continua depois de reabrir o app', /Ativa/.test(await p.locator('.assin').innerText()));
-    await p.click('.assin [data-act=planos]');
+    await p.click('.assin [data-act=planos]'); await p.waitForSelector('.sheet h2');
     ok('Assinante vê "Sua assinatura" e como gerenciar, sem a lista de planos', /Sua assinatura/.test(await p.locator('.sheet h2').innerText()) && (await p.locator('.plano').count()) === 0 && (await p.locator('[data-act=gerenciar-assin]').count()) === 1);
     await p.click('[data-act=cancelar-sim]');
     ok('Cancelar a assinatura simulada volta à lista de planos', (await p.locator('.plano').count()) === 4 && !/Ativa/.test(await p.locator('.assin').innerText().catch(() => '')));
@@ -151,7 +152,18 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
     // A Play não respondeu a compra
     const { p, ctx } = await abrir(40, { url: PROD, ponte: PONTE({ real: true, ativa: false, pronto: false, precos: {} }).replace("return 'ok'", "return 'indisponivel'") });
     await p.click('#ambiente [data-act=planos]'); await p.click('#bt-assinar');
-    ok('Play: se a casca não conseguir abrir a compra, o app avisa o que fazer', /Não consegui abrir a Google Play/.test(await p.locator('.toast').innerText()));
+    ok('Play sem resposta: o aviso pede para conferir a internet', /Não consegui falar com a Google Play\. Confira a internet/.test(await p.locator('.toast').innerText()));
+    await ctx.close();
+  }
+  {
+    // Relato do cliente (02/11): a Play respondeu, mas o produto de assinatura ainda não existe no Console.
+    // O aviso antigo mandava "conferir a internet", o que estava errado.
+    const { p, ctx } = await abrir(3, { url: PROD, ponte: PONTE({ real: true, ativa: false, pronto: true, precos: {} }).replace("return 'ok'", "return 'indisponivel'") });
+    await p.click('[data-act=abrir-menu]'); await p.click('.assin [data-act=planos]');
+    ok('Play sem planos à venda: a janela avisa e lembra que o teste grátis continua', /ainda não estão à venda na Google Play/.test(await p.locator('#aviso-planos').innerText()) && /continua valendo até/.test(await p.locator('#aviso-planos').innerText()));
+    await p.click('#bt-assinar');
+    const t = await p.locator('.toast').innerText();
+    ok('Play sem planos à venda: "Assinar" explica o motivo certo, sem falar de internet', /ainda não estão à venda/.test(t) && !/internet/.test(t), t);
     await ctx.close();
   }
 

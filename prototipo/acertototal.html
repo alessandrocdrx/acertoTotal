@@ -183,6 +183,19 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .actions{display:grid;gap:8px;margin-top:10px}
 .comp{border:1px dashed var(--line);border-radius:12px;padding:12px;margin-bottom:12px;background:var(--surface2)}
 .comp img{max-width:100%;max-height:200px;border-radius:8px;display:block;margin-top:8px}
+.comp .lado{margin-top:10px}
+.comp-mini{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px;margin-top:8px;text-align:left;min-height:72px}
+.comp-mini img{width:56px;height:56px;max-height:none;object-fit:cover;margin:0;border-radius:8px;flex:none}
+.comp-pdf{width:56px;height:56px;border-radius:8px;background:var(--bad-bg);color:var(--bad);font-weight:700;display:grid;place-items:center;flex:none}
+.comp-nome{display:grid;gap:2px;font-size:15px;color:var(--fg);overflow-wrap:anywhere;min-width:0}
+.comp-nome small{font-size:13px;color:var(--muted)}
+.visor-top .btn{color:var(--fg);flex:none}
+#visor{position:absolute;inset:0;z-index:20;background:#020506;display:flex;flex-direction:column}
+#visor:focus{outline:none}
+.visor-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;color:#e7f1f0;font-size:14px}
+.visor-top span{overflow-wrap:anywhere;min-width:0}
+#visor img{flex:1;min-height:0;width:100%;object-fit:contain;touch-action:pinch-zoom}
+#visor iframe{flex:1;border:0;background:#fff}
 .warn{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
 .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:10px 0}
 .tbl table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}
@@ -598,6 +611,8 @@ var PLANOS=[
   {id:'anual',nome:'Anual',ciclo:'uma vez por ano',preco:107.90,porMes:107.90/12,eco:10}
 ];
 var planoSel='mensal';
+// A Play respondeu, mas não tem os planos (produto ainda não criado ou não aprovado no Console).
+function planosForaDaLoja(){return ASSIN.real&&ASSIN.pronto&&!Object.keys(ASSIN.precos||{}).length}
 function precoPlano(p){return ASSIN.real&&ASSIN.precos&&ASSIN.precos[p.id]?ASSIN.precos[p.id]:brl.format(p.preco)}
 function assinCard(){
   var t,b='Ver planos';
@@ -618,6 +633,7 @@ function sheetPlanos(){
   }
   var enc=somenteLeitura();
   h+='<h2>Assinar acertoTotal</h2><p class="sub">'+(enc?'Seu teste grátis terminou. Assine para voltar a cadastrar, dar baixa, importar e exportar. Seus dados continuam guardados.':'Seu teste grátis vai até '+fimTxt()+'. Você pode assinar agora ou depois: escolha o plano.')+'</p>'
+   +(planosForaDaLoja()?'<div class="alerta info" id="aviso-planos">Os planos ainda não estão à venda na Google Play. Seu teste grátis continua valendo'+(somenteLeitura()?'':' até '+fimTxt())+'. Tente de novo mais tarde.</div>':'')
    +(sim?'<div class="alerta info">Versão de teste: a assinatura é simulada e ninguém é cobrado.</div>':'')
    +'<div class="planos" role="radiogroup" aria-label="Plano de assinatura">'+PLANOS.map(function(p){
       var on=p.id===planoSel;
@@ -729,7 +745,7 @@ function sheetExport(kind){
   lastExport={kind:kind,head:head,rows:rows,titulo:titulo,file:file,extra:extra,tsv:[head].concat(rows).map(function(r){return r.join('\t')}).join('\n')};
   var guia=kind==='custom'&&ed?'<div class="alerta info"><b>Depois de baixar:</b><ol class="mini-passos"><li>Mude no Excel o valor, o vencimento, a descrição ou o “Pago em”.</li><li>Não mexa na coluna “Código da conta”.</li><li>Volte em Planilha › <b>Enviar planilha editada</b>.</li></ol></div>':'';
   sheet('<h2>'+titulo+'</h2><p class="sub">'+(filtros?'Filtros: '+esc(filtros)+'. ':'')+rows.length+' linha'+(rows.length===1?'':'s')+'. Baixe como Excel (.xlsx) ou copie e cole numa planilha.</p>'+guia
-   +(kind==='backup'?'<div class="alerta info" id="aviso-comp">Fotos e PDFs de comprovante não vão na planilha. Para guardar um, abra a conta paga e toque em <b>Salvar comprovante no celular</b>.</div>':'')
+   +(kind==='backup'?'<div class="alerta info" id="aviso-comp">Fotos e PDFs de comprovante não vão na planilha. Para guardar um, abra a conta paga e toque em <b>Compartilhar</b> ou <b>Salvar na pasta Downloads</b>.</div>':'')
    +(rows.length?'<div class="actions"><button class="btn primary block" data-act="xlsx-export">Baixar Excel (.xlsx)</button><button class="btn block" data-act="copy-export">Copiar para colar no Excel</button></div>':'')
    +'<h3>Prévia</h3>'+(rows.length?tableOf(head,rows):'<div class="empty">Nenhuma conta com esses filtros.</div>')
    +'<div class="actions">'+(kind==='custom'?'<button class="btn block" data-act="xf-voltar">Voltar aos filtros</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>');
@@ -832,7 +848,7 @@ function render(){
 var tabAntes='contas';
 function voltar(){tab=tabAntes||'contas';$('screen').scrollTop=0;render()}
 // Botão Voltar do Android: fecha a janela aberta; sem janela, sai do Menu; senão, deixa o Android sair do app.
-window.acertoVoltar=function(){if($('layer').firstChild){closeSheet();return true}if(tab==='menu'){voltar();return true}return false};
+window.acertoVoltar=function(){if(fecharVisor())return true;if($('layer').firstChild){closeSheet();return true}if(tab==='menu'){voltar();return true}return false};
 var AUTOR='alessandrocdrx',PERFIL='https://github.com/alessandrocdrx',REPO='https://github.com/alessandrocdrx/acertoTotal';
 var LINK_LOJA='https://play.google.com/store/apps/details?id=io.github.alessandrocdrx.acertototal';
 var SIMBOLO=function(px){return '<svg width="'+px+'" height="'+px+'" viewBox="0 0 108 108" aria-hidden="true"><rect width="108" height="108" rx="24" fill="var(--accent)"/><path d="M73.97,48.51 A21,21 0 1 1 56.92,34.20" fill="none" stroke="var(--accent-fg)" stroke-width="7.5" stroke-linecap="round"/><path d="M41.5,55.5 L50.5,64.5 L76.5,35.5" fill="none" stroke="var(--sol)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
@@ -866,9 +882,13 @@ function sheetConta(id){
    +'<dl class="kv"><dt>Valor</dt><dd>'+brl.format(c.valor)+'</dd><dt>Vencimento</dt><dd>'+fmtD(c.venc)+'</dd><dt>Situação</dt><dd>'+pill(c)+'</dd>'
    +(c.pagoEm?'<dt>Pago em</dt><dd>'+fmtD(c.pagoEm)+'</dd>':'')+'</dl>';
   if(c.comprovante){
-    h+='<div class="comp"><strong>Comprovante anexado</strong><div style="color:var(--muted);font-size:13px">'+esc(c.comprovante.nome)+'</div>'
-     +(c.comprovante.data&&c.comprovante.tipo.indexOf('image')===0?'<img alt="Comprovante" src="'+c.comprovante.data+'">':'')
-     +(c.comprovante.data?'<button class="btn block" data-act="salvar-comp" data-id="'+c.id+'" style="margin-top:10px">Salvar comprovante no celular</button><p class="hint" style="margin:6px 0 0">Vai para a pasta Downloads. De lá você abre, imprime ou manda pelo WhatsApp.</p>':'<p class="hint" style="margin:6px 0 0">Comprovante de exemplo, sem arquivo.</p>')+'</div>';
+    var ka=compArquivo(c),img=ka.mime.indexOf('image/')===0;
+    h+='<div class="comp"><strong>Comprovante</strong>'
+     +'<button class="comp-mini" data-act="ver-comp" data-id="'+c.id+'" aria-label="Ver comprovante em tela cheia">'
+     +(img?'<img alt="" src="'+ka.url+'">':'<span class="comp-pdf" aria-hidden="true">PDF</span>')
+     +'<span class="comp-nome"><b>'+(ka.exemplo?'Comprovante de exemplo':(img?'Foto do comprovante':'PDF do comprovante'))+'</b><small>'+(ka.exemplo?'Toque para ver':esc(c.comprovante.nome)+' · toque para ver')+'</small></span></button>'
+     +'<div class="lado"><button class="btn primary" data-act="ver-comp" data-id="'+c.id+'">Ver</button><button class="btn" data-act="enviar-comp" data-id="'+c.id+'">Compartilhar</button></div>'
+     +'<button class="btn block quiet" data-act="salvar-comp" data-id="'+c.id+'">Salvar na pasta Downloads</button></div>';
   }
   if(somenteLeitura()){
     h+='<p class="leitura">'+esc(MSG_LEITURA)+'</p><div class="actions"><button class="btn primary block" data-act="planos">Ver planos</button><button class="btn block" data-act="close">Fechar</button></div>';
@@ -1366,13 +1386,55 @@ function planilhaExemplo(){
   return {SheetNames:['Exemplo'],Sheets:{Exemplo:XLSX.utils.aoa_to_sheet(aoa)}};
 }
 // Gera e entrega um .xlsx (no Android, pela ponte; no artefato, pelo download do navegador).
+// ===== Comprovante: ver em tela cheia, compartilhar (WhatsApp, e-mail, Drive) e salvar na pasta Downloads.
+// Os dados de exemplo não têm arquivo de verdade: o app desenha um comprovante de exemplo na hora, sem guardar.
+var compCache={};
+function compExemplo(c){
+  if(compCache[c.id])return compCache[c.id];
+  var cv=document.createElement('canvas');cv.width=720;cv.height=900;var g=cv.getContext('2d');
+  g.fillStyle='#ebf5f4';g.fillRect(0,0,720,900);g.fillStyle='#ffffff';g.fillRect(40,40,640,820);
+  g.fillStyle='#00766c';g.fillRect(40,40,640,14);
+  g.fillStyle='#0a2225';g.font='bold 38px sans-serif';g.fillText('Comprovante de exemplo',80,130);
+  g.fillStyle='#536869';g.font='28px sans-serif';g.fillText('Pix recebido',80,190);
+  g.fillStyle='#15733c';g.font='bold 64px sans-serif';g.fillText(brl.format(c.valor),80,280);
+  g.fillStyle='#0a2225';g.font='28px sans-serif';
+  [['De',cli(c.clienteId).nome],['Referente a',c.descricao],['Pago em',fmtD(c.pagoEm||c.venc)]].forEach(function(l,i){
+    g.fillStyle='#536869';g.fillText(l[0],80,370+i*90);g.fillStyle='#0a2225';g.font='bold 30px sans-serif';g.fillText(String(l[1]).slice(0,32),80,410+i*90);g.font='28px sans-serif'});
+  g.strokeStyle='#d5e1e0';g.setLineDash([10,8]);g.beginPath();g.moveTo(80,680);g.lineTo(640,680);g.stroke();
+  g.fillStyle='#536869';g.font='24px sans-serif';g.fillText('Dados de exemplo do acertoTotal.',80,740);g.fillText('Nas suas contas, aparece a foto',80,780);g.fillText('ou o PDF que você anexar.',80,815);
+  return (compCache[c.id]=cv.toDataURL('image/jpeg',.85));
+}
+function compArquivo(c){
+  var k=c.comprovante,exemplo=!k.data,url=exemplo?compExemplo(c):k.data;
+  var m=/^data:([^;]+);base64,(.*)$/.exec(url)||['','image/jpeg',''];
+  var ext={'image/jpeg':'jpg','image/png':'png','application/pdf':'pdf'}[m[1]]||'jpg';
+  return {exemplo:exemplo,url:url,mime:m[1],b64:m[2],arq:'comprovante-'+slug(cli(c.clienteId).nome)+'-'+(c.pagoEm||c.venc)+'.'+ext};
+}
+function compBytes(ka){var bin=atob(ka.b64),buf=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);return buf}
+var AND=function(f){return window.acertoTotalAndroid&&typeof window.acertoTotalAndroid[f]==='function'};
+function verComprovante(c){
+  var ka=compArquivo(c);
+  // No celular, abre no app de fotos ou de PDF do Android (dá para dar zoom e imprimir).
+  if(AND('abrirArquivo')){if(window.acertoTotalAndroid.abrirArquivo(ka.arq,ka.b64)!=='ok')toast('Nenhum app do celular abre este arquivo');return}
+  var v=document.createElement('div');v.id='visor';v.setAttribute('role','dialog');v.setAttribute('aria-modal','true');v.setAttribute('aria-label','Comprovante');v.tabIndex=-1;
+  v.innerHTML='<div class="visor-top"><span>'+esc(ka.arq)+'</span><button class="btn" data-act="fechar-visor">Fechar</button></div>'
+   +(ka.mime.indexOf('image/')===0?'<img alt="Comprovante de '+esc(cli(c.clienteId).nome)+'" src="'+ka.url+'">':'<iframe title="Comprovante em PDF" src="'+ka.url+'"></iframe>');
+  $('phone').appendChild(v);v.focus();
+}
+function fecharVisor(){var v=$('visor');if(v){v.remove();var b=document.querySelector('.sheet [data-act=ver-comp]');if(b)b.focus();return true}return false}
+function compartilharComprovante(c){
+  var ka=compArquivo(c);
+  if(AND('compartilharArquivo')){if(window.acertoTotalAndroid.compartilharArquivo(ka.arq,ka.b64)!=='ok')toast('Não foi possível compartilhar');return}
+  try{
+    var file=new File([compBytes(ka)],ka.arq,{type:ka.mime});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'Comprovante'}).catch(function(){});return}
+  }catch(e){}
+  toast('Este aparelho não compartilha arquivos. Use "Salvar na pasta Downloads".');
+}
 // Salva o comprovante (foto ou PDF) na pasta Downloads, pela mesma permissão de download do Excel.
 function salvarComprovante(c){
-  var k=c&&c.comprovante;if(!k||!k.data){toast('Este comprovante não tem arquivo');return}
-  var m=/^data:([^;]+);base64,(.*)$/.exec(k.data);if(!m){toast('Não foi possível ler o comprovante');return}
-  var ext={'image/jpeg':'jpg','image/png':'png','application/pdf':'pdf'}[m[1]]||'jpg';
-  var bin=atob(m[2]),buf=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);
-  var arq='comprovante-'+slug(cli(c.clienteId).nome)+'-'+(c.pagoEm||c.venc)+'.'+ext;
+  if(!c||!c.comprovante){toast('Esta conta não tem comprovante');return}
+  var ka=compArquivo(c),buf=compBytes(ka),arq=ka.arq;
   var useDl=(window.claude&&window.claude.use)?window.claude.use('downloads'):Promise.resolve(null);
   useDl.then(function(dl){
     if(!dl){toast('Download indisponível aqui.');return}
@@ -1479,7 +1541,7 @@ document.addEventListener('click',function(e){
   else if(a==='assinar'){
     if(ASSIN.real){
       var rr='';try{rr=window.acertoTotalAndroid.assinar(planoSel)}catch(err){rr='indisponivel'}
-      if(rr!=='ok')toast('Não consegui abrir a Google Play. Confira a internet e tente de novo.');
+      if(rr!=='ok')toast(planosForaDaLoja()?'Os planos ainda não estão à venda na Google Play. Tente de novo mais tarde.':'Não consegui falar com a Google Play. Confira a internet e tente de novo.');
     }else{
       try{localStorage.setItem(SIM_KEY,JSON.stringify({plano:planoSel,quando:Date.now()}))}catch(err){}
       ASSIN.ativa=true;ASSIN.plano=planoSel;closeSheet();render();toast('Assinatura simulada ativada. Nesta versão de teste ninguém é cobrado.');
@@ -1562,6 +1624,9 @@ document.addEventListener('click',function(e){
   else if(a==='xf-limpar'){expF=Object.assign({},expPadrao,{formato:expF.formato});sheetFiltros()}
   else if(a==='export-backup')sheetExport('backup');
   else if(a==='salvar-comp')salvarComprovante(S.contas.find(function(x){return x.id===el.dataset.id}));
+  else if(a==='ver-comp')verComprovante(S.contas.find(function(x){return x.id===el.dataset.id}));
+  else if(a==='enviar-comp')compartilharComprovante(S.contas.find(function(x){return x.id===el.dataset.id}));
+  else if(a==='fechar-visor')fecharVisor();
   else if(a==='periodo'){statsPeriod=+el.dataset.p;render()}
   else if(a==='aparencia')sheetAparencia();
   else if(a==='sobre')sheetSobre();

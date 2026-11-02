@@ -18,6 +18,8 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
   ok('Botão Voltar do Android usa window.acertoVoltar (fecha janela, sai do Menu, depois sai do app)', /JS_FECHAR_JANELA =\s*"\(function\(\)\{return !!\(window\.acertoVoltar&&window\.acertoVoltar\(\)\)\}\)\(\)"/.test(kt) && /window\.acertoVoltar=function/.test(html));
   const ponte = fs.readFileSync(path.join(SRC, 'main', 'java', 'io', 'github', 'alessandrocdrx', 'acertototal', 'Ponte.kt'), 'utf8');
   ok('Ponte Android salva comprovantes na pasta Downloads (jpg, png e pdf)', ['"jpg" to "image/jpeg"', '"png" to "image/png"', '"pdf" to "application/pdf"'].every(x => ponte.includes(x)));
+  const manif = fs.readFileSync(path.join(SRC, 'main', 'AndroidManifest.xml'), 'utf8');
+  ok('Comprovante abre e é compartilhado pelos apps do celular (FileProvider, sem permissão de armazenamento)', /fun abrirArquivo\(/.test(ponte) && /fun compartilharArquivo\(/.test(ponte) && /androidx\.core\.content\.FileProvider/.test(manif) && /android:exported="false"/.test(manif.split('<provider')[1] || '') && fs.existsSync(path.join(SRC, 'main', 'res', 'xml', 'arquivos.xml')) && !/STORAGE/.test(manif));
   ok('Leitor de Excel vai dentro do APK', fs.statSync(path.join(ASSETS, 'xlsx.full.min.js')).size > 500000);
   ok('Página do APK declara idioma pt-BR e viewport de celular', /<html lang="pt-BR">/.test(html) && /name="viewport"/.test(html));
 

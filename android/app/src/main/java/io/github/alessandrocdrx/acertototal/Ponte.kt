@@ -12,6 +12,8 @@ import android.provider.MediaStore
 import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
+import androidx.core.content.FileProvider
+import java.io.File
 
 /**
  * Ponte chamada pela página (window.acertoTotalAndroid). Faz o papel da permissão de
@@ -46,6 +48,47 @@ class Ponte(
         }
     }
 
+
+    /** Abre o comprovante no app de fotos ou de PDF do celular (zoom, imprimir). */
+    @JavascriptInterface
+    fun abrirArquivo(nome: String, base64: String): String {
+        val (uri, mime) = arquivoTemporario(nome, base64) ?: return "unavailable"
+        val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        return iniciar(intent)
+    }
+
+    /** Abre a janela de compartilhar do Android (WhatsApp, e-mail, Drive) com o comprovante. */
+    @JavascriptInterface
+    fun compartilharArquivo(nome: String, base64: String): String {
+        val (uri, mime) = arquivoTemporario(nome, base64) ?: return "unavailable"
+        val envio = Intent(Intent.ACTION_SEND).setType(mime).putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val escolha = Intent.createChooser(envio, "Enviar comprovante").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return iniciar(escolha)
+    }
+
+    private fun arquivoTemporario(nome: String, base64: String): Pair<Uri, String>? {
+        val seguro = nome.replace(Regex("[^A-Za-z0-9._-]"), "_").take(120)
+        val mime = MIMES[seguro.substringAfterLast('.', "").lowercase()] ?: return null
+        return try {
+            val pasta = File(ctx.cacheDir, "comprovantes").apply { mkdirs() }
+            pasta.listFiles()?.forEach { it.delete() } // guarda só o último, para não ocupar espaço
+            val arquivo = File(pasta, seguro).apply { writeBytes(Base64.decode(base64, Base64.DEFAULT)) }
+            FileProvider.getUriForFile(ctx, ctx.packageName + ".arquivos", arquivo) to mime
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun iniciar(intent: Intent): String = try {
+        (atividade ?: ctx).startActivity(intent)
+        "ok"
+    } catch (_: ActivityNotFoundException) {
+        "sem_app"
+    } catch (_: Exception) {
+        "unavailable"
+    }
 
     @JavascriptInterface
     fun salvarArquivo(nome: String, base64: String): String {
