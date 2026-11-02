@@ -125,11 +125,19 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R81. "Cobrar no WhatsApp" monta a mensagem no aparelho (nome, valor, vencimento, dias de atraso, chave Pix e nome do negócio) e abre o WhatsApp só quando a pessoa toca. O telefone vira `55` + DDD + número; sem telefone válido, não há link quebrado: a tela explica e oferece "Editar dados" e "Copiar mensagem". O app não envia nada sozinho, e a política de privacidade diz isso. [experiencia, tarefas]
 - R82. Tudo o que se toca ou se digita precisa **parecer** tocável: caixa de digitar e botão de contorno têm borda com contraste de pelo menos 3:1 sobre o fundo (`--campo-borda`, WCAG 1.4.11), e a caixa tem um fundo levemente marcado. Cartão que filtra mostra um ícone de filtro (e um "x" quando está marcado) e a lista oferece "Ver tudo". [experiencia]
 - R83. A prévia da importação avisa quando uma linha **sem código** parece mudança de conta que o app já tem (mesmo cliente, mesma descrição, conta em aberto, outro vencimento), com o botão "Ir para Atualizar pelo Excel". O aviso não bloqueia. A cópia de segurança mostra o que vai dentro (clientes e contas), e não a tabela de códigos. [importacao, experiencia]
+- R84. O que se toca parece tocável em **todo** o app: sanfona (`details`) sempre com setinha (para baixo fechada, para cima aberta), botão só de texto colorido e sublinhado, linha de lista com seta, cartão que filtra com ícone. Nada que seja botão pode ter cara de rótulo. [experiencia]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-039 · 02/11/2026 · "Achei que tinha resolvido os botões que parecem texto"
+- **Relato do cliente** (captura de "Como montar a planilha?"): as sanfonas "Um cliente com várias contas", "Atualizar contas que já existem" e "Só cadastrar clientes, sem contas" pareciam rótulos de texto.
+- **Causa:** a correção anterior (A-037) cobriu caixas de digitar, botões de contorno e cartões, mas não as sanfonas. Elas usavam `display:flex`, que apaga a setinha padrão do navegador, e a borda era a das divisórias. Outros itens tocáveis também pareciam texto: botões "quietos" ("Testar com a planilha de exemplo") em preto, sem sublinhado, e as linhas da lista de Clientes, sem seta.
+- **O que foi feito:** setinha em toda sanfona (gira ao abrir), borda visível nelas, botões de texto na cor da marca e sublinhados (os de excluir, em vermelho) e seta nas linhas de cliente e de "Quem mais deve".
+- **Pedido seguinte do cliente:** "De todas as telas". Fotografei as 25 telas e janelas (claro, 360×780) e achei mais dois pontos: os seletores de opção (Tema, "Relatório | Para editar") não tinham contorno e as opções inativas pareciam texto; e os botões dentro dos avisos ("Cadastrar agora", "Fazer cópia agora") ficavam no meio da frase. Os dois foram corrigidos (contorno no seletor; botão em linha própria dentro de qualquer aviso).
+- **Como evitar:** dessa vez a correção virou verificação geral. A suíte `experiencia` passa por todas as telas, nos dois temas e em dois tamanhos de celular, e falha se achar sanfona sem setinha, botão de texto sem sublinhado ou linha sem seta (regra R84).
 
 ### A-038 · 02/11/2026 · "O que é código da conta?" e importar quando era para atualizar
 - **Relato do cliente:** a prévia da cópia de segurança mostrava 33 linhas com uma coluna "Código da conta" sem explicação. Depois: "E se o cliente usar Importar sem querer, mas a intenção era atualizar?"

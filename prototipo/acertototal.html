@@ -104,7 +104,7 @@ h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .iconbtn{position:relative}
 .iconbtn .ponto{position:absolute;top:8px;right:8px;width:11px;height:11px;border-radius:50%;background:var(--bad);border:2px solid var(--surface)}
 .iconbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--surface2);padding:4px;border-radius:14px;margin:12px 0 4px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--surface2);padding:4px;border:1.5px solid var(--campo-borda);border-radius:14px;margin:12px 0 4px}
 .seg button{min-height:48px;border:0;border-radius:10px;background:none;font-weight:600;color:var(--muted)}
 .seg button[aria-checked="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.2)}
 .pal{display:grid;gap:8px}
@@ -237,7 +237,9 @@ button.mini[aria-pressed="true"]{border-color:var(--accent);background:var(--acc
 .money{position:relative}
 .money span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:600;pointer-events:none}
 .money input{padding-left:44px}
-.btn.quiet{border-color:transparent;background:none}
+.btn.quiet{border-color:transparent;background:none;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.btn.quiet.danger{color:var(--bad)}
+.row .v::after{content:"›";color:var(--muted);font-weight:400;margin-left:8px}
 .empty .btn{margin-top:12px}
 .task{background:var(--surface2);border-radius:16px;padding:14px;margin-bottom:12px}
 .task .actions{margin-top:12px}
@@ -257,6 +259,8 @@ button.mini[aria-pressed="true"]{border-color:var(--accent);background:var(--acc
 .alerta{background:var(--bad-bg);color:var(--bad);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:500;margin:0 0 12px}
 .alerta.info{background:var(--accent-soft);color:var(--fg)}
 .alerta-bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+/* Botão dentro de um aviso fica numa linha só dele (não no meio da frase). */
+.alerta>.btn.sm,.alerta>b+.btn.sm{display:block;margin-top:8px}
 .alerta .btn{color:var(--fg)}
 .actions.fixo{position:sticky;bottom:-18px;background:var(--surface);margin:14px -18px -18px;padding:10px 18px 18px;border-top:1px solid var(--line);z-index:1}
 .actions.fixo .xf-count{margin:0}
@@ -277,8 +281,13 @@ button.mini[aria-pressed="true"]{border-color:var(--accent);background:var(--acc
 .mini-passos{margin:10px 0 0;padding-left:20px;font-size:14px;color:var(--fg)}
 .mini-passos li{margin-bottom:4px}
 .task .mini-passos{color:var(--muted)}
-.ajuda{border:1px solid var(--line);border-radius:12px;margin:0 0 8px;padding:0 12px;font-size:14px}
+.ajuda{border:1.5px solid var(--campo-borda);border-radius:12px;margin:0 0 8px;padding:0 12px;font-size:14px}
 .ajuda summary{min-height:48px;display:flex;align-items:center;font-weight:600;cursor:pointer}
+/* Toda sanfona mostra a setinha (fecha para baixo, aberta para cima): sem ela parece um rótulo de texto. */
+.ajuda summary,.imp-iguais summary{list-style:none;justify-content:space-between;gap:10px}
+.ajuda summary::-webkit-details-marker,.imp-iguais summary::-webkit-details-marker{display:none}
+.ajuda summary::after,.imp-iguais summary::after{content:"";flex:none;width:9px;height:9px;margin:0 4px 3px 0;border-right:2.5px solid var(--muted);border-bottom:2.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+details[open]>summary::after{transform:rotate(-135deg);margin-bottom:-3px}
 .ajuda[open]{padding-bottom:12px}
 .ajuda p{margin:0 0 6px;color:var(--muted)}
 .lado{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -1006,8 +1015,8 @@ function sheetCobrar(clienteId,contaId){
   if(!lista.length){toast('Este cliente não tem conta a receber');return}
   var n=negocio();
   var h='<h2>Cobrar '+esc(cl.nome)+'</h2><p class="sub">'+lista.length+' conta'+(lista.length===1?'':'s')+' · '+brl.format(sum(lista))+'. Confira a mensagem e, se quiser, mude o texto.</p>';
-  if(!tel)h+='<div class="alerta info" id="aviso-tel">Falta o telefone com DDD deste cliente. Cadastre para abrir direto no WhatsApp, ou copie a mensagem. <button class="btn sm" data-act="editar-cliente" data-id="'+clienteId+'">Editar dados</button></div>';
-  if(!n.pix)h+='<div class="alerta info" id="aviso-pix">Dica: cadastre a sua chave Pix para ela ir na mensagem. <button class="btn sm" data-act="negocio">Cadastrar agora</button></div>';
+  if(!tel)h+='<div class="alerta info" id="aviso-tel">Falta o telefone com DDD deste cliente. Cadastre para abrir direto no WhatsApp, ou copie a mensagem.<div class="alerta-bt"><button class="btn sm" data-act="editar-cliente" data-id="'+clienteId+'">Editar dados</button></div></div>';
+  if(!n.pix)h+='<div class="alerta info" id="aviso-pix">Dica: cadastre a sua chave Pix para ela ir na mensagem.<div class="alerta-bt"><button class="btn sm" data-act="negocio">Cadastrar agora</button></div></div>';
   h+='<div class="field"><label for="cob-txt">Mensagem</label><textarea id="cob-txt" rows="9">'+esc(msgCobranca(cl,lista))+'</textarea></div>'
    +'<div class="actions fixo">'+(tel?'<a class="btn primary block" id="cob-wa" role="button" target="_blank" rel="noopener" href="'+WA+tel+'?text='+encodeURIComponent(msgCobranca(cl,lista))+'" data-tel="'+tel+'">Abrir no WhatsApp</a>':'')
    +'<button class="btn block" data-act="copiar-cobranca">Copiar mensagem</button><button class="btn block" data-act="close">Fechar</button></div>';

@@ -24,6 +24,7 @@ const TELAS = [
   ['Números', async p => p.click('.tabs [data-tab=numeros]')],
   ['Planilha', async p => p.click('.tabs [data-tab=planilha]')],
   ['Importar', async p => { await p.click('.tabs [data-tab=planilha]'); await p.click('#screen [data-act=import-abrir]'); }],
+  ['Importar · como montar a planilha', async p => { await p.click('.tabs [data-tab=planilha]'); await p.click('#screen [data-act=import-abrir]'); await p.click('details.como > summary'); await p.click('details.como details.ajuda > summary'); }],
   ['Atualizar pelo Excel', async p => { await p.click('.tabs [data-tab=planilha]'); await p.click('#screen [data-act=atualizar-abrir]'); }],
   ['Exportar · filtros', async p => { await p.click('.tabs [data-tab=planilha]'); await p.click('#screen [data-act=export-abrir]'); }],
   ['Exportar · prévia', async p => { await p.click('.tabs [data-tab=planilha]'); await p.click('#screen [data-act=export-abrir]'); await p.click('[data-act=export-custom]'); }],
@@ -74,15 +75,21 @@ const medir = () => {
   const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
   const fundoDe = e => { for (let n = e.parentElement; n; n = n.parentElement) { const c = rgb(getComputedStyle(n).backgroundColor); if (c.length >= 3 && (c[3] === undefined || c[3] > .9)) return c; } return [255, 255, 255]; };
   // Vale também para os botões de contorno (os cheios têm cor própria e os "quietos" são só texto).
-  const campo = [...raiz.querySelectorAll('input:not([type=file]):not([type=checkbox]):not([type=radio]):not([type=hidden]), select, textarea, .btn:not(.primary):not(.quiet):not(.apagar):not(:disabled), .iconbtn:not(.voltar)')].filter(vis)
+  const campo = [...raiz.querySelectorAll('input:not([type=file]):not([type=checkbox]):not([type=radio]):not([type=hidden]), select, textarea, .seg, .btn:not(.primary):not(.quiet):not(.apagar):not(:disabled), .iconbtn:not(.voltar)')].filter(vis)
     .map(e => { const cs = getComputedStyle(e), a = lum(rgb(cs.borderTopColor)), b = lum(fundoDe(e)); return { n: nome(e) || e.id, r: Math.round((Math.max(a, b) + .05) / (Math.min(a, b) + .05) * 10) / 10, w: parseFloat(cs.borderTopWidth) }; })
     .filter(x => x.r < 3 || x.w < 1).map(x => `${x.n} (contraste ${x.r}:1, borda ${x.w}px)`);
+  // 5c) O que se toca precisa parecer tocável: sanfona com setinha, botão só de texto sublinhado e colorido, linha de lista com seta.
+  const pista = [
+    ...[...raiz.querySelectorAll('details > summary')].filter(vis).filter(e => ['none', 'normal'].includes(getComputedStyle(e, '::after').content)).map(e => `sanfona sem setinha: ${nome(e)}`),
+    ...[...raiz.querySelectorAll('.btn.quiet')].filter(vis).filter(e => !/underline/.test(getComputedStyle(e).textDecorationLine)).map(e => `botão de texto sem sublinhado: ${nome(e)}`),
+    ...[...raiz.querySelectorAll('button.row .v')].filter(vis).filter(e => ['none', 'normal'].includes(getComputedStyle(e, '::after').content)).map(e => `linha sem seta: ${nome(e)}`),
+  ];
   // 6) Rolagem lateral da página.
   const lateral = document.documentElement.scrollWidth - document.documentElement.clientWidth;
   // 7) Janela tem saída visível (Fechar, Cancelar, Agora não, Voltar).
   const sheet = document.querySelector('#layer .sheet');
   const saida = !sheet || [...sheet.querySelectorAll('button')].some(b => /^(Fechar|Cancelar|Agora não|Voltar aos filtros)$/.test(b.innerText.trim()));
-  return { toque, campo, cortado, sob: [...new Set(sob)], pequena: [...new Set(pequena)], quebra, lateral, saida };
+  return { toque, campo, pista, cortado, sob: [...new Set(sob)], pequena: [...new Set(pequena)], quebra, lateral, saida };
 };
 
 (async () => {
@@ -112,13 +119,13 @@ const medir = () => {
   for (const [w, h, tema] of [[360, 780, 'light'], [320, 640, 'light'], [360, 780, 'dark']]) {
     const { p, ctx } = await abrir(w, h, tema);
     const tag = `${w}×${h} ${tema === 'dark' ? 'escuro' : 'claro'}`;
-    const prob = { toque: [], campo: [], cortado: [], sob: [], pequena: [], quebra: [], lateral: [], saida: [], axe: [] };
+    const prob = { toque: [], campo: [], pista: [], cortado: [], sob: [], pequena: [], quebra: [], lateral: [], saida: [], axe: [] };
     for (const [nome, ir] of TELAS) {
       try { await inicio(p); await ir(p); } catch (e) { prob.saida.push(`${nome}: não abriu (${e.message.split('\n')[0]})`); continue; }
       await p.waitForTimeout(450);
       await p.screenshot({ path: path.join(FOTOS, `${w}x${h}-${tema}-${nome.replace(/[^\wÀ-ú]+/g, '-')}.png`) });
       const m = await p.evaluate(medir);
-      for (const k of ['toque', 'campo', 'cortado', 'sob', 'pequena', 'quebra']) m[k].forEach(x => prob[k].push(`${nome}: ${x}`));
+      for (const k of ['toque', 'campo', 'pista', 'cortado', 'sob', 'pequena', 'quebra']) m[k].forEach(x => prob[k].push(`${nome}: ${x}`));
       if (m.lateral > 0) prob.lateral.push(`${nome}: ${m.lateral}px`);
       if (!m.saida) prob.saida.push(`${nome}: sem Fechar/Cancelar`);
       if (w === 360) { // contraste pelo axe em cada tela e janela, nos dois temas
@@ -129,6 +136,7 @@ const medir = () => {
     }
     ok(`[${tag}] Toque de 48 px em todos os botões, campos e links das ${TELAS.length} telas`, !prob.toque.length, prob.toque.slice(0, 8).join(' | '));
     ok(`[${tag}] Toda caixa de digitar e todo botão de contorno têm borda visível (contraste ≥ 3:1), não parece espaço vazio`, !prob.campo.length, prob.campo.slice(0, 6).join(' | '));
+    ok(`[${tag}] O que se toca parece tocável: sanfonas com setinha, botões de texto sublinhados, linhas com seta`, !prob.pista.length, prob.pista.slice(0, 6).join(' | '));
     ok(`[${tag}] Nenhum texto cortado`, !prob.cortado.length, prob.cortado.slice(0, 8).join(' | '));
     ok(`[${tag}] Nada se sobrepõe dentro de cartões e linhas (selo × botão, valor × texto)`, !prob.sob.length, prob.sob.slice(0, 8).join(' | '));
     ok(`[${tag}] Nenhuma letra abaixo de 11 px`, !prob.pequena.length, prob.pequena.slice(0, 8).join(' | '));
