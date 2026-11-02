@@ -115,11 +115,26 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R71. Pedaços que perdem o sentido se quebrarem ficam juntos (`.nw`): "venc. 23/10/2026", "7 contas". Selos dentro de cartões podem quebrar em 2 linhas, mas nunca encostar no botão. [experiencia]
 - R72. O título da tela é o mesmo rótulo da aba que a pessoa tocou ("Números", não "Estatísticas"). [experiencia]
 - R73. Tudo o que o app guarda pode sair dele: o comprovante (foto ou PDF) tem "Salvar comprovante no celular", que grava na pasta Downloads. A cópia de segurança avisa que não leva os comprovantes. [experiencia, android]
+- R74. Capturas da loja saem de `playstore/gerar-capturas.js`, nunca à mão: versão de produção, datas em pt-BR (`LANG=pt_BR`), nenhum número ruim de demonstração (0%, "Nunca feita", aviso de cópia) e nenhum aviso de "assinatura simulada". Textos da ficha conferidos pelo limite da Play (nome 30, curta 80, completa 4.000).
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-031 · 02/11/2026 · Capturas e textos da loja refeitos
+- **Pedido do cliente:** refazer as 8 capturas, o nome, a descrição curta e a longa, e o logo se precisasse.
+- **O que estava errado:**
+  - A descrição curta antiga tinha 81 caracteres, e o limite da Play é 80.
+  - Nas capturas, o campo de data saía no formato americano (11/09/2026), porque o Chromium sem idioma do sistema ignora o `locale` no `input type=date`.
+  - A captura dos Números mostrava "0%" e "Recebido R$ 0,00" (o mês tinha começado havia 2 dias), e a da Planilha mostrava "Nunca feita" em vermelho.
+  - A captura dos planos tinha o aviso "assinatura simulada", e a do Menu vendia pouco.
+- **O que foi feito:**
+  - Gerador `playstore/gerar-capturas.js`, com `LANG=pt_BR`.
+  - Números no período de 3 meses (87%), cópia de segurança feita hoje, conta paga com um comprovante de exemplo (ilustração genérica, sem marca de banco), ficha do cliente e nova conta preenchida.
+  - Descrição curta com 77 caracteres e completa reescrita, com seções e as palavras que o público procura (fiado, cobrança, Pix, Excel).
+  - O nome (29 caracteres), o ícone e o gráfico de destaque continuam, porque já seguem a marca.
+- **Como evitar:** regra R74.
 
 ### A-030 · 02/11/2026 · Revisão de todas as telas por foto e suíte de experiência
 - **Pedido do cliente:** "Onde o comprovante fica salvo? Consigo ter acesso a ele? Melhor remover esse campo?" E: testes automatizados de experiência, usabilidade, disposição, filtros e cores; rever todas as telas por foto, corrigir e fotografar de novo até ficar bom.

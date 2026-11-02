@@ -41,27 +41,48 @@ Sai em `android/app/build/outputs/bundle/producaoRelease/app-producao-release.aa
 
 **Nome (até 30):** `acertoTotal: Contas a Receber`
 
-**Descrição curta (até 80):**
-Anote o que cada cliente deve, dê baixa nos pagamentos e veja quem está atrasado.
+**Descrição curta (até 80, esta tem 77):**
+Saiba quem te deve e há quanto tempo. Dê baixa com comprovante e use o Excel.
 
-**Descrição completa:**
-O acertoTotal é um caderno de contas a receber para quem vende e cobra depois: autônomos, pequenas lojas, academias, escolas e prestadores de serviço.
+**Descrição completa (até 4.000):**
+Chega de caderninho de fiado e de planilha bagunçada. O acertoTotal mostra, numa tela só, quem te deve, quanto e desde quando. É feito para quem vende e cobra depois: autônomos, pequenas lojas, academias, escolas, entregadores e prestadores de serviço.
 
-• Cadastre clientes com CPF ou CNPJ e lance as contas a receber.
-• Veja na hora quem está em atraso e há quantos dias.
-• Dê baixa com um toque e guarde o comprovante em foto ou PDF (Pix, transferência, dinheiro).
-• Acompanhe os números: quanto entrou, quanto falta e o prazo médio.
-• Importe uma planilha do Excel com clientes e contas, e confira tudo antes de gravar. Um cliente com 8 contas ocupa 8 linhas com o mesmo CPF/CNPJ.
+QUEM DEVE, NA HORA
+• Veja o total em aberto, o que está em atraso e o que entrou no mês.
+• Cada conta diz a situação por escrito: "Atrasada há 5 dias", "Vence em 3 dias", "Paga em 02/11".
+• Filtre por Em aberto, Atrasadas, Pagas ou Todas, e busque pelo nome do cliente.
+
+CLIENTES PELO CPF OU CNPJ
+• Cada cliente é identificado pelo CPF ou CNPJ, sem cadastro repetido.
+• Abra o cliente e veja todas as contas dele, quanto deve e o contato.
+
+DÊ BAIXA COM O COMPROVANTE
+• Marque a conta como paga com um toque.
+• Anexe a foto ou o PDF do comprovante (Pix, transferência, dinheiro).
+• Salve o comprovante no celular quando precisar mandar ou imprimir.
+• Errou? Toque em "Desfazer".
+
+EXCEL DE IDA E DE VOLTA
+• Importe clientes e contas de uma planilha e confira tudo antes de gravar.
 • Atualize várias contas de uma vez: baixe a planilha, mude no Excel e envie de volta, vendo o antes e o depois.
-• Exporte relatórios e faça a cópia de segurança em Excel para trocar de celular.
-• Funciona sem internet. Seus dados ficam só no seu aparelho.
+• Exporte relatórios por situação, cliente e período.
+• Faça a cópia de segurança em Excel para guardar ou trocar de celular.
+
+SEUS NÚMEROS
+• Quanto entrou, quanto falta, taxa de recebimento e prazo médio de pagamento.
+• Recebido mês a mês e quem deve mais.
+
+SEUS DADOS SÃO SEUS
+• Funciona sem internet.
+• Clientes, contas e comprovantes ficam só no seu aparelho. O app não tem anúncios e não envia seus dados para ninguém.
+• Tema claro ou escuro.
 
 TESTE GRÁTIS E ASSINATURA
-Experimente todos os recursos sem pagar. Depois do teste, o app continua aberto para consulta, e para voltar a cadastrar, dar baixa, importar e exportar você assina: semanal, mensal, semestral ou anual. A cobrança é feita pela Google Play, renova sozinha e você cancela quando quiser em Google Play > Pagamentos e assinaturas > Assinaturas.
+Use todos os recursos de graça no período de teste. Depois, o app continua aberto para consulta; para voltar a cadastrar, dar baixa, importar e exportar, assine o plano semanal, mensal, semestral ou anual. A cobrança é feita pela Google Play, renova sozinha e você cancela quando quiser em Google Play > Pagamentos e assinaturas > Assinaturas.
 
-O acertoTotal não movimenta dinheiro: ele não faz nem recebe pagamentos. Ele só ajuda você a controlar o que tem a receber.
+O acertoTotal não movimenta dinheiro: ele não faz nem recebe pagamentos. Ele organiza o que você tem a receber.
 
-**Imagens** (em `entregas/play/`): `icone-512.png`, `grafico-destaque-1024x500.png` e as capturas de tela 1 a 5 (1080×1920).
+**Imagens** (em `playstore/`): `icone-512.png`, `grafico-destaque-1024x500.png` e as 8 capturas de `capturas/` (1080×1920), nesta ordem: Contas, Clientes, Números, Planilha, Importar, Comprovante, Cliente, Nova conta.
 
 ## 5. Segurança dos dados (respostas)
 
