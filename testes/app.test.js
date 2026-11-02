@@ -35,7 +35,15 @@ async function newPage(browser, opts = {}) {
   return { page, ctx, errors };
 }
 const st = page => page.evaluate(() => JSON.parse(localStorage.getItem('baixa-pix-v2')));
-const chipN = async (page, label) => +(await page.locator('.chip', { hasText: label }).innerText()).match(/\d+/)[0];
+// Número de contas de cada visão. Os 3 cartões do topo filtram; sem cartão marcado a lista é "Para receber".
+const chipN = async (page, label) => {
+  const soltar = async () => { const m = page.locator('.strip button.mini[aria-pressed=true]'); if (await m.count()) await m.click(); };
+  const lista = async () => +(await page.locator('.lista-t').innerText()).match(/(\d+)$/)[0];
+  if (label === 'Em aberto') { await soltar(); return lista(); }
+  if (label === 'Atrasadas') return +(await page.locator('.strip [data-f=atrasadas] small').innerText()).match(/\d+/)[0];
+  if (label === 'A vencer') return +(await page.locator('.strip [data-f=avencer] small').innerText()).match(/\d+/)[0];
+  await soltar(); await page.click('.strip [data-f=pagas]'); const n = await lista(); await page.click('.strip [data-f=pagas]'); return n;
+};
 // 'menu' não é aba do rodapé: abre pelo ícone ☰ no topo.
 const go = async (page, tab) => { if (tab === 'menu') return page.click('[data-act=abrir-menu]'); await page.evaluate(() => { while (window.acertoVoltar && window.acertoVoltar()); }); return page.click(`button[data-act=go][data-tab=${tab}]`); };
 
@@ -50,8 +58,8 @@ const go = async (page, tab) => { if (tab === 'menu') return page.click('[data-a
     const s0 = await st(page).catch(() => null);
     // storage só é gravado após a primeira ação; força leitura do estado em memória via UI
     await go(page, 'contas');
-    const nAbertas0 = await chipN(page, 'Em aberto'), nAtr0 = await chipN(page, 'Atrasadas'), nPagas0 = await chipN(page, 'Pagas'), nTodas0 = await chipN(page, 'Todas');
-    rec('Código', 'Dados de exemplo: abertas + pagas = total', nAbertas0 + nPagas0 === nTodas0, `${nAbertas0}+${nPagas0} vs ${nTodas0}`);
+    const nAbertas0 = await chipN(page, 'Em aberto'), nAtr0 = await chipN(page, 'Atrasadas'), nPagas0 = await chipN(page, 'Pagas'), nAvc0 = await chipN(page, 'A vencer');
+    rec('Código', 'Dados de exemplo: a vencer + atrasadas = para receber', nAvc0 + nAtr0 === nAbertas0, `${nAvc0}+${nAtr0} vs ${nAbertas0}`);
     rec('Código', 'Dados de exemplo têm contas atrasadas e pagas', nAtr0 > 0 && nPagas0 > 0, `atrasadas=${nAtr0} pagas=${nPagas0}`);
     const linhas = await page.locator('.crow').count();
     rec('Código', 'Filtro padrão "Em aberto" lista só contas não pagas', linhas === nAbertas0 && (await page.locator('.crow.paga').count()) === 0, `linhas=${linhas}`);
@@ -59,7 +67,7 @@ const go = async (page, tab) => { if (tab === 'menu') return page.click('[data-a
     // Baixa com comprovante
     await page.locator('.crow.atrasada .btn.primary').first().click();
     const sheetTxt = await page.locator('.sheet').innerText();
-    rec('Código', 'Tela de baixa abre com data, comprovante e confirmar', /Data do pagamento/.test(sheetTxt) && /Comprovante \(opcional\)/.test(sheetTxt) && /Confirmar baixa/.test(sheetTxt));
+    rec('Código', 'Tela de baixa abre com data, comprovante e confirmar', /Data do pagamento/.test(sheetTxt) && /Comprovante \(opcional\)/.test(sheetTxt) && /Marcar como paga/.test(sheetTxt));
     const defaultDate = await page.inputValue('#dtpago');
     const today = await page.evaluate(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); });
     rec('Código', 'Data do pagamento começa em hoje', defaultDate === today, defaultDate + ' vs ' + today);
@@ -71,8 +79,8 @@ const go = async (page, tab) => { if (tab === 'menu') return page.click('[data-a
     rec('Código', 'Baixa em 2 toques a partir da lista (Dar baixa → Confirmar)', true);
     const nAb1 = await chipN(page, 'Em aberto'), nPg1 = await chipN(page, 'Pagas');
     rec('Código', 'Contadores atualizam após a baixa', nAb1 === nAbertas0 - 1 && nPg1 === nPagas0 + 1, `abertas ${nAbertas0}→${nAb1}, pagas ${nPagas0}→${nPg1}`);
-    await page.click('.chip:has-text("Pagas")');
-    const dd = today.split('-').reverse().join('/');
+    await page.click('.strip [data-f=pagas]');
+    const dd = today.split('-').reverse().join('/').slice(0, 5);
     const paidRow = page.locator('.crow.paga', { hasText: 'Paga em ' + dd }).first();
     rec('Código', 'Conta paga mostra "✓ Paga em <data>" e sem botão Dar baixa', (await paidRow.count()) === 1 && (await paidRow.locator('.btn.primary').count()) === 0);
     await paidRow.locator('.cmain').click();
@@ -172,14 +180,6 @@ const go = async (page, tab) => { if (tab === 'menu') return page.click('[data-a
     await page.waitForTimeout(100);
     rec('Código', 'Backup completo registra a data do último backup', !!(await st(page)).ultimoBackup);
     await page.click('[data-act=close]');
-    await go(page, 'contas'); await page.click('.chip:has-text("Atrasadas")');
-    const nAtrTela = await page.locator('.crow').count();
-    await page.evaluate(() => { window.__saved = null; });
-    await page.click('[data-act=export-filtrado]'); await page.click('[data-act=xlsx-export]');
-    await page.waitForFunction(() => window.__saved);
-    const exp2 = await page.evaluate(() => { const wb = XLSX.read(new Uint8Array(window.__saved.bytes), { type: 'array' }); return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }).length - 1; });
-    rec('Código', 'Exportar na aba Contas respeita o filtro da tela', exp2 === nAtrTela, `${exp2} vs ${nAtrTela}`);
-    await page.click('[data-act=close]');
     await ctx.close();
   }
   {
@@ -242,11 +242,11 @@ const go = async (page, tab) => { if (tab === 'menu') return page.click('[data-a
   // Situação nunca só pela cor + texto de status
   {
     const { page, ctx } = await newPage(browser);
-    await go(page, 'contas'); await page.click('.chip:has-text("Todas")');
-    const sem = await page.evaluate(() => [...document.querySelectorAll('.crow')].filter(r => !/(Atrasada há|Em aberto ·|Paga em)/.test(r.innerText)).length);
+    await go(page, 'contas'); await page.fill('#q', 'a'); await page.dispatchEvent('#q', 'input'); // a busca olha todas as contas
+    const sem = await page.evaluate(() => [...document.querySelectorAll('.crow')].filter(r => !/(Atrasada há|Vence|Paga em)/.test(r.innerText)).length);
     rec('Usabilidade', 'Toda conta traz a situação escrita (não depende só da cor)', sem === 0, `${sem} sem texto`);
     const ordem = await page.evaluate(() => { const l = [...document.querySelectorAll('.crow')].map(r => r.classList.contains('paga')); const i = l.indexOf(true); return i === -1 || l.slice(i).every(Boolean); });
-    rec('Usabilidade', 'Em "Todas", contas pagas ficam por último', ordem);
+    rec('Usabilidade', 'Na busca (todas as contas), as pagas ficam por último', ordem);
     await ctx.close();
   }
   await browser.close();

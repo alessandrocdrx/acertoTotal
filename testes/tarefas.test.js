@@ -50,7 +50,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   await tocar('button[data-tab=planilha]');
   ok('T1 · "Importar planilha" aparece sem rolar', await visivelSemRolar('[data-act=import-abrir]'));
   await tocar('[data-act=import-abrir]');
-  ok('T1 · A primeira tela da importação já explica "8 contas = 8 linhas com o mesmo CPF/CNPJ"', /8 contas ocupa 8 linhas com o mesmo CPF\/CNPJ/.test(await p.locator('.sheet .sub').innerText()));
+  ok('T1 · A primeira tela da importação já explica "8 contas = 8 linhas com o mesmo CPF/CNPJ"', /8 contas ocupa 8 linhas com o mesmo CPF\/CNPJ/.test(await p.locator('.sheet').evaluate(e => { e.querySelector('details.como').open = true; return e.innerText; })));
   const linhas8 = [['CPF/CNPJ', 'Nome', 'Telefone', 'Descrição', 'Valor', 'Vencimento']];
   for (let i = 1; i <= 8; i++) linhas8.push([CPF_L, 'Lucas Pereira', i === 1 ? '(11) 95555-0000' : '', `Parcela ${i}/8`, 250, `${String(i).padStart(2, '0')}/12/2026`]);
   await enviar('lucas.xlsx', await xlsx(linhas8));
@@ -105,7 +105,12 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   await p.fill('#n-doc', cpf('987654321'));
   await tocar('[data-act=salvar-cliente]');
   ok('T3 · Dois clientes podem ter o mesmo nome; o que não pode é o mesmo CPF/CNPJ', (await estado()).clientes.some(c => c.nome === 'Homônimo Lucas'));
-  ok('T3 · A lista mostra o CPF de cada cliente', /CPF 489\.768\.865-50/.test(await p.locator('#screen').innerText()));
+  // Relato de revisão (PDF de UX): o CPF é dado técnico; a lista mostra quanto o cliente deve, e o CPF fica na ficha e na busca.
+  ok('T3 · A lista não repete o CPF em cada linha, mas a busca acha o cliente pelo CPF', !/CPF 489\.768/.test(await p.locator('#screen').innerText()) && await (async () => { await p.fill('#qc', '48976886550'); return /Lucas/.test(await p.locator('#screen').innerText()); })());
+  await p.fill('#qc', '');
+  await p.locator('#screen .row', { hasText: 'Lucas Pereira' }).first().click();
+  ok('T3 · A ficha do cliente mostra o CPF', /CPF 489\.768\.865-50/.test(await p.locator('.sheet').innerText()));
+  await p.keyboard.press('Escape');
 
   // ===== Tarefa 4: "Exportar as contas atrasadas"
   await inicio();
@@ -236,7 +241,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   ok('T9 · O Menu é uma tela própria: título "Menu", seta de voltar e sem o rodapé', /Menu/.test(await p.locator('#title').innerText()) && (await p.locator('.head [data-act=voltar]').count()) === 1 && !(await p.locator('#tabs').isVisible()));
   const menu = await p.locator('#screen').innerText();
   ok('T9 · O Menu mostra a marca, o autor (@alessandrocdrx) e a versão logo no topo', /acertoTotal/.test(menu) && /Criado por @alessandrocdrx · versão protótipo/.test(menu));
-  ok('T9 · O Menu tem Assinatura, Tema, Cópia de segurança, Avaliar, Relatar problema, Privacidade e Sobre', ['Assinatura', 'Tema e paleta', 'Cópia de segurança', 'Restaurar uma cópia', 'Avaliar o acertoTotal', 'Relatar problema ou sugestão', 'Política de privacidade', 'Sobre o acertoTotal'].every(t => menu.includes(t)), menu);
+  ok('T9 · O Menu tem Assinatura, Tema, Cópia de segurança, Avaliar, Relatar problema, Privacidade e Perguntas frequentes (e um só "Sobre": o cartão da marca)', ['Assinatura', 'Tema', 'Cópia de segurança', 'Restaurar uma cópia', 'Avaliar o acertoTotal', 'Relatar problema ou sugestão', 'Política de privacidade', 'Perguntas frequentes'].every(t => menu.includes(t)), menu);
   ok('T9 · Links: Play, GitHub e a política certa', await p.locator('a.opcao[href="https://play.google.com/store/apps/details?id=io.github.alessandrocdrx.acertototal"]').count() === 1 && await p.locator('a.opcao[href="https://github.com/alessandrocdrx/acertoTotal/issues/new"]').count() === 1 && await p.locator('a.opcao[href="https://github.com/alessandrocdrx/acertoTotal/blob/main/PRIVACIDADE.md"]').count() === 1);
   await tocar('.menu-marca');
   const sobre = await p.locator('.sheet').innerText();
@@ -244,7 +249,7 @@ const cpf = b => { const d = b.split('').map(Number); for (const n of [9, 10]) {
   ok(`T9 · Achar o autor em ${toques} toques (meta: até 2)`, toques <= 2, `${toques}`);
   await p.keyboard.press('Escape');
   await tocar('#screen [data-act=aparencia]');
-  ok('T9 · Tema e paleta abre pelo Menu', /Tema e paleta/.test(await p.locator('.sheet h2').innerText()));
+  ok('T9 · Tema abre pelo Menu', /^Tema/.test(await p.locator('.sheet h2').innerText()));
   await p.keyboard.press('Escape');
   ok('T9 · Voltar (Esc/botão do Android) fecha a janela e continua no Menu', (await p.locator('.sheet').count()) === 0 && /Menu/.test(await p.locator('#title').innerText()));
   await p.keyboard.press('Escape');

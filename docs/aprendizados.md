@@ -118,11 +118,32 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R74. Capturas da loja saem de `playstore/gerar-capturas.js`, nunca à mão: versão de produção, datas em pt-BR (`LANG=pt_BR`), nenhum número ruim de demonstração (0%, "Nunca feita", aviso de cópia) e nenhum aviso de "assinatura simulada". Textos da ficha conferidos pelo limite da Play (nome 30, curta 80, completa 4.000).
 - R75. Aviso de erro diz a causa certa. Se a Play respondeu mas não tem os planos, o app diz que "os planos ainda não estão à venda", e não manda conferir a internet. [assinatura]
 - R76. O app instalado tem a mesma cara do artefato: as fontes da marca (Bricolage Grotesque e IBM Plex Sans) vão dentro do pacote, em `android/fontes/`, e `preparar-assets.sh` as copia. Nada de fonte vinda da internet. [android]
+- R77. Em Contas, os 3 cartões do topo (A vencer, Atrasadas, Pagas no mês) são os filtros: mostram o valor e quantas contas, e tocar de novo tira o filtro. Não existe "Todas": a busca olha todas as contas. As pagas vêm agrupadas por mês, a mais recente primeiro. [experiencia, usabilidade]
+- R78. O topo da lista é só o essencial: nada de data do dia, botão de exportar nem aviso fixo. A cópia de segurança pendente aparece como ponto vermelho no ☰ e como situação dentro do Menu. [experiencia]
+- R79. O botão "+" sai da frente ao rolar para baixo e volta ao rolar para cima, para nunca cobrir o "Dar baixa". Seu estilo não pode herdar o dos cartões (`.compacto`, e não `.mini`). [experiencia]
+- R80. Todo dado errado tem como corrigir sem apagar: a conta tem "Editar conta", com "Desfazer" no aviso. [experiencia]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-034 · 02/11/2026 · Revisão de UX (PDF acertoTotalUx): Bloco A
+- **Origem:** análise de UX com 59 capturas, entregue pelo cliente em PDF (Drive). Pontos e prioridades revisados com o cliente, que aprovou o **Bloco A** (mudanças sem conflito com regras). O Bloco B (CPF opcional, Planilha no Menu, Cobrar pelo WhatsApp, lembretes, parcelas, pagamento parcial, menos planos) ficou para decisão do cliente.
+- **O que foi feito:**
+  - **Contas:** os 3 cartões do topo viraram os filtros, saíram a data "Hoje", o botão Exportar e o filtro "Todas" (a busca cobre), e o aviso de cópia foi para o Menu, com um ponto no ☰. Selos curtos ("Vence em 14 dias") e datas sem o ano. Pagas por mês, a mais recente primeiro.
+  - **Editar conta** (valor, vencimento, descrição e cliente), com "Desfazer".
+  - **Clientes:** busca a partir de 4 clientes, "Deve R$ 840,00", "a mais antiga há N dias", CPF só na ficha e a conta a receber antes das pagas.
+  - **Números:** sem os blocos repetidos ("Em aberto", "Em atraso") nem as métricas sem ação ("Valor médio", "Pagas com comprovante"). No começo do mês, a taxa explica em vez de mostrar "0%".
+  - **Menu:** um só "Sobre" (o cartão da marca), "Tema" sem a tabela de cores e "Perguntas frequentes".
+  - **Textos:** "Marcar como paga", e "Desfazer baixa" sem vermelho.
+  - **Importar:** só "Escolher arquivo" à vista, com a explicação em "Como montar a planilha?".
+  - **Botão "+":** some ao rolar para baixo.
+- **Problemas achados nos testes:**
+  - O botão "+" herdou o estilo dos cartões `.mini` e ficou com 76 px de altura. Foi renomeado para `.compacto`.
+  - Em 320 px, o rótulo "Pagas no mês" quebrava em 2 linhas e deixava um cartão mais alto.
+  - O teste de contraste lia a tabela de cores que saiu da tela. Passou a medir os pares de cor direto dos tokens, nos dois temas.
+- **Como evitar:** regras R77 a R80; suíte `experiencia` com 74 checagens (as novas cobrem todo o bloco); testes antigos ajustados nas suítes app, usabilidade, tarefas, importacao, estatisticas, avaliacao e tema.
 
 ### A-033 · 02/11/2026 · App instalado com cara diferente do artefato
 - **Relato do cliente:** "Eu vejo diferenças" entre o artefato e o app da Play.

@@ -24,15 +24,15 @@ const num=t=>parseFloat(t.replace(/[^\d,]/g,'').replace(',','.'));
   const e=exp(ini);
   const big=num(await p.locator('.sum .big strong').innerText());
   ok(`Recebido no período (${n} m): R$ ${e.rec}`,Math.abs(big-e.rec)<0.01,`tela ${big}`);
-  const mini=await p.locator('.sum .mini strong').allInnerTexts();
-  ok(`Em aberto e em atraso batem com os dados (${n} m)`,Math.abs(num(mini[0])-e.ab)<0.01&&Math.abs(num(mini[1])-e.atr)<0.01,mini.join('|'));
+  ok(`Números não repete Em aberto e Em atraso (estão na tela Contas) (${n} m)`,(await p.locator('.sum .mini').count())===0);
   const pctTxt=await p.locator('.pct').count()?await p.locator('.pct').innerText():null;
-  ok(`Taxa de recebimento correta (${n} m): ${e.pct}%`,(e.pct===null&&pctTxt===null)||pctTxt===e.pct+'%',pctTxt);
+  // Em "Este mês", se nada vencido foi pago ainda, a tela explica em vez de mostrar "0%".
+  const semPct=e.pct===null||(n===1&&e.pct===0);
+  ok(`Taxa de recebimento correta (${n} m): ${semPct?'sem %':e.pct+'%'}`,(semPct&&pctTxt===null)||pctTxt===e.pct+'%',pctTxt);
   const tiles=await p.locator('.tile strong').allInnerTexts();
   const pz=e.prazo===null?'—':(e.prazo===0?'No dia':Math.abs(e.prazo)+(Math.abs(e.prazo)===1?' dia':' dias'));
   ok(`Prazo médio correto (${n} m): ${pz}`,tiles[0]===pz,tiles[0]);
-  ok(`Pagas com comprovante correto (${n} m)`,tiles[2]===(e.comp===null?'—':e.comp+'%'),tiles[2]);
-  ok(`Valor médio por conta correto (${n} m)`,e.ticket===null?tiles[1]==='—':Math.abs(num(tiles[1])-e.ticket)<0.01,tiles[1]+' vs '+e.ticket);
+  ok(`Sem as métricas sem ação (Valor médio, Pagas com comprovante); sobram 2 cartões (${n} m)`,tiles.length===2&&!/Valor médio|Pagas com comprovante/.test(await p.locator('#screen').innerText()),tiles.join('|'));
  }
  // atrasos por tempo e devedores
  const atr=S.contas.filter(c=>!c.pagoEm&&c.venc<D.today);
@@ -71,6 +71,6 @@ const num=t=>parseFloat(t.replace(/[^\d,]/g,'').replace(',','.'));
  await p.click('button[data-tab=numeros]');
  const txt=await p.locator('#screen').innerText();
  ok('Só contas futuras: taxa mostra aviso, sem divisão por zero',/Ainda não há contas vencidas/.test(txt)&&!/NaN|Infinity/.test(txt),txt);
- ok('Só contas futuras: prazo médio e comprovante mostram traço',(await p.locator('.tile strong').allInnerTexts()).filter(t=>t==='—').length>=2);
+ ok('Só contas futuras: o prazo médio mostra traço (ninguém pagou ainda)',(await p.locator('.tile strong').first().innerText())==='—');
  await ctx.close();}
 await b.close();console.log(out.join('\n'));if(out.some(l=>l.startsWith('✖')))process.exitCode=1})()

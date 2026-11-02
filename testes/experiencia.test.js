@@ -96,7 +96,7 @@ const medir = () => {
     if (tema === 'dark') { await p.evaluate(() => localStorage.setItem('acerto-total-tema', 'dark')); await p.reload(); await p.waitForSelector('.crow'); }
     return { p, ctx };
   };
-  const inicio = async p => { await p.evaluate(() => { while (window.acertoVoltar && window.acertoVoltar()); document.getElementById('screen').scrollTop = 0; }); await p.click('.tabs [data-tab=contas]'); await p.click('[data-act=filter][data-f=abertas]'); };
+  const inicio = async p => { await p.evaluate(() => { while (window.acertoVoltar && window.acertoVoltar()); document.getElementById('screen').scrollTop = 0; }); await p.click('.tabs [data-tab=contas]'); const m = p.locator('.strip button.mini[aria-pressed=true]'); if (await m.count()) await m.click(); };
 
   for (const [w, h, tema] of [[360, 780, 'light'], [320, 640, 'light'], [360, 780, 'dark']]) {
     const { p, ctx } = await abrir(w, h, tema);
@@ -140,13 +140,75 @@ const medir = () => {
   await p.click('.tabs [data-tab=numeros]');
   ok('Números: os 3 períodos cabem numa linha só', await p.evaluate(() => new Set([...document.querySelectorAll('[data-act=periodo]')].map(e => Math.round(e.getBoundingClientRect().top))).size === 1));
   ok('Números: período tem nome completo para o leitor de tela ("Últimos 3 meses")', (await p.getAttribute('[data-p="3"]', 'aria-label')) === 'Últimos 3 meses');
-  // Filtros: o número no botão é o número de contas na lista
+  // Filtros: os 3 cartões do topo mostram quantas contas há e filtram a lista com esse mesmo número
   await p.click('.tabs [data-tab=contas]');
-  for (const f of ['abertas', 'atrasadas', 'pagas', 'todas']) {
-    await p.click(`[data-act=filter][data-f=${f}]`);
-    const n = +(await p.locator(`[data-act=filter][data-f=${f}] b`).innerText()), l = await p.locator('#screen .crow').count();
-    ok(`Filtro "${f}": o número do botão (${n}) é o tamanho da lista (${l})`, n === l);
+  for (const f of ['avencer', 'atrasadas']) {
+    await p.click(`.strip [data-f=${f}]`);
+    const n = +(await p.locator(`.strip [data-f=${f}] small`).innerText()).match(/\d+/)[0], l = await p.locator('#screen .crow').count();
+    ok(`Cartão "${f}": o número de contas (${n}) é o tamanho da lista (${l}), e o título da lista diz o mesmo`, n === l && new RegExp('· ' + l + '$').test(await p.locator('.lista-t').innerText()));
+    await p.click(`.strip [data-f=${f}]`);
+    ok(`Tocar de novo no cartão "${f}" tira o filtro e volta ao "Para receber"`, /^Para receber/i.test(await p.locator('.lista-t').innerText()));
   }
+  ok('Sem filtro "Todas": a busca olha todas as contas, pagas e a receber', await (async () => { await p.fill('#q', 'a'); await p.dispatchEvent('#q', 'input'); const t = await p.locator('#screen .crow').count(), pg = await p.locator('#screen .crow.paga').count(); await p.fill('#q', ''); await p.dispatchEvent('#q', 'input'); return t > 20 && pg > 0 && (await p.locator('[data-f=todas]').count()) === 0; })());
+  // Selos curtos e datas sem o ano
+  const sel = await p.evaluate(() => [...document.querySelectorAll('#screen .crow .pill')].map(e => e.innerText.trim()));
+  ok('Selos curtos: "Atrasada há 5 dias" e "Vence em 14 dias", sem o prefixo "Em aberto ·"', sel.length > 0 && sel.every(t => /^(Atrasada há \d+ dias?|Vence (hoje|em \d+ dias?)|✓ Paga em \d\d\/\d\d)$/.test(t)), JSON.stringify(sel));
+  ok('Data do vencimento sem o ano quando é o ano atual ("venc. 28/10")', await p.evaluate(() => [...document.querySelectorAll('#screen .crow .nw')].every(e => /^venc\. \d\d\/\d\d(\/\d{4})?$/.test(e.innerText.trim()) && (!/\/\d{4}$/.test(e.innerText.trim()) || !e.innerText.includes(String(new Date().getFullYear()))))));
+  ok('Topo de Contas enxuto: sem a data "Hoje" e sem botão Exportar', !/Hoje,/.test(await p.locator('.head').innerText()) && (await p.locator('.head .btn').count()) === 0);
+  // Pagas: mais recente primeiro, agrupadas por mês
+  await p.click('.strip [data-f=pagas]');
+  const pagas = await p.evaluate(() => { const S = JSON.parse(localStorage.getItem('baixa-pix-v2')), h = [...document.querySelectorAll('#screen h3:not(.lista-t)')].map(e => e.innerText.trim().toLowerCase()); return { h, n: document.querySelectorAll('#screen .crow.paga').length }; });
+  ok('Pagas: contas agrupadas por mês, do mais recente para o mais antigo (novembro, outubro…)', pagas.h.length >= 3 && pagas.h[0] === 'novembro' && pagas.h[1] === 'outubro', JSON.stringify(pagas.h));
+  ok('Pagas: dentro do mês, a mais recente vem primeiro', await p.evaluate(() => { const l = [...document.querySelectorAll('#screen .crow.paga .pill')].map(e => e.innerText.match(/(\d\d)\/(\d\d)/)).filter(Boolean).map(m => m[2] + m[1]); const ate = l.slice(0, 6); return ate.every((x, i) => i === 0 || x <= ate[i - 1]); }));
+  await p.click('.strip [data-f=pagas]');
+  // Menu: ponto no ☰ enquanto a cópia de segurança está pendente, e a situação dentro do Menu
+  ok('☰ tem um ponto vermelho e nome para o leitor de tela enquanto a cópia de segurança está pendente', (await p.locator('.head .ponto').count()) === 1 && /cópia de segurança pendente/.test(await p.getAttribute('.head [data-act=abrir-menu]', 'aria-label')));
+  await p.click('[data-act=abrir-menu]');
+  ok('Menu: um só "Sobre" (o cartão da marca), Tema simples e "Perguntas frequentes"', (await p.locator('#screen [data-act=sobre]').count()) === 1 && /Perguntas frequentes/.test(await p.locator('#screen').innerText()) && !/Tema e paleta/.test(await p.locator('#screen').innerText()));
+  ok('Menu: "Cópia de segurança" mostra "Nunca feita" e o aviso não ocupa o topo da lista', /Nunca feita/.test(await p.locator('#screen').innerText()));
+  await p.click('#screen [data-act=faq]');
+  ok('Perguntas frequentes: 6 respostas curtas, incluindo "Como dar baixa?" e "Como trocar de celular?"', (await p.locator('.sheet details.ajuda').count()) === 6 && /Como dar baixa/.test(await p.locator('.sheet').innerText()) && /Como trocar de celular/.test(await p.locator('.sheet').innerText()));
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  // Clientes: busca, "Deve" e CPF só na ficha
+  await p.click('.tabs [data-tab=clientes]');
+  ok('Clientes: a busca aparece (4 ou mais clientes)', (await p.locator('#qc').count()) === 1);
+  const linha = await p.locator('#screen .row').first().innerText();
+  ok('Clientes: a linha diz "Deve R$ …", conta as contas e não repete o CPF', /Deve\s+R\$/.test(linha) && /\d+ contas?/.test(linha) && !/\d{3}\.\d{3}\.\d{3}-\d\d/.test(linha), linha);
+  ok('Clientes: o que tem atraso diz "a mais antiga há N dias"', /a mais antiga há \d+ dias?/.test(await p.locator('#screen').innerText()));
+  await p.click('#screen .row'); 
+  ok('Ficha do cliente: as contas a receber vêm antes das pagas', await p.evaluate(() => { const l = [...document.querySelectorAll('.sheet .crow')].map(r => r.classList.contains('paga')); const i = l.indexOf(true); return i === -1 || l.slice(i).every(Boolean); }));
+  await p.keyboard.press('Escape');
+  // Números: sem o que repete a tela Contas e sem métricas sem ação
+  await p.click('.tabs [data-tab=numeros]');
+  const num = await p.locator('#screen').innerText();
+  ok('Números: sem "Valor médio por conta", "Pagas com comprovante" e sem Em aberto/Em atraso repetidos', !/Valor médio|Pagas com comprovante/.test(num) && !/^Em aberto$/m.test(num) && (await p.locator('.sum .mini').count()) === 0, num.slice(0, 300));
+  ok('Números: no começo do mês, sem "0%" desanimador (explica o motivo)', !(await p.locator('.pct').count()) && /Nenhuma conta vencida neste mês foi paga ainda/.test(num));
+  ok('Números: o subtítulo não repete o período escolhido', (await p.locator('#subtitle').innerText()).trim() === '');
+  // Textos: "Marcar como paga" e "Desfazer baixa" sem vermelho
+  await p.click('.tabs [data-tab=contas]'); await p.click('.crow .btn.primary');
+  ok('Dar baixa: o botão diz "Marcar como paga" (sem o jargão "baixa" entre parênteses)', /^Marcar como paga$/.test((await p.locator('.sheet [data-act=baixa]').innerText()).trim()));
+  await p.keyboard.press('Escape');
+  // Editar conta: muda valor e vencimento, avisa e permite desfazer
+  await p.click('.crow .cmain');
+  const antes = await p.evaluate(() => document.querySelector('.sheet .kv').innerText);
+  await p.click('.sheet [data-act=editar-conta]');
+  ok('Editar conta: abre com cliente, descrição, valor e vencimento preenchidos', (await p.inputValue('#ec-desc')).length > 0 && /^\d+,\d\d$/.test(await p.inputValue('#ec-val')) && /^\d{4}-\d\d-\d\d$/.test(await p.inputValue('#ec-venc')) && (await p.locator('#ec-cli').inputValue()).length > 0);
+  await p.fill('#ec-val', '999,90'); await p.fill('#ec-desc', 'Descrição corrigida'); await p.fill('#ec-venc', '2026-12-15');
+  await p.click('[data-act=salvar-edicao]');
+  ok('Editar conta: salva, avisa "Conta atualizada" e a lista mostra o novo valor', /Conta atualizada/.test(await p.locator('.toast').innerText()) && /999,90/.test(await p.locator('#screen').innerText()));
+  await p.click('.toast-undo'); await p.waitForTimeout(150);
+  ok('Editar conta: "Desfazer" devolve os valores de antes', !/999,90/.test(await p.locator('#screen').innerText()));
+  await p.click('.crow .cmain'); await p.click('.sheet [data-act=editar-conta]'); await p.fill('#ec-val', '0');
+  await p.click('[data-act=salvar-edicao]');
+  ok('Editar conta: valor zerado é barrado no próprio campo, sem fechar a janela', /Informe o valor/.test(await p.locator('#ec-val-err').innerText().catch(() => '')) && (await p.locator('.sheet').count()) === 1);
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  // Botão flutuante: some ao rolar para baixo e volta ao rolar para cima
+  await p.click('.tabs [data-tab=contas]');
+  await p.evaluate(() => { const s = document.getElementById('screen'); s.scrollTop = 200; s.dispatchEvent(new Event('scroll')); });
+  const oculto = await p.evaluate(() => document.querySelector('.fab').classList.contains('oculto'));
+  await p.evaluate(() => { const s = document.getElementById('screen'); s.scrollTop = 120; s.dispatchEvent(new Event('scroll')); });
+  const volta = await p.evaluate(() => !document.querySelector('.fab').classList.contains('oculto'));
+  ok('Botão "+": sai da frente ao rolar para baixo e volta ao rolar para cima (não cobre o "Dar baixa")', oculto && volta);
   // Ficha do cliente: telefone e e-mail em linhas separadas
   await p.click('.tabs [data-tab=clientes]'); await p.click('#screen .row');
   ok('Ficha do cliente: telefone e e-mail em linhas separadas', await p.evaluate(() => { const s = document.querySelector('.sheet .sub'); return !/\d · \S+@/.test(s.innerText) && s.innerHTML.split('<br>').length >= 3; }));
@@ -182,7 +244,7 @@ const medir = () => {
   await p.keyboard.press('Escape');
   // Dados de exemplo: o comprovante de exemplo não fica vazio ("sem arquivo"), aparece como ilustração e abre
   const exId = await p.evaluate(() => { const S = JSON.parse(localStorage.getItem('baixa-pix-v2')); const c = S.contas.find(x => x.comprovante && !x.comprovante.data); return c && c.id; });
-  await p.click('[data-act=filter][data-f=todas]');
+  await p.click('.tabs [data-tab=contas]'); await p.fill('#q', 'a'); await p.dispatchEvent('#q', 'input');
   await p.evaluate(id => document.querySelector(`.cmain[data-id="${id}"]`).click(), exId);
   ok('Comprovante de exemplo: mostra a ilustração, marcada como "de exemplo", sem "sem arquivo"', (await p.locator('.sheet .comp-mini img').count()) === 1 && /Comprovante de exemplo/.test(await p.locator('.sheet .comp-nome').innerText()) && !/sem arquivo/.test(await p.locator('.sheet').innerText()));
   await p.click('.sheet .comp .lado [data-act=ver-comp]');

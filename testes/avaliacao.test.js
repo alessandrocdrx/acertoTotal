@@ -65,9 +65,9 @@ const DIA = 864e5;
     const f = await faixa(p);
     ok('Prazo vencido: faixa vermelha explica que é só consulta', /Teste grátis encerrado em \d\d\/\d\d\/\d{4}\. O app está só para consulta/.test(f) && await p.locator('#ambiente').evaluate(e => e.classList.contains('fim')), f);
     ok('Contas: lista continua visível, com situação escrita', (await p.locator('.crow').count()) > 0 && /Atrasada há/.test(await p.locator('#screen').innerText()));
-    ok('Contas: some o aviso de cópia de segurança (exportar está bloqueado)', (await p.locator('#screen .warn').count()) === 0);
-    ok('Contas: sem botões "Dar baixa", sem "+ Nova conta" e sem "Exportar"', (await p.locator('.crow .btn.primary').count()) === 0 && (await p.locator('.fab').count()) === 0 && (await p.locator('[data-act=export-filtrado]').count()) === 0);
-    await p.click('.chip:has-text("Pagas")');
+    ok('Contas: some o ponto de cópia de segurança no ☰ (exportar está bloqueado)', (await p.locator('.head .ponto').count()) === 0);
+    ok('Contas: sem botões "Dar baixa", sem "+ Nova conta" e sem "Editar conta"', (await p.locator('.crow .btn.primary').count()) === 0 && (await p.locator('.fab').count()) === 0 && (await p.locator('[data-act=editar-conta]').count()) === 0);
+    await p.click('.strip [data-f=pagas]');
     ok('Contas: filtros e busca continuam funcionando', (await p.locator('.crow.paga').count()) > 0);
     await p.locator('.crow .cmain').first().click();
     const sh = await p.locator('.sheet').innerText();
@@ -90,7 +90,7 @@ const DIA = 864e5;
     await p.keyboard.press('Escape');
 
     // Tentativas de burlar pela página: ações de escrita disparadas direto
-    for (const act of ['nova-conta', 'novo-cliente', 'import-abrir', 'import-sample', 'import-modelo', 'export-abrir', 'export-backup', 'pick-xl', 'baixa', 'excluir-conta']) {
+    for (const act of ['nova-conta', 'editar-conta', 'salvar-edicao', 'novo-cliente', 'import-abrir', 'import-sample', 'import-modelo', 'export-abrir', 'export-backup', 'pick-xl', 'baixa', 'excluir-conta']) {
       await p.evaluate(a => { const b = document.createElement('button'); b.dataset.act = a; b.dataset.id = 'x'; document.body.appendChild(b); b.click(); b.remove(); }, act);
       ok(`Ação "${act}" disparada direto é bloqueada com aviso`, (await p.locator('.sheet').count()) === 0 && /só para consulta/.test(await p.locator('.toast').innerText()));
     }

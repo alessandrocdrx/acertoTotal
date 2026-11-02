@@ -20,13 +20,14 @@ const ok = (tecnica, nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} 
   });
   await p.goto('file://' + __dirname + '/.build/page.html');
   await p.waitForSelector('.crow');
-  const n = async label => +(await p.locator('.four .chip', { hasText: label }).innerText()).match(/\d+/)[0];
+  // Contas na lista padrão ("Para receber") ou o total de contas guardado no aparelho.
+  const n = async label => label === 'Todas' ? await p.evaluate(() => JSON.parse(localStorage.getItem('baixa-pix-v2')).contas.length) : +(await p.locator('.lista-t').innerText()).match(/(\d+)$/)[0];
   const espera = () => p.waitForTimeout(80);
 
   // Lei de Hick e de Jakob: poucas escolhas, padrões do Android
   // Material 3: a barra de navegação tem de 3 a 5 destinos de trabalho; conta e ajustes ficam no Menu, aberto pelo ícone ☰ do topo.
   ok('Lei de Hick + Material 3', 'Rodapé com os 4 destinos de trabalho, sem "Menu"', (await p.locator('.tabs button').count()) === 4 && !/Menu/.test(await p.locator('.tabs').innerText()));
-  ok('Lei de Jakob', 'Menu no ícone ☰ do topo, à direita, com nome para leitor de tela', await p.evaluate(() => { const g = document.querySelector('.head [data-act=abrir-menu]'); if (!g) return false; const r = g.getBoundingClientRect(); return g.getAttribute('aria-label') === 'Menu' && g.innerHTML.includes('M4 7h16M4 12h16M4 17h16') && r.right > innerWidth - 60 && r.top < 260; }));
+  ok('Lei de Jakob', 'Menu no ícone ☰ do topo, à direita, com nome para leitor de tela', await p.evaluate(() => { const g = document.querySelector('.head [data-act=abrir-menu]'); if (!g) return false; const r = g.getBoundingClientRect(); return /^Menu/.test(g.getAttribute('aria-label')) && g.innerHTML.includes('M4 7h16M4 12h16M4 17h16') && r.right > innerWidth - 60 && r.top < 260; }));
   ok('Material 3', 'Aba ativa com indicador em pílula (56×32) atrás do ícone', await p.evaluate(() => { const i = document.querySelector('.tabs [aria-current=true] .ind'); const r = i && i.getBoundingClientRect(); return !!r && Math.round(r.width) === 56 && Math.round(r.height) === 32 && getComputedStyle(i).backgroundColor !== 'rgba(0, 0, 0, 0)'; }));
   ok('Material 3', 'Rodapé com pelo menos 64 px de altura e ícones de 24 px', await p.evaluate(() => document.querySelector('.tabs').getBoundingClientRect().height >= 64 && document.querySelector('.tabs svg').getBoundingClientRect().width === 24));
   {
@@ -42,10 +43,10 @@ const ok = (tecnica, nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} 
     await pq.goto('file://' + __dirname + '/.build/page.html'); await pq.waitForSelector('.crow');
     // Largura do primeiro "Dar baixa" que sobra livre para o dedo, ao lado do botão flutuante
     const livre = await pq.evaluate(() => { const f = document.querySelector('.fab').getBoundingClientRect(), d = document.querySelector('.crow .btn.primary').getBoundingClientRect(); const cruza = !(f.bottom < d.top || f.top > d.bottom); return cruza ? Math.max(0, Math.min(d.right, f.left) - d.left) : d.width; });
-    ok('Material 3', `Celular pequeno (320×640): botão flutuante começa como "+" e deixa ≥ 48 px do "Dar baixa" livres (${Math.round(livre)} px)`, (await pq.locator('.fab.mini').count()) === 1 && livre >= 48, String(livre));
+    ok('Material 3', `Celular pequeno (320×640): botão flutuante começa como "+" e deixa ≥ 48 px do "Dar baixa" livres (${Math.round(livre)} px)`, (await pq.locator('.fab.compacto').count()) === 1 && livre >= 48, String(livre));
     await pq.close();
   }
-  ok('Lei de Hick', 'Filtros de contas em 4 botões numa linha só', await p.evaluate(() => { const t = [...document.querySelectorAll('.four .chip')].map(c => c.getBoundingClientRect().top); return t.length === 4 && new Set(t).size === 1; }));
+  ok('Lei de Hick', 'Os 3 cartões do topo (A vencer, Atrasadas, Pagas no mês) são os filtros, numa linha só', await p.evaluate(() => { const t = [...document.querySelectorAll('.strip button.mini')].map(c => Math.round(c.getBoundingClientRect().top)); return t.length === 3 && new Set(t).size === 1 && !document.querySelector('.four, [data-f=todas]'); }));
   ok('Lei de Jakob', 'Botão flutuante, menu inferior e janela de baixo, como nos apps Android', (await p.locator('.fab').count()) === 1 && (await p.locator('nav.tabs').count()) === 1);
   ok('Identidade', 'Nome acertoTotal aparece dentro do app', (await p.locator('.brand').innerText()).includes('acertoTotal'));
   const faixa = p.locator('#ambiente');

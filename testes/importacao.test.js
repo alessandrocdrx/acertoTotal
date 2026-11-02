@@ -86,13 +86,16 @@ const CPF_MARINA = '637.129.261-70', CPF_BRUNO = cpf('434259868'), CPF_LIA = cpf
 
   // ---------- Passo 1
   await abrirImport();
+  // Relato do cliente (02/11): só "Escolher arquivo" à vista; a explicação fica em "Como montar a planilha?".
+  ok('Passo 1: "Escolher arquivo" aparece sem rolar e a explicação vem fechada em "Como montar a planilha?"', await p.evaluate(() => { const b = document.querySelector('.sheet [data-act=pick-xl]').getBoundingClientRect(), d = document.querySelector('details.como'); return b.bottom <= innerHeight && !!d && !d.open && /Como montar a planilha/.test(d.querySelector(':scope > summary').innerText); }));
+  await p.locator('details.como > summary').click();
   const p1 = await texto();
   ok('Passo 1: etapas visíveis, na etapa "Arquivo"', (await p.locator('.passos li[aria-current=step]').innerText()).includes('Arquivo'));
   ok('Passo 1: CPF ou CNPJ obrigatório e Nome para cliente novo', /CPF ou CNPJ\s*obrigatória/.test(p1) && /Nome do cliente\s*cliente novo/.test(p1) && /Código da conta\s*para atualizar/.test(p1), p1.slice(0, 500));
   ok('Passo 1 explica "8 contas = 8 linhas com o mesmo CPF/CNPJ"', /um cliente com 8 contas ocupa 8 linhas com o mesmo CPF\/CNPJ/.test(p1));
-  ok('Passo 1: ajuda "Um cliente com várias contas", "Atualizar contas" e "Só clientes"', (await p.locator('details.ajuda').count()) === 3);
-  await p.locator('details.ajuda summary').first().click();
-  ok('Ajuda mostra exemplo com o mesmo CPF em 3 linhas', (await p.locator('details.ajuda[open] tbody tr').count()) === 3 && /1 cliente com 3 contas/.test(await p.locator('details.ajuda[open]').innerText()));
+  ok('Passo 1: ajuda "Um cliente com várias contas", "Atualizar contas" e "Só clientes"', (await p.locator('details.como details.ajuda').count()) === 3);
+  await p.locator('details.como details.ajuda > summary').first().click();
+  ok('Ajuda mostra exemplo com o mesmo CPF em 3 linhas', (await p.locator('details.como details.ajuda[open] tbody tr').count()) === 3 && /1 cliente com 3 contas/.test(await p.locator('details.como details.ajuda[open]').innerText()));
   await axe('passo 1 (escolher arquivo)');
 
   const S0 = await estado();
