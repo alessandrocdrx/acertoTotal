@@ -31,4 +31,5 @@ Mesmo padrão do geoTotal e do calcTotal: nome `palavraTotal` em camelCase, repo
 - Toda correção ganha um teste em `testes/`.
 - Todo problema achado, seja por teste, pelo cliente ou numa revisão, vira uma entrada em `docs/aprendizados.md` com causa, correção e como evitar.
 - Publique o artefato só com todas as suítes passando.
+- **O artefato acompanha o protótipo, sempre.** Toda mudança em `prototipo/acertototal.html` é publicada logo depois dos testes verdes e do commit, na mesma URL (https://claude.ai/artifact/AmxvF5aaQtretFKakGHWLA), sem esperar pedido. Antes de dizer que terminou, confira que a versão publicada é a do último commit.
 - Os textos da interface ficam em português do Brasil simples: uma ação por botão, erro que explica como resolver.
