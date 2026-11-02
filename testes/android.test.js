@@ -38,6 +38,20 @@ const ok = (nome, cond, det = '') => out.push(`${cond ? '✔' : '✖'} ${nome}${
     return { p, ctx };
   };
 
+  // Fontes da marca: dentro do pacote, sem internet (relato do cliente: o app instalado tinha cara diferente do artefato)
+  {
+    const { p, ctx } = await nova();
+    const fontes = await p.evaluate(async () => {
+      await Promise.all(['700 28px "Bricolage Grotesque"', '600 16px "Bricolage Grotesque"', '400 15px "IBM Plex Sans"', '500 15px "IBM Plex Sans"', '600 15px "IBM Plex Sans"'].map(f => document.fonts.load(f, 'Menu acertoTotal ação')));
+      return [...document.fonts].filter(f => f.status === 'loaded').map(f => `${f.family} ${f.weight}`).sort();
+    });
+    ok('APK: as fontes da marca carregam do próprio pacote (Bricolage 600/700 e Plex 400/500/600)', JSON.stringify(fontes) === JSON.stringify(['Bricolage Grotesque 600', 'Bricolage Grotesque 700', 'IBM Plex Sans 400', 'IBM Plex Sans 500', 'IBM Plex Sans 600'].map(x => x.replace(/^'|'$/g, '')).sort()), JSON.stringify(fontes));
+    ok('APK: título e logotipo usam a fonte da marca, e o texto usa a Plex', await p.evaluate(() => /Bricolage Grotesque/.test(getComputedStyle(document.getElementById('title')).fontFamily) && /IBM Plex Sans/.test(getComputedStyle(document.body).fontFamily)));
+    ok('APK: nenhuma fonte vem da internet (arquivos .woff2 dentro de assets/fontes)', fs.readdirSync(path.join(ASSETS, 'fontes')).filter(x => x.endsWith('.woff2')).length === 5 && !/fonts\.(googleapis|gstatic)/.test(html));
+    ok('APK: licença das fontes (OFL) registrada', fs.existsSync(path.join(__dirname, '..', 'android', 'fontes', 'LICENCAS.md')));
+    await ctx.close();
+  }
+
   // Ponte de download
   {
     const { p, ctx } = await nova(() => {

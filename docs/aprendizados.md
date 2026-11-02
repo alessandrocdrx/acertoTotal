@@ -117,11 +117,21 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R73. Tudo o que o app guarda pode ser visto e sair dele: o comprovante tem **Ver** (tela cheia ou app de fotos/PDF do celular), **Compartilhar** e **Salvar na pasta Downloads**. A cópia de segurança avisa que não leva os comprovantes. [experiencia, android]
 - R74. Capturas da loja saem de `playstore/gerar-capturas.js`, nunca à mão: versão de produção, datas em pt-BR (`LANG=pt_BR`), nenhum número ruim de demonstração (0%, "Nunca feita", aviso de cópia) e nenhum aviso de "assinatura simulada". Textos da ficha conferidos pelo limite da Play (nome 30, curta 80, completa 4.000).
 - R75. Aviso de erro diz a causa certa. Se a Play respondeu mas não tem os planos, o app diz que "os planos ainda não estão à venda", e não manda conferir a internet. [assinatura]
+- R76. O app instalado tem a mesma cara do artefato: as fontes da marca (Bricolage Grotesque e IBM Plex Sans) vão dentro do pacote, em `android/fontes/`, e `preparar-assets.sh` as copia. Nada de fonte vinda da internet. [android]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-033 · 02/11/2026 · App instalado com cara diferente do artefato
+- **Relato do cliente:** "Eu vejo diferenças" entre o artefato e o app da Play.
+- **Causa:** duas diferenças.
+  - **Fontes:** `preparar-assets.sh` removia as fontes do Google do APK ("o app usa as fontes do sistema"). No celular, o título, o logotipo e os números saíam na fonte padrão do Android, sem a Bricolage Grotesque da marca.
+  - **Modo:** o artefato roda no modo de teste, com a faixa "Ambiente de teste" e o bloco "Apagar tudo", que o app da Play (produção) não tem.
+- **O que foi feito:** as fontes foram para dentro do pacote (5 arquivos `.woff2`, cerca de 120 KB, licença OFL em `android/fontes/LICENCAS.md`), com `@font-face` injetado no lugar do link da internet. O app continua sem usar rede.
+- **Pendente (aguarda decisão do cliente):** publicar o artefato no modo de produção, com a versão real no Menu.
+- **Como evitar:** regra R76; testes na suíte `android` (as 5 fontes carregam do pacote, título e logotipo usam a fonte da marca, nenhum endereço de fonte externo).
 
 ### A-032 · 02/11/2026 · Comprovante sem como ver e assinatura com aviso errado
 - **Relato do cliente** (app da Play):
