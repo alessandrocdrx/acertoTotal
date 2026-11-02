@@ -333,6 +333,35 @@ const CPF_MARINA = '637.129.261-70', CPF_BRUNO = cpf('434259868'), CPF_LIA = cpf
   const S7 = await estado();
   ok('Desfazer pelo histórico tira o que não foi mexido e mantém o que foi usado', !S7.clientes.some(c => c.nome === 'Lote Um') && S7.contas.some(c => c.id === loteDois.id) && S7.clientes.some(c => c.nome === 'Lote Dois'));
 
+  // ---------- Importar sem querer, quando a intenção era atualizar (relato do cliente, 02/11)
+  {
+    const S = await estado();
+    const marina = S.clientes.find(c => c.nome === 'Marina Alves');
+    const aberta = S.contas.filter(c => c.clienteId === marina.id && !c.pagoEm).sort((x, y) => x.venc < y.venc ? 1 : -1)[0];
+    const dd = iso => iso.split('-').reverse().join('/');
+    const maisDias = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+    const cab = ['CPF/CNPJ', 'Nome', 'Descrição', 'Valor', 'Vencimento'];
+    const doc = '637.129.261-70';
+    // A) mesma conta com outro vencimento, sem código: vira "conta nova" e o app avisa que parece mudança
+    await abrirImport(); await enviar('mudei-vencimento.xlsx', await xlsx([cab, [doc, 'Marina Alves', aberta.descricao, aberta.valor, dd(maisDias(aberta.venc, 3))]]));
+    const t1 = await texto();
+    ok('Importar sem código uma conta com outro vencimento: a prévia avisa que parece mudança de conta que o app já tem', await p.locator('#aviso-atualizacao').count() === 1 && /parece mudança de conta que o app já tem/.test(t1) && new RegExp(aberta.descricao).test(await p.locator('#aviso-atualizacao').innerText()), t1.slice(0, 700));
+    ok('O aviso aparece antes do botão de importar e oferece "Ir para Atualizar pelo Excel"', await p.evaluate(() => { const a = document.getElementById('aviso-atualizacao'), b = document.querySelector('[data-act=import-confirm]'); return !!a && !!b && (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) > 0 && !!a.querySelector('[data-act=atualizar-abrir]'); }));
+    ok('O aviso não bloqueia: o botão de importar continua ativo', !(await botao().isDisabled()));
+    await p.click('#aviso-atualizacao [data-act=atualizar-abrir]');
+    ok('"Ir para Atualizar pelo Excel" abre a janela de atualizar, sem gravar nada', /Atualizar/.test(await p.locator('.sheet h2').innerText()) && base(await estado()) === base(S));
+    // B) mesma conta, mesmo vencimento: é "sem mudança", sem aviso
+    await abrirImport(); await enviar('igual.xlsx', await xlsx([cab, [doc, 'Marina Alves', aberta.descricao, aberta.valor, dd(aberta.venc)]]));
+    ok('Conta igual à que já existe: sem aviso (é "sem mudança")', await p.locator('#aviso-atualizacao').count() === 0 && (await resumo())['Sem mudança'] === 1);
+    // C) descrição diferente: é conta nova de verdade, sem aviso
+    await abrirImport(); await enviar('taxa.xlsx', await xlsx([cab, [doc, 'Marina Alves', 'Taxa extra de dezembro', 50, dd(maisDias(aberta.venc, 40))]]));
+    ok('Conta com outra descrição é nova de verdade: sem aviso', await p.locator('#aviso-atualizacao').count() === 0 && (await resumo())['Contas novas'] === 1);
+    // D) com o código da conta é atualização: sem aviso
+    await abrirImport(); await enviar('com-codigo.xlsx', await xlsx([['Código da conta', ...cab], [aberta.id, doc, 'Marina Alves', aberta.descricao, aberta.valor, dd(maisDias(aberta.venc, 3))]]));
+    ok('Linha com o código da conta é atualização: sem aviso', await p.locator('#aviso-atualizacao').count() === 0 && (await resumo())['Atualizações'] === 1);
+    await fechar();
+  }
+
   // ---------- Layout em 320 px
   await p.setViewportSize({ width: 320, height: 640 });
   await abrirImport(); await enviar('clientes-novembro.xlsx', arq);

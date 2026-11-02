@@ -124,11 +124,20 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R80. Todo dado errado tem como corrigir sem apagar: a conta tem "Editar conta", com "Desfazer" no aviso. [experiencia]
 - R81. "Cobrar no WhatsApp" monta a mensagem no aparelho (nome, valor, vencimento, dias de atraso, chave Pix e nome do negócio) e abre o WhatsApp só quando a pessoa toca. O telefone vira `55` + DDD + número; sem telefone válido, não há link quebrado: a tela explica e oferece "Editar dados" e "Copiar mensagem". O app não envia nada sozinho, e a política de privacidade diz isso. [experiencia, tarefas]
 - R82. Tudo o que se toca ou se digita precisa **parecer** tocável: caixa de digitar e botão de contorno têm borda com contraste de pelo menos 3:1 sobre o fundo (`--campo-borda`, WCAG 1.4.11), e a caixa tem um fundo levemente marcado. Cartão que filtra mostra um ícone de filtro (e um "x" quando está marcado) e a lista oferece "Ver tudo". [experiencia]
+- R83. A prévia da importação avisa quando uma linha **sem código** parece mudança de conta que o app já tem (mesmo cliente, mesma descrição, conta em aberto, outro vencimento), com o botão "Ir para Atualizar pelo Excel". O aviso não bloqueia. A cópia de segurança mostra o que vai dentro (clientes e contas), e não a tabela de códigos. [importacao, experiencia]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-038 · 02/11/2026 · "O que é código da conta?" e importar quando era para atualizar
+- **Relato do cliente:** a prévia da cópia de segurança mostrava 33 linhas com uma coluna "Código da conta" sem explicação. Depois: "E se o cliente usar Importar sem querer, mas a intenção era atualizar?"
+- **Causa:** o código é o identificador interno que liga a linha do Excel à conta (é ele que faz "Atualizar" e "Restaurar" sem duplicar), mas a tela o mostrava como se fosse algo para conferir. Quem mudava o vencimento no Excel e importava sem o código criava uma conta nova ao lado da antiga, e a prévia só dizia "contas novas".
+- **O que foi feito:**
+  - **Cópia de segurança:** em vez da tabela de códigos, mostra "O que vai na cópia" (clientes, contas, pagas) e explica numa linha o que é o código e que não se mexe nele.
+  - **Importar:** quando a planilha traz conta sem código com a mesma descrição de uma conta em aberto do mesmo cliente e outro vencimento, a prévia mostra o aviso, com um exemplo e o botão "Ir para Atualizar pelo Excel". Não bloqueia: pode ser conta nova de verdade (uma mensalidade nova, por exemplo).
+- **Como evitar:** regra R83; 5 testes novos em `importacao` (aviso, posição antes do botão, não bloqueia, e 3 casos sem aviso: conta igual, outra descrição e linha com código) e 1 em `experiencia`.
 
 ### A-037 · 02/11/2026 · "Difícil saber que é uma caixa para digitar" e "nem percebi que dava para clicar"
 - **Relato do cliente** (três capturas): "Aqui e em vários locais fica difícil saber que é uma caixa para digitar, parece mais um espaço vazio". "Nem percebi que dava para clicar" (os 3 cartões do topo de Contas). O terceiro print mostrava o campo de data e o botão "Anexar foto ou PDF", com a mesma borda quase invisível.

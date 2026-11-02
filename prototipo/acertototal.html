@@ -768,6 +768,12 @@ function tableOf(head,rows){
    +rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+esc(c)+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>';
 }
 var lastExport=null;
+// A cópia de segurança não mostra a tabela de códigos (ninguém confere 33 linhas de códigos): só o que vai dentro.
+function resumoBackup(){
+  var nc=S.clientes.length,nt=S.contas.length,np=S.contas.filter(function(c){return c.pagoEm}).length,nk=S.contas.filter(function(c){return c.comprovante}).length;
+  return '<h3>O que vai na cópia</h3><ul class="contagem" id="resumo-backup"><li>'+nc+' cliente'+(nc===1?'':'s')+'</li><li>'+nt+' conta'+(nt===1?'':'s')+' ('+np+' paga'+(np===1?'':'s')+')</li><li>Telefone, e-mail, vencimentos e datas de pagamento</li></ul>'
+   +'<p class="hint">Cada conta leva um código na planilha. Ele é o que permite “Restaurar uma cópia” sem duplicar nada. Não mexa na coluna “Código da conta”.'+(nk?' Os '+nk+' comprovante'+(nk===1?'':'s')+' não vão na planilha.':'')+'</p>';
+}
 function sheetExport(kind){
   if(somenteLeitura()){toast(MSG_LEITURA);return}
   var head,rows,titulo,filtros='',file,extra=null,ed=false;
@@ -789,7 +795,7 @@ function sheetExport(kind){
   sheet('<h2>'+titulo+'</h2><p class="sub">'+(filtros?'Filtros: '+esc(filtros)+'. ':'')+rows.length+' linha'+(rows.length===1?'':'s')+'. Baixe como Excel (.xlsx) ou copie e cole numa planilha.</p>'+guia
    +(kind==='backup'?'<div class="alerta info" id="aviso-comp">Fotos e PDFs de comprovante não vão na planilha. Para guardar um, abra a conta paga e toque em <b>Compartilhar</b> ou <b>Salvar na pasta Downloads</b>.</div>':'')
    +(rows.length?'<div class="actions"><button class="btn primary block" data-act="xlsx-export">Baixar Excel (.xlsx)</button><button class="btn block" data-act="copy-export">Copiar para colar no Excel</button></div>':'')
-   +'<h3>Prévia</h3>'+(rows.length?tableOf(head,rows):'<div class="empty">Nenhuma conta com esses filtros.</div>')
+   +(kind==='backup'?resumoBackup():'<h3>Prévia</h3>'+(rows.length?tableOf(head,rows):'<div class="empty">Nenhuma conta com esses filtros.</div>'))
    +'<div class="actions">'+(kind==='custom'?'<button class="btn block" data-act="xf-voltar">Voltar aos filtros</button>':'')+'<button class="btn block" data-act="close">Fechar</button></div>');
 }
 
@@ -1327,6 +1333,11 @@ function planejarImport(linhas,arquivo,soClientes){
     if(pg&&pg!==ex.pagoEm)md.push(baixaMud(ex,pg));
     if(md.length){pl.contasAtualizadas.push({conta:ex,mud:md});grupo(cl).contasMud.push({conta:ex,mud:md})}else pl.semMudanca.push(ex);
   });
+  // "Parece atualização": o cliente já tem uma conta em aberto com a mesma descrição, mas a linha veio sem código e com outro vencimento.
+  // Quem mudou o vencimento no Excel e importou (em vez de "Atualizar pelo Excel") cria uma conta nova ao lado da antiga.
+  pl.parecemAtualizacao=pl.contasNovas.filter(function(cn){
+    return !cn.id&&cn.cliente&&S.contas.some(function(c){return c.clienteId===cn.cliente.id&&!c.pagoEm&&norm(c.descricao)===norm(cn.descricao)&&c.venc!==cn.venc});
+  });
   return pl;
 }
 // Transforma o plano em itens de texto, agrupados por cliente: os mesmos na prévia e no histórico.
@@ -1380,6 +1391,12 @@ function sheetImport(pl){
    +'<ul class="imp-res">'+res.map(function(x){return '<li'+(x[0]==='Com problema'&&x[1]?' class="bad"':'')+'><b>'+x[1]+'</b><span>'+x[0]+'</span></li>'}).join('')+'</ul>';
   if(ne)h+='<div class="alerta" role="alert"><b>'+ne+' linha'+(ne>1?'s':'')+' com problema '+(ne>1?'ficam':'fica')+' de fora.</b> Você pode importar o resto agora e corrigir essas depois.<div class="alerta-bt"><button class="btn sm" data-act="imp-ver-prob">Ver problemas</button><button class="btn sm" data-act="imp-erros">Baixar linhas com problema</button></div></div>';
   h+=colunasHtml();
+  if(pl.parecemAtualizacao&&pl.parecemAtualizacao.length){
+    var pa=pl.parecemAtualizacao,n1=pa.length,ex=pa[0],ant=S.contas.find(function(c){return c.clienteId===ex.cliente.id&&!c.pagoEm&&norm(c.descricao)===norm(ex.descricao)&&c.venc!==ex.venc});
+    h+='<div class="alerta info" id="aviso-atualizacao"><b>'+n1+' conta'+(n1>1?'s':'')+' nova'+(n1>1?'s':'')+' '+(n1>1?'parecem':'parece')+' mudança'+(n1>1?'s':'')+' de conta'+(n1>1?'s':'')+' que o app já tem.</b> Exemplo: '+esc(ex.cliente.nome)+' já tem “'+esc(ant.descricao)+'” em aberto (venc. '+fmtDC(ant.venc)+') e a planilha traz outra com vencimento '+fmtDC(ex.venc)+'. '
+     +'Se a ideia era <b>atualizar</b> contas, não continue: use “Atualizar pelo Excel”, que mantém a conta e muda só o que você alterou. Se são contas novas de verdade, siga em frente.'
+     +'<div class="alerta-bt"><button class="btn sm" data-act="atualizar-abrir">Ir para Atualizar pelo Excel</button></div></div>';
+  }
   if(pl.soClientes)h+='<div class="alerta info">A planilha não tem colunas de valor e vencimento: só os clientes serão importados.</div>';
   if(nAt)h+='<h3>O que vai mudar</h3><p class="hint">Dados que já existem no app e estão diferentes na planilha, por cliente. Riscado é como está; em negrito é como vai ficar.</p>'+itensHtml(itens,'atualizado')
    +'<label class="toggle"><input type="checkbox" id="imp-atualizar" checked> Atualizar estes dados</label>';

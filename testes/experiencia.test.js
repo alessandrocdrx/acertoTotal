@@ -257,6 +257,7 @@ const medir = () => {
   await p.click('.tabs [data-tab=planilha]'); await p.click('#screen [data-act=export-backup]'); await p.waitForTimeout(300);
   const visivel = sel => p.evaluate(s => { const e = document.querySelector(s); if (!e) return false; const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }, sel);
   ok('Cópia de segurança: "Baixar Excel" aparece sem rolar, antes da prévia', await visivel('.sheet [data-act=xlsx-export]'));
+  ok('Cópia de segurança: mostra o que vai dentro (clientes e contas) e não a tabela de códigos', (await p.locator('.sheet tbody tr').count()) === 0 && /\d+ clientes?/.test(await p.locator('#resumo-backup').innerText()) && /\d+ contas?/.test(await p.locator('#resumo-backup').innerText()) && /código na planilha/.test(await p.locator('.sheet').innerText()));
   ok('Cópia de segurança: avisa que os comprovantes não vão na planilha e como salvá-los', /comprovante não vão na planilha/.test(await p.locator('#aviso-comp').innerText()));
   await p.keyboard.press('Escape');
   // Comprovante (relato do cliente: "salvei, mas como visualizo?"): ver em tela cheia, compartilhar e salvar
