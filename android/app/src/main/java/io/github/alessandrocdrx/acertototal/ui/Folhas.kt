@@ -54,6 +54,7 @@ fun FolhaConta(
     aoAnexar: (Anexo) -> Unit,
     aoRemoverComprovante: () -> Unit,
     aoDesfazerBaixa: () -> Unit,
+    aoCobrar: () -> Unit,
     aoEditar: () -> Unit,
     aoExcluir: () -> Unit,
 ) {
@@ -81,6 +82,7 @@ fun FolhaConta(
                 val e = Validacao.baixa(data, hoje)
                 if (e != null) erro = e else aoBaixar(data!!, pendente)
             })
+            BotaoBloco("Cobrar no WhatsApp", aoClicar = aoCobrar)
         } else {
             SecaoComprovante(atual = anexoDaConta, aoAnexar = aoAnexar, aoRemover = aoRemoverComprovante)
             HorizontalDivider()
@@ -182,6 +184,7 @@ fun FolhaCliente(
     aoNovaConta: () -> Unit,
     aoEditar: () -> Unit,
     aoAtualizarExcel: () -> Unit,
+    aoCobrar: () -> Unit,
     aoExcluir: () -> Unit,
     aoAbrirConta: (ContaComCliente) -> Unit,
 ) {
@@ -197,7 +200,9 @@ fun FolhaCliente(
             )
             BotaoBloco("Completar cadastro", principal = true, aoClicar = aoEditar)
         } else {
-            BotaoBloco("Nova conta para este cliente", principal = true, aoClicar = aoNovaConta)
+            val temAberta = contas.any { it.pagoEm == null }
+            if (temAberta) BotaoBloco("Cobrar no WhatsApp", principal = true, aoClicar = aoCobrar)
+            BotaoBloco("Nova conta para este cliente", principal = !temAberta, aoClicar = aoNovaConta)
             BotaoBloco("Editar dados", aoClicar = aoEditar)
             if (contas.isNotEmpty()) BotaoBloco("Atualizar pelo Excel", aoClicar = aoAtualizarExcel)
         }

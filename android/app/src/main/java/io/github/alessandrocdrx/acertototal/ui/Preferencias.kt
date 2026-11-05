@@ -31,6 +31,16 @@ object Preferencias {
         ctx.getSharedPreferences(ARQUIVO, Context.MODE_PRIVATE).edit().remove("ultimo_backup").apply()
     }
 
+    /** "Meu negócio": nome e chave Pix da mensagem de cobrança. "Apagar tudo" não mexe nisto. */
+    fun negocio(ctx: Context): io.github.alessandrocdrx.acertototal.dominio.Negocio {
+        val p = ctx.getSharedPreferences(ARQUIVO, Context.MODE_PRIVATE)
+        return io.github.alessandrocdrx.acertototal.dominio.Negocio(p.getString("negocio_nome", "").orEmpty(), p.getString("negocio_pix", "").orEmpty())
+    }
+
+    fun salvarNegocio(ctx: Context, n: io.github.alessandrocdrx.acertototal.dominio.Negocio) {
+        ctx.getSharedPreferences(ARQUIVO, Context.MODE_PRIVATE).edit().putString("negocio_nome", n.nome).putString("negocio_pix", n.pix).apply()
+    }
+
     fun salvarTema(ctx: Context, tema: Tema) {
         ctx.getSharedPreferences(ARQUIVO, Context.MODE_PRIVATE).edit().putString("tema", tema.name).apply()
     }

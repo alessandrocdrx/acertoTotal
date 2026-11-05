@@ -85,6 +85,10 @@ sealed interface Janela {
     data object AtualizarExcel : Janela
     data class RegistroImp(val id: Long) : Janela
     data class DesfazerImp(val id: Long) : Janela
+    /** [contaId]: cobra só esta conta; sem ele, todas as contas em aberto do cliente. */
+    data class Cobrar(val clienteId: String, val contaId: String?) : Janela
+    /** [voltar]: ao salvar, volta para a cobrança de onde a pessoa veio. */
+    data class Negocio(val voltar: Cobrar?) : Janela
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,6 +122,7 @@ fun App(
     val completas by contasVm.completas.collectAsStateWithLifecycle()
     var filtros by remember { mutableStateOf(FiltrosExport()) }
     var ultimoBackup by remember { mutableStateOf(Preferencias.ultimoBackup(contexto)) }
+    var negocio by remember { mutableStateOf(Preferencias.negocio(contexto)) }
     var retorno by remember { mutableStateOf<Retorno?>(null) }
     // Cada janela começa sem a resposta da anterior.
     androidx.compose.runtime.LaunchedEffect(janela) { retorno = null }
@@ -270,6 +275,8 @@ fun App(
                 aoTema = { janela = Janela.Tema },
                 aoFaq = { janela = Janela.Faq },
                 aoApagar = { janela = Janela.Apagar },
+                negocio = negocio,
+                aoNegocio = { janela = Janela.Negocio(null) },
                 modifier = corpo,
             )
             aba == Aba.CONTAS -> TelaContas(
@@ -409,6 +416,26 @@ fun App(
                     aoFechar = { janela = null },
                 )
             }
+            is Janela.Cobrar -> {
+                val cl = uiClientes.todos.firstOrNull { it.id == j.clienteId }
+                val abertas = ui.todas.filter { it.clienteId == j.clienteId && it.pagoEm == null && (j.contaId == null || it.id == j.contaId) }
+                if (cl != null && abertas.isNotEmpty()) FolhaCobrar(
+                    cliente = cl, contas = abertas, negocio = negocio, hoje = ui.hoje,
+                    aoEditarCliente = { janela = Janela.FormCliente(cl.id) },
+                    aoMeuNegocio = { janela = Janela.Negocio(j) },
+                    aoFechar = { janela = null },
+                ) else androidx.compose.runtime.LaunchedEffect(Unit) { janela = null }
+            }
+            is Janela.Negocio -> FolhaNegocio(
+                inicial = negocio,
+                aoSalvar = { n ->
+                    Preferencias.salvarNegocio(contexto, n)
+                    negocio = n
+                    janela = j.voltar
+                    avisar("Dados do negócio salvos")
+                },
+                aoFechar = { janela = j.voltar },
+            )
             Janela.Sobre -> FolhaSobre(io.github.alessandrocdrx.acertototal.BuildConfig.VERSION_NAME) { janela = null }
             Janela.Tema -> FolhaTema(tema, aoEscolher = aoMudarTema, aoFechar = { janela = null })
             Janela.Faq -> FolhaFaq { janela = null }
@@ -450,6 +477,7 @@ fun App(
                         contasVm.desfazerBaixa(c.id) { antes -> avisar("Baixa desfeita") { contasVm.restaurarConta(antes) } }
                         janela = null
                     },
+                    aoCobrar = { janela = Janela.Cobrar(c.clienteId, c.id) },
                     aoEditar = { janela = Janela.FormConta(c.id, null) },
                     aoExcluir = {
                         contasVm.excluirConta(c.id) { removida -> avisar("Conta excluída") { contasVm.restaurarConta(removida) } }
@@ -491,6 +519,7 @@ fun App(
                         filtros = FiltrosExport(formato = FormatoExport.EDITAR, status = StatusExport.TODAS, clienteId = cl.id)
                         janela = Janela.ExportarPrevia(backup = false)
                     },
+                    aoCobrar = { janela = Janela.Cobrar(cl.id, null) },
                     aoExcluir = {
                         clientesVm.excluir(cl.id) { removido ->
                             if (removido == null) avisar("Este cliente tem contas e não pode ser excluído.")

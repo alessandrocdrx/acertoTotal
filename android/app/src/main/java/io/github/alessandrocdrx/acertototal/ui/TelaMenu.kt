@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -145,6 +146,8 @@ fun TelaMenu(
     aoTema: () -> Unit,
     aoFaq: () -> Unit,
     aoApagar: () -> Unit,
+    negocio: io.github.alessandrocdrx.acertototal.dominio.Negocio,
+    aoNegocio: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val links = LocalUriHandler.current
@@ -167,6 +170,13 @@ fun TelaMenu(
         }
         Grupo("Aparência")
         Opcao(Icons.Filled.Palette, "Tema", "Claro, escuro ou igual ao celular", aoTema)
+        Grupo("Cobrança")
+        Opcao(
+            Icons.Filled.Store, "Meu negócio",
+            listOf(negocio.nome, negocio.pix.takeIf { it.isNotBlank() }?.let { "Pix $it" }).filterNotNull().filter { it.isNotBlank() }
+                .joinToString(" · ").ifEmpty { "Seu nome e sua chave Pix, para a mensagem de cobrança" },
+            aoNegocio,
+        )
         Grupo("Seus dados")
         Opcao(
             Icons.Filled.Backup, "Cópia de segurança", "Tudo numa planilha, para guardar ou trocar de celular", aoBackup,
