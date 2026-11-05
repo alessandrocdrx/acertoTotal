@@ -10,7 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.alessandrocdrx.acertototal.R
 
 /** Cores de situação, além das do Material 3. Vêm dos tokens do protótipo (--ok, --warn, --bad). */
 data class CoresAcerto(
@@ -99,11 +104,43 @@ private val Formas = Shapes(
 )
 
 /** O tema claro é o padrão (R18): o escuro só entra quando a pessoa escolhe. */
+/** Fontes da marca, embutidas no app (funciona sem internet): títulos em Bricolage Grotesque, textos em IBM Plex Sans. */
+private val Titulos = FontFamily(
+    Font(R.font.bricolage_600, FontWeight.SemiBold),
+    Font(R.font.bricolage_700, FontWeight.Bold),
+    Font(R.font.bricolage_600, FontWeight.Normal),
+)
+private val Textos = FontFamily(
+    Font(R.font.plex_400, FontWeight.Normal),
+    Font(R.font.plex_500, FontWeight.Medium),
+    Font(R.font.plex_600, FontWeight.SemiBold),
+    Font(R.font.plex_600, FontWeight.Bold),
+)
+
+private val Padrao = Typography()
+private val Tipografia = Typography(
+    displayLarge = Padrao.displayLarge.copy(fontFamily = Titulos),
+    displayMedium = Padrao.displayMedium.copy(fontFamily = Titulos),
+    displaySmall = Padrao.displaySmall.copy(fontFamily = Titulos),
+    headlineLarge = Padrao.headlineLarge.copy(fontFamily = Titulos),
+    headlineMedium = Padrao.headlineMedium.copy(fontFamily = Titulos),
+    headlineSmall = Padrao.headlineSmall.copy(fontFamily = Titulos),
+    titleLarge = Padrao.titleLarge.copy(fontFamily = Titulos),
+    titleMedium = Padrao.titleMedium.copy(fontFamily = Titulos),
+    titleSmall = Padrao.titleSmall.copy(fontFamily = Titulos),
+    bodyLarge = Padrao.bodyLarge.copy(fontFamily = Textos),
+    bodyMedium = Padrao.bodyMedium.copy(fontFamily = Textos),
+    bodySmall = Padrao.bodySmall.copy(fontFamily = Textos),
+    labelLarge = Padrao.labelLarge.copy(fontFamily = Textos),
+    labelMedium = Padrao.labelMedium.copy(fontFamily = Textos),
+    labelSmall = Padrao.labelSmall.copy(fontFamily = Textos),
+)
+
 @Composable
 fun TemaAcerto(escuro: Boolean = false, conteudo: @Composable () -> Unit) {
     val esquema: ColorScheme = if (escuro) Escuro else Claro
     CompositionLocalProvider(LocalCoresAcerto provides if (escuro) CoresEscuro else CoresClaro) {
-        MaterialTheme(colorScheme = esquema, shapes = Formas, content = conteudo)
+        MaterialTheme(colorScheme = esquema, shapes = Formas, typography = Tipografia, content = conteudo)
     }
 }
 

@@ -641,7 +641,6 @@ As entradas mais recentes ficam no topo.
 
 - A miniatura do link no WhatsApp é gerada pelo Claude e não pode ser trocada pelo app.
 - O app nativo foi testado só no emulador (Android 35). Falta passar por um celular de verdade, principalmente a leitura de `.xlsx` (no emulador a primeira leitura demorou vários segundos), a câmera e o WhatsApp.
-- Fontes da marca (Bricolage Grotesque, IBM Plex Sans) ainda não estão no app nativo: o Compose precisa de `.ttf`, e só temos `.woff2` em `android/fontes`.
 - Planilha `.xls` antiga (e com senha) não é lida pelo app nativo: ele explica como salvar como `.xlsx`.
 - Lint: três bibliotecas AndroidX têm versões mais novas (activity, core, webkit). Atualizar exige compileSdk 36 e uma versão nova do AGP.
 - Se o app for desinstalado, os dados se perdem (banco Room no aparelho). A cópia de segurança em Excel é a proteção.

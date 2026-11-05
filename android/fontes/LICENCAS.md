@@ -6,3 +6,5 @@ O app funciona sem internet, então as fontes da marca vão dentro do pacote (ar
 - **IBM Plex Sans** (400, 500 e 600): textos. SIL Open Font License 1.1.
 
 Origem: pacotes `@fontsource/bricolage-grotesque` e `@fontsource/ibm-plex-sans` (v5). A licença OFL permite embutir e redistribuir as fontes em apps. O crédito aparece em Menu › Sobre.
+
+No app nativo, os `.woff2` foram convertidos para `.ttf` (o Compose não lê `.woff2`) e ficam em `android/app/src/main/res/font/`. A licença é a mesma.
