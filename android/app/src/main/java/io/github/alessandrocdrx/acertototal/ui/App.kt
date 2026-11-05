@@ -43,8 +43,13 @@ import io.github.alessandrocdrx.acertototal.dominio.Documento
 import io.github.alessandrocdrx.acertototal.dominio.backupPendente
 import io.github.alessandrocdrx.acertototal.dominio.brl
 import io.github.alessandrocdrx.acertototal.dominio.infoBackup
+import io.github.alessandrocdrx.acertototal.planilha.AbaXlsx
 import io.github.alessandrocdrx.acertototal.planilha.Exportacao
 import io.github.alessandrocdrx.acertototal.planilha.FiltrosExport
+import io.github.alessandrocdrx.acertototal.planilha.FormatoExport
+import io.github.alessandrocdrx.acertototal.planilha.Modelos
+import io.github.alessandrocdrx.acertototal.planilha.StatusExport
+import io.github.alessandrocdrx.acertototal.planilha.mantidosTexto
 import io.github.alessandrocdrx.acertototal.planilha.PlanilhaPronta
 import io.github.alessandrocdrx.acertototal.planilha.Xlsx
 import androidx.compose.material3.Badge
@@ -76,6 +81,10 @@ sealed interface Janela {
     data object ExportarFiltros : Janela
     /** [backup]: a cópia de segurança não tem filtros nem tabela, só o resumo. */
     data class ExportarPrevia(val backup: Boolean) : Janela
+    data object Importar : Janela
+    data object AtualizarExcel : Janela
+    data class RegistroImp(val id: Long) : Janela
+    data class DesfazerImp(val id: Long) : Janela
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,6 +95,7 @@ fun App(
     contasVm: ContasViewModel = viewModel(),
     clientesVm: ClientesViewModel = viewModel(),
     numerosVm: NumerosViewModel = viewModel(),
+    importVm: ImportacaoViewModel = viewModel(),
 ) {
     var aba by rememberSaveable { mutableStateOf(Aba.CONTAS) }
     var noMenu by rememberSaveable { mutableStateOf(false) }
@@ -93,6 +103,12 @@ fun App(
     val ui by contasVm.ui.collectAsStateWithLifecycle()
     val uiClientes by clientesVm.ui.collectAsStateWithLifecycle()
     val uiNumeros by numerosVm.ui.collectAsStateWithLifecycle()
+    val estadoImp by importVm.estado.collectAsStateWithLifecycle()
+    val registros by importVm.registros.collectAsStateWithLifecycle()
+    // Planilhas de qualquer origem: o tipo vem do conteúdo, não do nome nem do tipo que o app de origem declara (R48).
+    val escolherArquivo = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri -> if (uri != null) importVm.lerUri(uri) }
     val aviso = remember { SnackbarHostState() }
     val escopo = rememberCoroutineScope()
     val listaContas = rememberLazyListState()
@@ -140,6 +156,31 @@ fun App(
         else Exportacao.relatorioOuEditar(uiClientes.todos, completas, filtros, ui.hoje)
 
     fun nomeDoArquivo(p: PlanilhaPronta) = "${p.arquivo}-${ui.hoje}.xlsx"
+
+    /** Baixa uma planilha auxiliar (modelo, linhas com problema). O resultado vai num Toast, que aparece acima das janelas. */
+    fun baixarAbas(abas: List<AbaXlsx>, nomeBase: String, comData: Boolean = true) {
+        escopo.launch {
+            val nome = nomeBase + (if (comData) "-${ui.hoje}" else "") + ".xlsx"
+            val ok = withContext(Dispatchers.IO) {
+                runCatching { Arquivos.salvarEmDownloads(contexto, nome, Xlsx.escrever(abas)) }.getOrDefault(false)
+            }
+            android.widget.Toast.makeText(
+                contexto,
+                if (ok) "Arquivo Excel salvo em Downloads: $nome" else "Não foi possível salvar o arquivo. Confira se há espaço no aparelho.",
+                android.widget.Toast.LENGTH_LONG,
+            ).show()
+        }
+    }
+
+    fun abrirImportar() {
+        importVm.reiniciar()
+        janela = Janela.Importar
+    }
+
+    fun fecharImportar() {
+        importVm.reiniciar()
+        janela = null
+    }
 
     /** Falha ao salvar nunca é silenciosa (R28). A data da cópia só muda se o arquivo foi gravado. */
     fun baixar(backup: Boolean) {
@@ -224,6 +265,7 @@ fun App(
                 mostrarApagar = !io.github.alessandrocdrx.acertototal.BuildConfig.COBRANCA_REAL,
                 backup = infoBackup,
                 aoBackup = { janela = Janela.ExportarPrevia(backup = true) },
+                aoRestaurar = { abrirImportar() },
                 aoSobre = { janela = Janela.Sobre },
                 aoTema = { janela = Janela.Tema },
                 aoFaq = { janela = Janela.Faq },
@@ -253,8 +295,12 @@ fun App(
             aba == Aba.PLANILHA -> TelaPlanilha(
                 backup = infoBackup,
                 // Cada tarefa abre com os filtros limpos: nada herdado de outra tarefa (R56).
+                aoImportar = { abrirImportar() },
+                aoAtualizar = { janela = Janela.AtualizarExcel },
                 aoExportar = { filtros = FiltrosExport(); janela = Janela.ExportarFiltros },
                 aoBackup = { janela = Janela.ExportarPrevia(backup = true) },
+                registros = registros,
+                aoAbrirRegistro = { janela = Janela.RegistroImp(it) },
                 modifier = corpo,
             )
             aba == Aba.NUMEROS -> TelaNumeros(
@@ -290,6 +336,76 @@ fun App(
                         retorno = Retorno("Copiado. Cole numa planilha do Excel.")
                     },
                     aoVoltar = if (j.backup) null else ({ janela = Janela.ExportarFiltros }),
+                    aoFechar = { janela = null },
+                )
+            }
+            Janela.Importar -> when (val e = estadoImp) {
+                ImpEstado.Escolher -> PassoEscolher(
+                    backup = infoBackup,
+                    mostrarExemplo = !io.github.alessandrocdrx.acertototal.BuildConfig.COBRANCA_REAL,
+                    aoEscolherArquivo = { escolherArquivo.launch(arrayOf("*/*")) },
+                    aoUsarExemplo = importVm::usarExemplo,
+                    aoBaixarModelo = { baixarAbas(Modelos.modelo(), "modelo-importacao-acertototal", comData = false) },
+                    aoFazerBackup = { janela = Janela.ExportarPrevia(backup = true) },
+                    aoFechar = { fecharImportar() },
+                )
+                is ImpEstado.Lendo -> PassoLendo(e.arquivo) { fecharImportar() }
+                is ImpEstado.Erro -> PassoErro(
+                    e, aoEscolherOutro = { escolherArquivo.launch(arrayOf("*/*")) },
+                    aoBaixarModelo = { baixarAbas(Modelos.modelo(), "modelo-importacao-acertototal", comData = false) },
+                    aoFechar = { fecharImportar() },
+                )
+                is ImpEstado.Colunas -> PassoColunas(
+                    e, aoEscolherAba = importVm::escolherAba, aoMudarColuna = importVm::mudarColuna,
+                    aoContinuar = importVm::confirmarColunas, aoVoltar = importVm::reiniciar, aoFechar = { fecharImportar() },
+                )
+                is ImpEstado.Previa -> PassoPrevia(
+                    e, hoje = ui.hoje,
+                    aoAjustarColunas = importVm::ajustarColunas,
+                    aoBaixarErros = {
+                        baixarAbas(listOf(Modelos.linhasComProblema(e.abas[e.aba], e.plano.erros)), Modelos.nomeLinhasComProblema(e.arquivo))
+                    },
+                    aoIrAtualizar = { janela = Janela.AtualizarExcel },
+                    aoImportar = { novos, atualizar -> importVm.aplicar(novos, atualizar) },
+                    aoFechar = { fecharImportar() },
+                )
+                is ImpEstado.Concluida -> PassoConcluida(
+                    e,
+                    aoVer = {
+                        aba = if (e.resumo.contasNovas + e.resumo.contasAtualizadas > 0) Aba.CONTAS else Aba.CLIENTES
+                        noMenu = false
+                        fecharImportar()
+                    },
+                    aoBaixarErros = {
+                        baixarAbas(listOf(Modelos.linhasComProblema(e.previa.abas[e.previa.aba], e.previa.plano.erros)), Modelos.nomeLinhasComProblema(e.previa.arquivo))
+                    },
+                    aoDesfazer = { janela = Janela.DesfazerImp(e.registroId) },
+                    aoFechar = { fecharImportar() },
+                )
+            }
+            Janela.AtualizarExcel -> FolhaAtualizarExcel(
+                aoBaixar = { filtros = FiltrosExport(formato = FormatoExport.EDITAR, status = StatusExport.ABERTAS); janela = Janela.ExportarFiltros },
+                aoEnviar = { abrirImportar() },
+                aoFechar = { janela = null },
+            )
+            is Janela.RegistroImp -> registros.firstOrNull { it.id == j.id }?.let { reg ->
+                // Só a importação mais recente que ainda vale pode ser desfeita: as de depois partem do que ela deixou.
+                val pode = reg.desfeita == null && registros.takeWhile { it.id != reg.id }.all { it.desfeita != null }
+                FolhaRegistroImp(reg, podeDesfazer = pode, aoDesfazer = { janela = Janela.DesfazerImp(reg.id) }, aoFechar = { janela = null })
+            }
+            is Janela.DesfazerImp -> registros.firstOrNull { it.id == j.id }?.let { reg ->
+                FolhaDesfazerImp(
+                    reg,
+                    aoConfirmar = {
+                        importVm.desfazer(reg.id) { mantidos ->
+                            janela = null
+                            importVm.reiniciar()
+                            avisar(
+                                if (mantidos == null) "Esta importação não pode mais ser desfeita."
+                                else "Importação desfeita" + if (mantidos > 0) ". ${mantidosTexto(mantidos)}" else "",
+                            )
+                        }
+                    },
                     aoFechar = { janela = null },
                 )
             }
@@ -365,6 +481,11 @@ fun App(
                     aoFechar = { janela = null },
                     aoNovaConta = { novaConta(cl.id) },
                     aoEditar = { janela = Janela.FormCliente(cl.id) },
+                    // Só este cliente, com todas as contas, direto na prévia da planilha para editar.
+                    aoAtualizarExcel = {
+                        filtros = FiltrosExport(formato = FormatoExport.EDITAR, status = StatusExport.TODAS, clienteId = cl.id)
+                        janela = Janela.ExportarPrevia(backup = false)
+                    },
                     aoExcluir = {
                         clientesVm.excluir(cl.id) { removido ->
                             if (removido == null) avisar("Este cliente tem contas e não pode ser excluído.")

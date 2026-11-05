@@ -5,22 +5,39 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import io.github.alessandrocdrx.acertototal.BuildConfig
 import java.time.LocalDate
 import java.util.UUID
 
-@Database(entities = [Cliente::class, Conta::class], version = 1, exportSchema = false)
+@Database(entities = [Cliente::class, Conta::class, ImportacaoReg::class], version = 2, exportSchema = false)
 @TypeConverters(Conversores::class)
 abstract class Banco : RoomDatabase() {
     abstract fun contas(): ContaDao
     abstract fun clientes(): ClienteDao
+    abstract fun importacoes(): ImportacaoDao
 
     companion object {
         @Volatile
         private var instancia: Banco? = null
 
+        /** Versão 2: histórico das importações e índice do CPF/CNPJ sem exigir único. Os dados ficam como estão. */
+        private val MIGRACAO_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP INDEX IF EXISTS `index_clientes_doc`")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_clientes_doc` ON `clientes` (`doc`)")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `importacoes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`quando` TEXT NOT NULL, `arquivo` TEXT NOT NULL, `resumo` TEXT NOT NULL, `itens` TEXT NOT NULL, " +
+                        "`desfazer` TEXT NOT NULL, `desfeita` TEXT, `mantidos` INTEGER NOT NULL)",
+                )
+            }
+        }
+
         fun obter(ctx: Context): Banco = instancia ?: synchronized(this) {
             instancia ?: Room.databaseBuilder(ctx.applicationContext, Banco::class.java, "acertototal.db")
+                .addMigrations(MIGRACAO_1_2)
                 .build().also { instancia = it }
         }
     }

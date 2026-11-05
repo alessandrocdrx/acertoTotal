@@ -9,7 +9,9 @@ import java.time.LocalDate
 
 fun novoId(): String = java.util.UUID.randomUUID().toString().take(8)
 
-@Entity(tableName = "clientes", indices = [Index(value = ["doc"], unique = true)])
+// O índice do CPF/CNPJ é só para buscar rápido. Que ele não repita (R52) quem garante é a validação: um índice
+// único recusaria dois clientes antigos sem documento, que ficam com o campo vazio (R59).
+@Entity(tableName = "clientes", indices = [Index(value = ["doc"])])
 data class Cliente(
     @PrimaryKey val id: String,
     val nome: String,
@@ -44,6 +46,24 @@ data class Conta(
     val compTipo: String? = null,
     /** Nome do arquivo do comprovante na pasta do app (R27: imagem reduzida a 1280 px). */
     val compArquivo: String? = null,
+)
+
+/**
+ * Uma importação já feita, para o histórico e para o desfazer (R50). Os detalhes ficam em JSON:
+ * [resumo] (contagens), [itens] (o que mudou, por cliente) e [desfazer] (o que voltar atrás).
+ */
+@Entity(tableName = "importacoes")
+data class ImportacaoReg(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val quando: String,
+    val arquivo: String,
+    val resumo: String,
+    val itens: String,
+    val desfazer: String,
+    /** Quando foi desfeita; null enquanto vale. */
+    val desfeita: String? = null,
+    /** Itens que a pessoa usou depois e por isso o desfazer deixou como estavam. */
+    val mantidos: Int = 0,
 )
 
 class Conversores {

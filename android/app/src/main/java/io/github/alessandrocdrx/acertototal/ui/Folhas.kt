@@ -172,6 +172,7 @@ fun FolhaCliente(
     aoFechar: () -> Unit,
     aoNovaConta: () -> Unit,
     aoEditar: () -> Unit,
+    aoAtualizarExcel: () -> Unit,
     aoExcluir: () -> Unit,
     aoAbrirConta: (ContaComCliente) -> Unit,
 ) {
@@ -189,6 +190,7 @@ fun FolhaCliente(
         } else {
             BotaoBloco("Nova conta para este cliente", principal = true, aoClicar = aoNovaConta)
             BotaoBloco("Editar dados", aoClicar = aoEditar)
+            if (contas.isNotEmpty()) BotaoBloco("Atualizar pelo Excel", aoClicar = aoAtualizarExcel)
         }
         if (contas.isEmpty()) BotaoBloco("Excluir cliente", perigo = true, aoClicar = aoExcluir)
         Text("Contas (${contas.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)

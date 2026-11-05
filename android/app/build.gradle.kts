@@ -110,6 +110,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     // O Android já traz o leitor de XML; nos testes do computador ele precisa vir junto.
     testImplementation("net.sf.kxml:kxml2:2.3.0")
+    // O Android já traz o org.json (histórico das importações); nos testes do computador ele precisa vir junto.
+    testImplementation("org.json:json:20231013")
     androidTestImplementation(composeBom)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -139,6 +140,7 @@ fun TelaMenu(
     mostrarApagar: Boolean,
     backup: io.github.alessandrocdrx.acertototal.dominio.InfoBackup,
     aoBackup: () -> Unit,
+    aoRestaurar: () -> Unit,
     aoSobre: () -> Unit,
     aoTema: () -> Unit,
     aoFaq: () -> Unit,
@@ -170,6 +172,7 @@ fun TelaMenu(
             Icons.Filled.Backup, "Cópia de segurança", "Tudo numa planilha, para guardar ou trocar de celular", aoBackup,
             extra = { SeloSituacao(backup.tom, backup.texto) },
         )
+        Opcao(Icons.Filled.Restore, "Restaurar uma cópia", "Traga de volta os dados de uma cópia de segurança", aoRestaurar)
         Grupo("Ajuda")
         Opcao(Icons.Filled.Star, "Avaliar o acertoTotal", "Na Play Store · ajuda muito o app a crescer", { links.openUri(LINK_LOJA) }, externo = true)
         Opcao(Icons.Filled.Feedback, "Relatar problema ou sugestão", "Abre a página do projeto", { links.openUri("$REPO/issues/new") }, externo = true)

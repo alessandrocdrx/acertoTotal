@@ -20,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
@@ -69,6 +70,42 @@ fun Folha(
             Text(titulo, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (subtitulo != null) Text(subtitulo, color = MaterialTheme.colorScheme.onSurfaceVariant)
             conteudo()
+        }
+    }
+}
+
+/**
+ * Janela com o botão principal fixo embaixo, visível mesmo com o conteúdo rolado (R46).
+ * O que está em [rodape] não rola junto com [conteudo].
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FolhaComRodape(
+    titulo: String,
+    aoFechar: () -> Unit,
+    subtitulo: String? = null,
+    rodape: @Composable ColumnScope.() -> Unit,
+    conteudo: @Composable ColumnScope.() -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = aoFechar,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(Modifier.imePadding()) {
+            Column(
+                Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+            ) {
+                Text(titulo, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                if (subtitulo != null) Text(subtitulo, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                conteudo()
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Column(
+                Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+            ) { rodape() }
         }
     }
 }

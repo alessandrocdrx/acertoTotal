@@ -20,8 +20,17 @@ interface ContaDao {
     @Query("SELECT * FROM contas")
     fun completas(): Flow<List<Conta>>
 
+    @Query("SELECT * FROM contas")
+    suspend fun todasAgora(): List<Conta>
+
     @Query("SELECT * FROM contas WHERE id = :id")
     suspend fun porId(id: String): Conta?
+
+    @Update
+    suspend fun atualizarTodas(contas: List<Conta>)
+
+    @Query("DELETE FROM contas WHERE id IN (:ids)")
+    suspend fun excluirVarias(ids: List<String>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserir(conta: Conta)
@@ -46,12 +55,47 @@ interface ContaDao {
 }
 
 @Dao
+interface ImportacaoDao {
+    /** As 10 últimas, da mais recente para a mais antiga. */
+    @Query("SELECT * FROM importacoes ORDER BY id DESC LIMIT 10")
+    fun recentes(): Flow<List<ImportacaoReg>>
+
+    @Query("SELECT * FROM importacoes ORDER BY id DESC LIMIT 10")
+    suspend fun recentesAgora(): List<ImportacaoReg>
+
+    @Query("SELECT * FROM importacoes WHERE id = :id")
+    suspend fun porId(id: Long): ImportacaoReg?
+
+    @Insert
+    suspend fun inserir(r: ImportacaoReg): Long
+
+    @Update
+    suspend fun atualizar(r: ImportacaoReg)
+
+    /** Guarda só as 10 últimas. */
+    @Query("DELETE FROM importacoes WHERE id NOT IN (SELECT id FROM importacoes ORDER BY id DESC LIMIT 10)")
+    suspend fun apararAntigas()
+
+    @Query("DELETE FROM importacoes")
+    suspend fun apagarTodas()
+}
+
+@Dao
 interface ClienteDao {
     @Query("SELECT * FROM clientes ORDER BY nome COLLATE NOCASE")
     fun todos(): Flow<List<Cliente>>
 
+    @Query("SELECT * FROM clientes")
+    suspend fun todosAgora(): List<Cliente>
+
     @Query("SELECT * FROM clientes WHERE id = :id")
     suspend fun porId(id: String): Cliente?
+
+    @Update
+    suspend fun atualizarTodos(clientes: List<Cliente>)
+
+    @Query("DELETE FROM clientes WHERE id IN (:ids)")
+    suspend fun excluirVarios(ids: List<String>)
 
     @Query("SELECT * FROM clientes WHERE doc = :doc AND doc != '' LIMIT 1")
     suspend fun porDoc(doc: String): Cliente?
