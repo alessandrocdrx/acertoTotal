@@ -90,6 +90,7 @@ android {
 dependencies {
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation("com.android.billingclient:billing:8.0.0")
 
     // Interface nativa (Jetpack Compose + Material 3) e banco de dados local (Room).

@@ -3,4 +3,6 @@
      (fotos, PDF, WhatsApp) só pelo FileProvider, com permissão de leitura daquele arquivo. -->
 <paths>
     <cache-path name="comprovantes" path="comprovantes/" />
+    <!-- Destino da foto tirada pela câmera dentro do app. -->
+    <cache-path name="camera" path="camera/" />
 </paths>

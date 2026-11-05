@@ -84,4 +84,7 @@ data class ContaComCliente(
     val venc: LocalDate,
     val pagoEm: LocalDate?,
     val temComprovante: Boolean,
+    val compNome: String? = null,
+    val compTipo: String? = null,
+    val compArquivo: String? = null,
 )

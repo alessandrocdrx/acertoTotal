@@ -36,6 +36,20 @@ object Arquivos {
         false
     }
 
+    /** Abre o arquivo no app de fotos ou de PDF do aparelho (zoom, imprimir). */
+    fun abrir(ctx: Context, nome: String, bytes: ByteArray, mime: String): Boolean = try {
+        val pasta = File(ctx.cacheDir, "comprovantes").apply { mkdirs() }
+        pasta.listFiles()?.forEach { it.delete() }
+        val arquivo = File(pasta, nomeSeguro(nome)).apply { writeBytes(bytes) }
+        val uri = FileProvider.getUriForFile(ctx, ctx.packageName + ".arquivos", arquivo)
+        val ver = Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+        ctx.startActivity(ver)
+        true
+    } catch (_: Exception) {
+        false
+    }
+
     /** Abre a janela de compartilhar do Android (WhatsApp, e-mail, Drive) com o arquivo. */
     fun compartilhar(ctx: Context, nome: String, bytes: ByteArray, mime: String = MIME_XLSX, titulo: String = "Enviar planilha"): Boolean = try {
         val pasta = File(ctx.cacheDir, "comprovantes").apply { mkdirs() }

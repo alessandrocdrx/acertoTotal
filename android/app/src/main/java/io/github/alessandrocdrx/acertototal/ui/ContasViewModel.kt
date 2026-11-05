@@ -4,8 +4,14 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.alessandrocdrx.acertototal.dados.Anexo
 import io.github.alessandrocdrx.acertototal.dados.Banco
+import io.github.alessandrocdrx.acertototal.dados.Comprovantes
 import io.github.alessandrocdrx.acertototal.dados.Conta
+import io.github.alessandrocdrx.acertototal.dados.anexo
+import io.github.alessandrocdrx.acertototal.dados.comAnexo
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import io.github.alessandrocdrx.acertototal.dados.ContaComCliente
 import io.github.alessandrocdrx.acertototal.dados.Exemplo
 import io.github.alessandrocdrx.acertototal.dados.Repositorio
@@ -60,11 +66,15 @@ class ContasViewModel(app: Application) : AndroidViewModel(app) {
                 Exemplo.semearSeVazio(banco, hoje)
                 prefs.edit().putBoolean("exemplo_semeado", true).apply()
             }
+            // Arquivos que nenhuma conta usa mais (anexo cancelado, conta excluída) saem ao abrir o app.
+            val usados = repo.contasAgora().mapNotNull { it.compArquivo }.toSet()
+            withContext(Dispatchers.IO) { Comprovantes.limparOrfaos(app, usados) }
         }
     }
 
     fun apagarTudo(aoTerminar: () -> Unit) = viewModelScope.launch {
         repo.apagarTudo()
+        withContext(Dispatchers.IO) { Comprovantes.apagarTodos(getApplication()) }
         aoTerminar()
     }
 
@@ -84,9 +94,16 @@ class ContasViewModel(app: Application) : AndroidViewModel(app) {
     // ---- Escrita. Toda ação que apaga ou muda devolve o estado de antes, para o "Desfazer" (R5). ----
 
     /** Marca como paga. Devolve a conta como estava antes. */
-    fun darBaixa(id: String, data: LocalDate, aoGravar: (antes: Conta) -> Unit = {}) = viewModelScope.launch {
+    fun darBaixa(id: String, data: LocalDate, anexo: Anexo? = null, aoGravar: (antes: Conta) -> Unit = {}) = viewModelScope.launch {
         val c = repo.conta(id) ?: return@launch
-        repo.salvarConta(c.copy(pagoEm = data))
+        repo.salvarConta(c.copy(pagoEm = data).comAnexo(anexo ?: c.anexo()))
+        aoGravar(c)
+    }
+
+    /** Anexa (ou troca) o comprovante de uma conta. O arquivo antigo só sai ao reabrir o app, para o "Desfazer" funcionar. */
+    fun anexar(id: String, anexo: Anexo?, aoGravar: (antes: Conta) -> Unit = {}) = viewModelScope.launch {
+        val c = repo.conta(id) ?: return@launch
+        repo.salvarConta(c.comAnexo(anexo))
         aoGravar(c)
     }
 

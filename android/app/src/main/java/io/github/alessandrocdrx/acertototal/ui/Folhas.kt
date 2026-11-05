@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import io.github.alessandrocdrx.acertototal.BuildConfig
+import io.github.alessandrocdrx.acertototal.dados.Anexo
 import io.github.alessandrocdrx.acertototal.dados.Cliente
 import io.github.alessandrocdrx.acertototal.dados.ContaComCliente
 import io.github.alessandrocdrx.acertototal.dominio.CampoForm
@@ -49,7 +50,9 @@ fun FolhaConta(
     conta: ContaComCliente,
     hoje: LocalDate,
     aoFechar: () -> Unit,
-    aoBaixar: (LocalDate) -> Unit,
+    aoBaixar: (LocalDate, Anexo?) -> Unit,
+    aoAnexar: (Anexo) -> Unit,
+    aoRemoverComprovante: () -> Unit,
     aoDesfazerBaixa: () -> Unit,
     aoEditar: () -> Unit,
     aoExcluir: () -> Unit,
@@ -57,6 +60,9 @@ fun FolhaConta(
     val sit = situacaoDe(conta.venc, conta.pagoEm, hoje)
     var data by remember { mutableStateOf<LocalDate?>(hoje) }
     var erro by remember { mutableStateOf<ErroForm?>(null) }
+    var pendente by remember { mutableStateOf<Anexo?>(null) }
+    val anexoDaConta = if (conta.compArquivo != null)
+        Anexo(conta.compArquivo, conta.compNome ?: "comprovante", conta.compTipo ?: "image/jpeg") else null
     Folha(titulo = conta.clienteNome, subtitulo = conta.descricao, aoFechar = aoFechar) {
         Linha("Valor") { Text(brl(conta.valor), fontWeight = FontWeight.Bold) }
         Linha("Vencimento") { Text(dataCompleta(conta.venc)) }
@@ -70,11 +76,14 @@ fun FolhaConta(
                 aoMudar = { data = it; erro = null },
                 erro = erro?.takeIf { it.campo == CampoForm.DATA_PAGO }?.mensagem,
             )
+            SecaoComprovante(atual = pendente, aoAnexar = { pendente = it }, aoRemover = { pendente = null })
             BotaoBloco("Marcar como paga", principal = true, aoClicar = {
                 val e = Validacao.baixa(data, hoje)
-                if (e != null) erro = e else aoBaixar(data!!)
+                if (e != null) erro = e else aoBaixar(data!!, pendente)
             })
         } else {
+            SecaoComprovante(atual = anexoDaConta, aoAnexar = aoAnexar, aoRemover = aoRemoverComprovante)
+            HorizontalDivider()
             BotaoBloco("Desfazer baixa", aoClicar = aoDesfazerBaixa)
         }
         BotaoBloco("Editar conta", aoClicar = aoEditar)

@@ -432,8 +432,13 @@ fun App(
                 FolhaConta(
                     conta = c, hoje = ui.hoje,
                     aoFechar = { janela = null },
-                    aoBaixar = { data ->
-                        contasVm.darBaixa(c.id, data) { antes ->
+                    aoAnexar = { novo -> contasVm.anexar(c.id, novo) },
+                    aoRemoverComprovante = {
+                        contasVm.anexar(c.id, null) { antes -> avisar("Comprovante removido") { contasVm.restaurarConta(antes) } }
+                        janela = null
+                    },
+                    aoBaixar = { data, anexo ->
+                        contasVm.darBaixa(c.id, data, anexo) { antes ->
                             avisar("Baixa registrada: ${brl(c.valor)}") {
                                 contasVm.restaurarConta(antes)
                                 avisar("Baixa desfeita")

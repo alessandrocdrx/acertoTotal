@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface ContaDao {
     @Query(
         """SELECT c.id, c.clienteId, cl.nome AS clienteNome, c.descricao, c.valor, c.venc, c.pagoEm,
-                  (c.compArquivo IS NOT NULL) AS temComprovante
+                  (c.compArquivo IS NOT NULL) AS temComprovante, c.compNome, c.compTipo, c.compArquivo
            FROM contas c JOIN clientes cl ON cl.id = c.clienteId""",
     )
     fun todas(): Flow<List<ContaComCliente>>
