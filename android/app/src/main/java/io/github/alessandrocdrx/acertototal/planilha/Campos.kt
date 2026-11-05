@@ -21,7 +21,7 @@ enum class CampoPlanilha(
     val contem: List<String>,
 ) {
     DOC(
-        "CPF/CNPJ", "CPF ou CNPJ", Req.SIM, "123.456.789-09", "Identifica o cliente. Repita em cada linha do mesmo cliente.",
+        "CPF/CNPJ", "CPF ou CNPJ", Req.NENHUM, "123.456.789-09", "Opcional. Sem ele, o cliente é reconhecido pelo nome.",
         listOf("cpf/cnpj", "cpf cnpj", "cpf", "cnpj", "cpf ou cnpj", "cpf/cnpj do cliente", "documento", "doc"), listOf("cpf", "cnpj"),
     ),
     NOME(
@@ -142,7 +142,6 @@ object Campos {
     fun validarMapa(m: Map<CampoPlanilha, Int>): Pair<CampoPlanilha, String>? {
         val cod = CampoPlanilha.CODIGO in m
         return when {
-            CampoPlanilha.DOC !in m && !cod -> CampoPlanilha.DOC to "Escolha a coluna com o CPF ou CNPJ do cliente"
             CampoPlanilha.NOME !in m && !cod -> CampoPlanilha.NOME to "Escolha a coluna com o nome do cliente"
             !cod && CampoPlanilha.VALOR !in m && CampoPlanilha.VENC in m ->
                 CampoPlanilha.VALOR to "Para importar contas, escolha também a coluna do valor"
@@ -168,13 +167,11 @@ object Campos {
 
     /** Explica o que falta no mapa de colunas, ou devolve vazio se está tudo certo. */
     fun faltaColuna(m: Map<CampoPlanilha, Int>): String {
-        val doc = CampoPlanilha.DOC in m
         val cod = CampoPlanilha.CODIGO in m
         val nome = CampoPlanilha.NOME in m
         val valor = CampoPlanilha.VALOR in m
         val venc = CampoPlanilha.VENC in m
         return when {
-            !doc && !cod -> "Não achei a coluna de CPF/CNPJ. É ela que diz de qual cliente é cada linha. Escolha abaixo qual é."
             !nome && !cod -> "Não achei a coluna com o nome do cliente. Escolha abaixo qual é."
             !cod && valor != venc ->
                 "Achei a coluna " + (if (!valor) "do vencimento, mas não a do valor" else "do valor, mas não a do vencimento") +

@@ -111,7 +111,7 @@ fun FolhaFormConta(
     aoFechar: () -> Unit,
     aoSalvar: (clienteId: String, descricao: String, valor: Long, venc: LocalDate) -> Unit,
 ) {
-    var clienteId by remember { mutableStateOf(inicial?.clienteId ?: clientePre?.takeIf { id -> clientes.any { it.id == id && it.doc.isNotEmpty() } }) }
+    var clienteId by remember { mutableStateOf(inicial?.clienteId ?: clientePre?.takeIf { id -> clientes.any { it.id == id } }) }
     var descricao by remember { mutableStateOf(inicial?.descricao.orEmpty()) }
     var valorTxt by remember { mutableStateOf(inicial?.let { Dinheiro.paraCampo(it.valor) }.orEmpty()) }
     var venc by remember { mutableStateOf<LocalDate?>(inicial?.venc ?: hoje.plusDays(7)) }
@@ -132,15 +132,14 @@ fun FolhaFormConta(
         )
         CampoData("Vencimento", venc, { venc = it; erro = null }, erro = erroDe(CampoForm.VENCIMENTO))
         BotaoBloco(if (inicial == null) "Salvar conta" else "Salvar alterações", principal = true, aoClicar = {
-            val tem = clientes.firstOrNull { it.id == clienteId }?.doc?.isNotEmpty() == true
-            val e = Validacao.conta(clienteId, tem, valorTxt, venc)
+            val e = Validacao.conta(clienteId, valorTxt, venc)
             if (e != null) erro = e else aoSalvar(clienteId!!, descricao, Dinheiro.parse(valorTxt)!!, venc!!)
         })
         BotaoBloco("Cancelar", aoClicar = aoFechar)
     }
 }
 
-/** Novo cliente, editar e "Completar cadastro" (cliente antigo sem CPF/CNPJ, R59). */
+/** Novo cliente e editar cliente. Só o nome é obrigatório; o CPF/CNPJ é opcional. */
 @Composable
 fun FolhaFormCliente(
     inicial: Cliente?,
@@ -154,7 +153,6 @@ fun FolhaFormCliente(
     var obs by remember { mutableStateOf(inicial?.obs.orEmpty()) }
     var erro by remember { mutableStateOf<ErroForm?>(null) }
     fun erroDe(c: CampoForm) = erro?.takeIf { it.campo == c }?.mensagem
-    val falta = inicial != null && inicial.doc.isEmpty()
 
     // O aviso do teste muda enquanto a pessoa digita, nunca ao sair do campo (R62).
     val d = Documento.soDigitos(doc)
@@ -162,14 +160,14 @@ fun FolhaFormCliente(
         "Atenção: este ${Documento.tipo(d)} ${Documento.AVISO_TESTE}" else null
 
     Folha(
-        titulo = when { falta -> "Completar cadastro"; inicial != null -> "Editar cliente"; else -> "Novo cliente" },
-        subtitulo = if (falta) "Falta o CPF ou CNPJ de ${inicial?.nome}." else "Nome e CPF ou CNPJ são obrigatórios.",
+        titulo = if (inicial != null) "Editar cliente" else "Novo cliente",
+        subtitulo = "Só o nome é obrigatório.",
         aoFechar = aoFechar,
     ) {
         CampoForm("Nome", nome, { nome = it; erro = null }, erro = erroDe(CampoForm.NOME))
         CampoForm(
-            "CPF ou CNPJ", doc, { doc = it; erro = null },
-            dica = "Identifica o cliente nas planilhas. Pode digitar com ou sem pontos.",
+            "CPF ou CNPJ (opcional)", doc, { doc = it; erro = null },
+            dica = "Se preencher, ajuda a reconhecer o cliente nas planilhas. Pode digitar com ou sem pontos.",
             teclado = KeyboardType.Number, erro = erroDe(CampoForm.DOC), aviso = avisoTeste,
         )
         CampoForm("Telefone", tel, { tel = it }, teclado = KeyboardType.Phone)
@@ -203,12 +201,6 @@ fun FolhaCliente(
     Folha(titulo = cliente.nome, subtitulo = docTxt + contato, aoFechar = aoFechar) {
         if (somenteConsulta) {
             Text(MSG_SOMENTE_CONSULTA, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        } else if (cliente.doc.isEmpty()) {
-            Text(
-                "Falta o CPF ou CNPJ. Sem ele não dá para lançar contas nem usar planilhas com este cliente.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            BotaoBloco("Completar cadastro", principal = true, aoClicar = aoEditar)
         } else {
             val temAberta = contas.any { it.pagoEm == null }
             if (temAberta) BotaoBloco("Cobrar no WhatsApp", principal = true, aoClicar = aoCobrar)

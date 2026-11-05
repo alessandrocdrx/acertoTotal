@@ -4,7 +4,7 @@
 
 O acertoTotal é um aplicativo de contas a receber, criado por **alessandrocdrx** (https://github.com/alessandrocdrx), que funciona totalmente no seu aparelho.
 
-**Dados que o app guarda:** os clientes, contas, comprovantes e planilhas que você mesmo cadastra ou importa (nomes, CPF/CNPJ, telefone, e-mail, valores e datas). Esses dados ficam apenas no armazenamento do app, no seu aparelho.
+**Dados que o app guarda:** os clientes, contas, comprovantes e planilhas que você mesmo cadastra ou importa (nomes, telefone, e-mail, CPF/CNPJ se você quiser informar, valores e datas). Esses dados ficam apenas no armazenamento do app, no seu aparelho.
 
 **Dados que o app envia:** nenhum. Os seus clientes, contas, comprovantes e planilhas nunca saem do aparelho. O app não usa anúncios nem ferramentas de análise e não compartilha dados com ninguém.
 

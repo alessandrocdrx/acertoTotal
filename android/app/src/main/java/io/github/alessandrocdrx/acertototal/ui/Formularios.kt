@@ -249,8 +249,7 @@ fun SeletorCliente(
             ExposedDropdownMenu(expanded = aberto, onDismissRequest = { aberto = false }) {
                 clientes.sortedBy { it.nome.lowercase() }.forEach { c ->
                     DropdownMenuItem(
-                        text = { Text(c.nome + if (c.doc.isEmpty()) " (falta CPF/CNPJ)" else "") },
-                        enabled = c.doc.isNotEmpty(),
+                        text = { Text(c.nome) },
                         onClick = { aoEscolher(c.id); aberto = false },
                     )
                 }

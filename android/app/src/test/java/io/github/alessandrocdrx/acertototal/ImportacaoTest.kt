@@ -79,7 +79,7 @@ class CamposTest {
     }
 
     @Test fun mapaIncompletoDizOQueFalta() {
-        assertTrue(Campos.faltaColuna(mapOf(CampoPlanilha.NOME to 0)).startsWith("Não achei a coluna de CPF/CNPJ"))
+        assertEquals("", Campos.faltaColuna(mapOf(CampoPlanilha.NOME to 0))) // CPF/CNPJ é opcional
         assertTrue(Campos.faltaColuna(mapOf(CampoPlanilha.DOC to 0)).startsWith("Não achei a coluna com o nome"))
         assertTrue(Campos.faltaColuna(mapOf(CampoPlanilha.DOC to 0, CampoPlanilha.NOME to 1, CampoPlanilha.VENC to 2)).contains("do vencimento, mas não a do valor"))
         assertEquals("", Campos.faltaColuna(mapOf(CampoPlanilha.DOC to 0, CampoPlanilha.NOME to 1)))
@@ -243,9 +243,16 @@ class PlanoImportacaoTest {
         assertEquals("novoId", colisao.contasNovas.single().id)
     }
 
-    @Test fun codigoInexistenteSemCpfDizComoCorrigir() {
-        val pl = planejar(listOf(linha(nome = "Ana", valor = "10", venc = "10/11/2026", cod = "zzz")))
+    @Test fun codigoInexistenteSemNomeNemCpfDizComoCorrigir() {
+        val pl = planejar(listOf(linha(valor = "10", venc = "10/11/2026", cod = "zzz")))
         assertTrue(pl.erros.single().problemas.any { it.coluna == "Código da conta" && it.texto.contains("apague o código") })
+    }
+
+    // Restaurar a cópia num celular novo: código que não existe, mas a linha tem o nome, cria a conta com o mesmo código.
+    @Test fun codigoInexistenteComNomeCriaAContaComOMesmoCodigo() {
+        val pl = planejar(listOf(linha(nome = "Ana", desc = "X", valor = "10", venc = "10/11/2026", cod = "zzz")))
+        assertEquals(0, pl.erros.size)
+        assertEquals("zzz", pl.contasNovas.single().id)
     }
 
     // R44: a linha, a coluna, a célula e como corrigir; vários problemas de uma vez.
@@ -280,17 +287,32 @@ class PlanoImportacaoTest {
     // R52 e R59: cliente antigo sem CPF/CNPJ.
     @Test fun clienteAntigoSemDocumentoCompletaPelaPlanilha() {
         val antigo = Cliente("a1", "Zeca Antigo", "")
-        val sem = planejar(listOf(linha(nome = "Zeca Antigo", valor = "10", venc = "10/11/2026")), clientes = listOf(antigo))
-        assertTrue(sem.erros.single().problemas.single().texto.contains("está no app sem CPF/CNPJ"))
+        // Sem CPF/CNPJ na linha, o nome acha o cliente que já está no app: nada de cliente repetido.
+        val sem = planejar(listOf(linha(nome = "Zeca Antigo", desc = "Y", valor = "10", venc = "10/11/2026")), clientes = listOf(antigo))
+        assertEquals(0, sem.erros.size)
+        assertEquals(0, sem.clientesNovos.size)
+        assertEquals("a1", sem.contasNovas.single().clienteId)
         val com = planejar(listOf(linha("193.573.925-56", "Zeca Antigo", desc = "X", valor = "10", venc = "10/11/2026")), clientes = listOf(antigo))
         assertEquals(0, com.clientesNovos.size) // é o mesmo cliente, agora com o número
         assertEquals("doc", com.clientesAtualizados.single().mud.single().campo)
         assertEquals(1, com.contasNovas.size)
     }
 
-    @Test fun linhaSemCpfEBarrada() {
-        val pl = planejar(listOf(linha(nome = "Ana", valor = "10", venc = "10/11/2026")))
-        assertTrue(pl.erros.single().problemas.single().texto.startsWith("está vazio. Cada cliente precisa"))
+    // CPF/CNPJ é opcional: o cliente novo entra só com o nome, e a mesma pessoa em duas linhas é um cliente só.
+    @Test fun linhaSemCpfCriaClientePeloNome() {
+        val pl = planejar(listOf(
+            linha(nome = "Ana", desc = "A", valor = "10", venc = "10/11/2026"),
+            linha(nome = "ana", desc = "B", valor = "20", venc = "10/12/2026"),
+        ))
+        assertEquals(0, pl.erros.size)
+        assertEquals(1, pl.clientesNovos.size)
+        assertEquals("", pl.clientesNovos.single().doc)
+        assertEquals(2, pl.contasNovas.size)
+    }
+
+    @Test fun linhaSemCpfENemNomeEBarrada() {
+        val pl = planejar(listOf(linha(tel = "11999990000", valor = "10", venc = "10/11/2026")))
+        assertTrue(pl.erros.single().problemas.single().texto.startsWith("está vazio. Informe o nome do cliente"))
     }
 
     @Test fun cpfInvalidoNaProducaoMasAceitoNoTesteComAviso() {

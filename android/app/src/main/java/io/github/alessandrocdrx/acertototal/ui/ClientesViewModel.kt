@@ -10,6 +10,7 @@ import io.github.alessandrocdrx.acertototal.dados.ContaComCliente
 import io.github.alessandrocdrx.acertototal.dados.Repositorio
 import io.github.alessandrocdrx.acertototal.dados.novoId
 import io.github.alessandrocdrx.acertototal.dominio.Documento
+import io.github.alessandrocdrx.acertototal.planilha.Campos
 import io.github.alessandrocdrx.acertototal.dominio.ErroForm
 import io.github.alessandrocdrx.acertototal.dominio.Validacao
 import io.github.alessandrocdrx.acertototal.dominio.diasEntre
@@ -35,7 +36,6 @@ data class ClientesUi(
     val linhas: List<LinhaCliente> = emptyList(),
     val todos: List<Cliente> = emptyList(),
     val busca: String = "",
-    val semDoc: Int = 0,
 )
 
 class ClientesViewModel(app: Application) : AndroidViewModel(app) {
@@ -77,13 +77,14 @@ class ClientesViewModel(app: Application) : AndroidViewModel(app) {
 
     companion object {
         fun montar(clientes: List<Cliente>, contas: List<ContaComCliente>, busca: String, hoje: LocalDate): ClientesUi {
-            val q = busca.trim().lowercase()
-            val qd = Documento.soDigitos(q)
+            // Busca só por nome ou telefone: o nome sem acento nem maiúscula, o telefone só pelos números.
+            val q = Campos.norm(busca)
+            val qd = Documento.soDigitos(busca)
             val porCliente = contas.groupBy { it.clienteId }
             val linhas = clientes
                 .filter { c ->
-                    q.isEmpty() || "${c.nome} ${c.telefone}".lowercase().contains(q) ||
-                        (qd.length >= 3 && c.doc.contains(qd))
+                    q.isEmpty() || Campos.norm(c.nome).contains(q) ||
+                        (qd.isNotEmpty() && Documento.soDigitos(c.telefone).contains(qd))
                 }
                 .sortedBy { it.nome.lowercase() }
                 .map { c ->
@@ -97,7 +98,7 @@ class ClientesViewModel(app: Application) : AndroidViewModel(app) {
                         maisAntiga = atrasadas.maxOfOrNull { diasEntre(it.venc, hoje) } ?: 0,
                     )
                 }
-            return ClientesUi(linhas, clientes, busca, semDoc = clientes.count { it.doc.isEmpty() })
+            return ClientesUi(linhas, clientes, busca)
         }
     }
 }

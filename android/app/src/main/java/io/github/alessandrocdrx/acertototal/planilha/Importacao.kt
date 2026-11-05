@@ -63,8 +63,8 @@ object Importacao {
 
     /**
      * Monta o plano da importação sem gravar nada.
-     * Linha com "Código da conta" atualiza aquela conta. Sem código, o CPF/CNPJ acha (ou cria) o cliente,
-     * e a conta é achada por cliente + descrição + vencimento: assim reimportar não duplica (R38, R53).
+     * Linha com "Código da conta" atualiza aquela conta. Sem código, o CPF/CNPJ (se houver) ou o nome acha (ou cria)
+     * o cliente, e a conta é achada por cliente + descrição + vencimento: assim reimportar não duplica (R38, R53).
      */
     fun planejar(
         linhas: List<LinhaDados>,
@@ -78,8 +78,8 @@ object Importacao {
     ): Plano {
         val pl = Plano(arquivo, soClientes)
         val porDoc = mutableMapOf<String, Cliente>()
-        val semDoc = mutableMapOf<String, Cliente>()
-        clientes.forEach { if (it.doc.isNotEmpty()) porDoc[it.doc] = it else semDoc[norm(it.nome)] = it }
+        val porNome = mutableMapOf<String, Cliente>()
+        clientes.forEach { if (it.doc.isNotEmpty()) porDoc[it.doc] = it; porNome.putIfAbsent(norm(it.nome), it) }
         val clientePorId = clientes.associateBy { it.id }
         val contaPorId = contas.associateBy { it.id }
         val novos = mutableMapOf<String, ClienteNovo>()
@@ -163,9 +163,9 @@ object Importacao {
 
             // 1) Linha com código: atualiza a conta que já existe.
             val ct = if (cod.isNotEmpty()) contaPorId[cod] else null
-            // Código que não existe no app (ex.: restaurar a cópia num celular novo): com CPF/CNPJ, a conta é criada com o mesmo código.
-            if (cod.isNotEmpty() && ct == null && !(dr != null && dr.ok)) {
-                p(probs, CampoPlanilha.CODIGO, "“$cod” não existe no app e a linha não tem CPF/CNPJ para criar a conta. Se é uma conta nova, apague o código e preencha o CPF/CNPJ.")
+            // Código que não existe no app (ex.: restaurar a cópia num celular novo): com nome ou CPF/CNPJ, a conta é criada com o mesmo código.
+            if (cod.isNotEmpty() && ct == null && !(dr != null && dr.ok) && nome.isEmpty()) {
+                p(probs, CampoPlanilha.CODIGO, "“$cod” não existe no app e a linha não tem nome nem CPF/CNPJ para criar a conta. Se é uma conta nova, apague o código e preencha o nome do cliente.")
                 return@forEach fimErro()
             }
             if (ct != null) {
@@ -208,13 +208,16 @@ object Importacao {
             var cl: Cliente? = null
             var nv: ClienteNovo? = null
             if (dr == null) {
-                val lg = if (nome.isNotEmpty()) semDoc[norm(nome)] else null
-                if (lg != null) p(probs, CampoPlanilha.DOC, "está vazio. “${lg.nome}” está no app sem CPF/CNPJ: preencha o CPF ou CNPJ nesta linha e o cadastro dele fica completo.")
-                else p(probs, CampoPlanilha.DOC, "está vazio. Cada cliente precisa do CPF ou do CNPJ: é assim que o app reconhece quem é quem.")
+                // Sem CPF/CNPJ na linha: o nome diz quem é o cliente.
+                if (nome.isEmpty()) p(probs, CampoPlanilha.NOME, "está vazio. Informe o nome do cliente (ou o CPF/CNPJ).")
+                else {
+                    cl = porNome[norm(nome)]
+                    nv = novos["n:" + norm(nome)]
+                }
             } else if (dr.ok) {
                 cl = porDoc[dr.d]
                 nv = novos[dr.d]
-                if (cl == null && nv == null && nome.isNotEmpty()) cl = semDoc[norm(nome)]
+                if (cl == null && nv == null && nome.isNotEmpty()) cl = porNome[norm(nome)]?.takeIf { it.doc.isEmpty() }
             }
             if (dr != null && dr.ok && cl == null && nv == null && nome.isEmpty()) p(probs, CampoPlanilha.NOME, "está vazio. Cliente novo precisa de nome.")
             val temConta = !soClientes && (tv || tvc || tp)
@@ -232,12 +235,12 @@ object Importacao {
                 return@forEach fimErro()
             }
             if (cl != null && nome.isNotEmpty() && norm(nome) != norm(cl.nome)) {
-                p(avs, CampoPlanilha.NOME, "este ${Documento.tipo(docN)} é de “${cl.nome}” no app. Se você atualizar, o nome muda para “$nome”. Confira se o número está certo.")
+                p(avs, CampoPlanilha.NOME, "este ${if (docN.isNotEmpty()) Documento.tipo(docN) else "cliente"} é de “${cl.nome}” no app. Se você atualizar, o nome muda para “$nome”. Confira se o número está certo.")
             }
             if (avs.isNotEmpty()) pl.avisos += LinhaAviso(L.linha, nome.ifEmpty { cl?.nome.orEmpty() }, avs.toList())
             if (cl == null && nv == null) {
                 nv = ClienteNovo(novoId(), nome, docN, tel, mail)
-                novos[docN] = nv
+                novos[docN.ifEmpty { "n:" + norm(nome) }] = nv
                 pl.clientesNovos += nv
                 grupoNovo(nv)
             } else if (nv != null) {

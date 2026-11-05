@@ -1,7 +1,9 @@
 package io.github.alessandrocdrx.acertototal.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -76,8 +78,7 @@ sealed interface Janela {
     data class Conta(val id: String) : Janela
     data class FormConta(val editarId: String?, val clientePre: String?) : Janela
     data class Cliente(val id: String) : Janela
-    /** [fila]: "Completar agora" abre um cliente sem CPF/CNPJ por vez (R59). */
-    data class FormCliente(val id: String?, val fila: Boolean = false) : Janela
+    data class FormCliente(val id: String?) : Janela
     data object Sobre : Janela
     data object Tema : Janela
     data object Faq : Janela
@@ -161,7 +162,6 @@ fun App(
     fun novaConta(clientePre: String? = null) {
         when {
             uiClientes.todos.isEmpty() -> avisar("Cadastre um cliente primeiro")
-            uiClientes.todos.none { it.doc.isNotEmpty() } -> avisar("Complete o CPF ou CNPJ de um cliente primeiro")
             else -> janela = Janela.FormConta(null, clientePre)
         }
     }
@@ -277,7 +277,23 @@ fun App(
         },
         snackbarHost = { SnackbarHost(aviso) },
     ) { margens ->
-        val corpo = Modifier.fillMaxSize().padding(margens)
+        // Deslizar o dedo para a esquerda ou para a direita troca de aba: Contas, Clientes, Números e Planilha.
+        val limiteDeslize = with(androidx.compose.ui.platform.LocalDensity.current) { 72.dp.toPx() }
+        val deslizar = Modifier.pointerInput(aba, noMenu, janela) {
+            var total = 0f
+            detectHorizontalDragGestures(
+                onDragStart = { total = 0f },
+                onDragEnd = {
+                    val i = Aba.entries.indexOf(aba)
+                    if (!noMenu && janela == null) {
+                        if (total < -limiteDeslize && i < Aba.entries.lastIndex) aba = Aba.entries[i + 1]
+                        else if (total > limiteDeslize && i > 0) aba = Aba.entries[i - 1]
+                    }
+                },
+                onHorizontalDrag = { _, d -> total += d },
+            )
+        }
+        val corpo = Modifier.fillMaxSize().padding(margens).then(if (noMenu) Modifier else deslizar)
         when {
             noMenu -> TelaMenu(
                 versao = io.github.alessandrocdrx.acertototal.BuildConfig.VERSION_NAME,
@@ -310,9 +326,6 @@ fun App(
                 ui = uiClientes,
                 aoBuscar = clientesVm::buscar,
                 aoAbrir = { c -> janela = Janela.Cliente(c.id) },
-                aoCompletarDocs = if (consulta) null else ({
-                    uiClientes.todos.firstOrNull { it.doc.isEmpty() }?.let { janela = Janela.FormCliente(it.id, fila = true) }
-                }),
                 modifier = corpo,
                 estado = listaClientes,
             )
@@ -572,7 +585,7 @@ fun App(
                 val inicial = j.id?.let { id -> uiClientes.todos.firstOrNull { it.id == id } }
                 FolhaFormCliente(
                     inicial = inicial,
-                    aoFechar = { janela = inicial?.let { if (j.fila) null else Janela.Cliente(it.id) } },
+                    aoFechar = { janela = inicial?.let { Janela.Cliente(it.id) } },
                     aoSalvar = { nome, doc, tel, email, obs, aoErro ->
                         clientesVm.salvar(j.id, nome, doc, tel, email, obs) { r ->
                             when (r) {
@@ -581,10 +594,8 @@ fun App(
                                     val base = if (r.novo) "Cliente cadastrado" else "Dados atualizados"
                                     val atencao = if (r.documentoValido) "" else
                                         ". Atenção: o ${Documento.tipo(r.cliente.doc)} não é válido (aceito só na versão de teste)."
-                                    // Na fila de "Completar agora", segue para o próximo cliente sem CPF/CNPJ.
-                                    val proximo = if (j.fila) uiClientes.todos.firstOrNull { it.doc.isEmpty() && it.id != r.cliente.id } else null
-                                    janela = proximo?.let { Janela.FormCliente(it.id, fila = true) }
-                                    if (proximo == null) avisar(base + atencao)
+                                    janela = null
+                                    avisar(base + atencao)
                                 }
                             }
                         }

@@ -39,7 +39,6 @@ fun TelaClientes(
     ui: ClientesUi,
     aoBuscar: (String) -> Unit,
     aoAbrir: (Cliente) -> Unit,
-    aoCompletarDocs: (() -> Unit)?,
     modifier: Modifier = Modifier,
     estado: LazyListState = rememberLazyListState(),
 ) {
@@ -49,24 +48,11 @@ fun TelaClientes(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (ui.semDoc > 0 && aoCompletarDocs != null) {
-            item("aviso-semdoc") {
-                Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(12.dp)) {
-                    Column(Modifier.padding(12.dp)) {
-                        Text(
-                            (if (ui.semDoc == 1) "1 cliente está" else "${ui.semDoc} clientes estão") +
-                                " sem CPF/CNPJ. Sem ele não dá para lançar contas nem usar planilhas.",
-                        )
-                        TextButton(onClick = aoCompletarDocs, modifier = Modifier.heightIn(min = 48.dp)) { Text("Completar agora") }
-                    }
-                }
-            }
-        }
         if (ui.todos.size > 3) {
             item("busca") {
                 OutlinedTextField(
                     value = ui.busca, onValueChange = aoBuscar, modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Buscar por nome, CPF ou CNPJ") }, singleLine = true, colors = camposAcerto(),
+                    label = { Text("Buscar por nome ou telefone") }, singleLine = true, colors = camposAcerto(),
                 )
             }
         }
@@ -103,10 +89,7 @@ private fun LinhaDeCliente(l: LinhaCliente, aoAbrir: (Cliente) -> Unit) {
                 val partes = buildList {
                     add(plural(l.nContas, "conta"))
                     if (l.maisAntiga > 0) add("a mais antiga há ${plural(l.maisAntiga, "dia")}")
-                    when {
-                        c.doc.isEmpty() -> add("Sem CPF/CNPJ")
-                        !Documento.valido(c.doc) -> add("CPF/CNPJ inválido (teste)")
-                    }
+                    if (c.doc.isNotEmpty() && !Documento.valido(c.doc)) add("CPF/CNPJ inválido (teste)")
                 }
                 Text(partes.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (l.atrasadas > 0) {

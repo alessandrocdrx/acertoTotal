@@ -11,7 +11,7 @@ cd android && rm -rf app/build/outputs && ./gradlew clean bundleProducaoRelease 
 
 Sai em `android/app/build/outputs/bundle/producaoRelease/app-producao-release.aab`.
 
-- A variante `producao` não tem faixa de teste nem "Apagar tudo", e só aceita CPF/CNPJ válido. Tem **32 dias de teste grátis** (fase de aprovação da Play) e depois exige assinatura. Na versão final, o teste volta para 7 dias: mude `producao:producao:32` para `producao:producao:7` em `android/preparar-assets.sh` e suba `versionCode`.
+- A variante `producao` não tem faixa de teste nem "Apagar tudo", e, quando o CPF/CNPJ é preenchido, só aceita número válido (ele é opcional). Tem **32 dias de teste grátis** (fase de aprovação da Play) e depois exige assinatura. Na versão final, o teste volta para 7 dias: mude `producao:producao:32` para `producao:producao:7` em `android/preparar-assets.sh` e suba `versionCode`.
 - Assinado com a **chave de envio** (`android/celsopix-envio.keystore` + `android/assinatura-play.properties`). Os dois ficam fora do repositório (.gitignore). **Guarde uma cópia dos dois num lugar seguro, fora do computador.** Se perder, dá para pedir a troca da chave de envio ao suporte da Play, mas demora.
 - Impressão digital SHA-256 da chave de envio: `F3:13:A3:DC:BA:5C:2F:46:3D:82:80:79:CB:96:E8:EF:5A:87:89:EC:B0:89:24:53:28:3D:A4:F0:0E:13:35:54` (o arquivo continua `android/celsopix-envio.keystore`: o nome antigo foi mantido para não mexer na chave)
 - Cada envio novo precisa de `versionCode` maior em `android/app/build.gradle.kts`.
@@ -56,8 +56,8 @@ COBRE PELO WHATSAPP
 • Cadastre a sua chave Pix uma vez e ela vai em toda cobrança.
 • Confira e mude o texto antes de mandar. Quem envia é você, no seu WhatsApp.
 
-CLIENTES PELO CPF OU CNPJ
-• Cada cliente é identificado pelo CPF ou CNPJ, sem cadastro repetido.
+CLIENTES SEM BUROCRACIA
+• Só o nome é obrigatório. CPF ou CNPJ é opcional, e a busca é por nome ou telefone.
 • Abra o cliente e veja todas as contas dele, quanto deve e o contato. Errou um valor? Edite a conta.
 
 DÊ BAIXA COM O COMPROVANTE

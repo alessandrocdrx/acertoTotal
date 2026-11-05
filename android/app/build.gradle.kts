@@ -16,8 +16,8 @@ android {
         applicationId = "io.github.alessandrocdrx.acertototal"
         minSdk = 29
         targetSdk = 36
-        versionCode = 19
-        versionName = "0.9.8"
+        versionCode = 20
+        versionName = "1.0.0"
     }
 
     // Assinatura: lida de android/assinatura.properties, que NÃO vai para o repositório

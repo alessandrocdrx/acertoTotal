@@ -39,15 +39,12 @@ class DinheiroTest {
 class ValidacaoTest {
     private val hoje = LocalDate.of(2026, 11, 5)
 
-    @Test fun contaExigeClienteComDocumentoValorEVencimento() {
-        assertEquals(CampoForm.CLIENTE, Validacao.conta(null, true, "150", hoje)!!.campo)
-        val semDoc = Validacao.conta("x", false, "150", hoje)!!
-        assertEquals(CampoForm.CLIENTE, semDoc.campo)
-        assertEquals("Este cliente está sem CPF/CNPJ. Complete o cadastro dele primeiro.", semDoc.mensagem)
-        assertEquals("Informe o valor. Ex.: 150,00", Validacao.conta("x", true, "", hoje)!!.mensagem)
-        assertEquals(CampoForm.VALOR, Validacao.conta("x", true, "0", hoje)!!.campo) // valor zero não vale
-        assertEquals(CampoForm.VENCIMENTO, Validacao.conta("x", true, "150", null)!!.campo)
-        assertNull(Validacao.conta("x", true, "150", hoje))
+    @Test fun contaExigeClienteValorEVencimento() {
+        assertEquals(CampoForm.CLIENTE, Validacao.conta(null, "150", hoje)!!.campo)
+        assertEquals("Informe o valor. Ex.: 150,00", Validacao.conta("x", "", hoje)!!.mensagem)
+        assertEquals(CampoForm.VALOR, Validacao.conta("x", "0", hoje)!!.campo) // valor zero não vale
+        assertEquals(CampoForm.VENCIMENTO, Validacao.conta("x", "150", null)!!.campo)
+        assertNull(Validacao.conta("x", "150", hoje)) // cliente sem CPF/CNPJ pode ter conta
     }
 
     // R10: a data de pagamento não aceita dia futuro.
@@ -58,9 +55,9 @@ class ValidacaoTest {
         assertNull(Validacao.baixa(hoje.minusDays(3), hoje))
     }
 
-    @Test fun clienteExigeNomeEDocumento() {
+    @Test fun clienteExigeSoONome() {
         assertEquals(CampoForm.NOME, Validacao.cliente(" ", "63712926170", null, producao = true)!!.campo)
-        assertEquals("Informe o CPF ou o CNPJ", Validacao.cliente("Ana", "", null, producao = true)!!.mensagem)
+        assertNull("CPF/CNPJ é opcional", Validacao.cliente("Ana", "", null, producao = true))
         assertEquals(
             "CPF tem 11 números e CNPJ tem 14. Confira os números.",
             Validacao.cliente("Ana", "123", null, producao = true)!!.mensagem,
@@ -108,15 +105,14 @@ class ClientesListaTest {
         assertEquals(0L, ui.linhas.first { it.cliente.id == "p" }.aberto) // "Em dia"
     }
 
-    @Test fun contaClientesSemDocumento() {
-        assertEquals(1, ClientesViewModel.montar(listOf(marina, antigo), contas, "", hoje).semDoc)
-    }
-
-    @Test fun buscaPorNomeTelefoneEDocumento() {
+    @Test fun buscaPorNomeOuTelefone() {
         val todos = listOf(marina, padaria, antigo)
-        assertEquals(listOf("m"), ClientesViewModel.montar(todos, contas, "mari", hoje).linhas.map { it.cliente.id })
-        assertEquals(listOf("m"), ClientesViewModel.montar(todos, contas, "98765", hoje).linhas.map { it.cliente.id })
-        assertEquals(listOf("p"), ClientesViewModel.montar(todos, contas, "71.296.668", hoje).linhas.map { it.cliente.id })
-        assertEquals(emptyList<String>(), ClientesViewModel.montar(todos, contas, "zzz", hoje).linhas.map { it.cliente.id })
+        fun achar(q: String) = ClientesViewModel.montar(todos, contas, q, hoje).linhas.map { it.cliente.id }
+        assertEquals(listOf("m"), achar("mari"))
+        assertEquals(listOf("p"), achar("pao")) // sem acento acha "Pão"
+        assertEquals(listOf("m"), achar("98765"))
+        assertEquals(listOf("m"), achar("(11) 98765-4321")) // com pontuação
+        assertEquals(emptyList<String>(), achar("71.296.668")) // CPF/CNPJ não entra na busca
+        assertEquals(emptyList<String>(), achar("zzz"))
     }
 }

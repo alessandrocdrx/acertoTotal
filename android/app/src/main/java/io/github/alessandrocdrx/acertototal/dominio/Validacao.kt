@@ -10,11 +10,8 @@ data class ErroForm(val campo: CampoForm, val mensagem: String)
 object Validacao {
 
     /** Nova conta e edição de conta. Mostra só o primeiro erro, como o protótipo. */
-    fun conta(clienteId: String?, clienteTemDoc: Boolean, valorTxt: String, venc: LocalDate?): ErroForm? {
+    fun conta(clienteId: String?, valorTxt: String, venc: LocalDate?): ErroForm? {
         if (clienteId.isNullOrEmpty()) return ErroForm(CampoForm.CLIENTE, "Escolha o cliente")
-        if (!clienteTemDoc) {
-            return ErroForm(CampoForm.CLIENTE, "Este cliente está sem CPF/CNPJ. Complete o cadastro dele primeiro.")
-        }
         val valor = Dinheiro.parse(valorTxt)
         if (valor == null || valor <= 0) return ErroForm(CampoForm.VALOR, "Informe o valor. Ex.: 150,00")
         if (venc == null) return ErroForm(CampoForm.VENCIMENTO, "Informe o vencimento")
@@ -27,11 +24,11 @@ object Validacao {
         else -> null
     }
 
-    /** [donoDoDoc] é o nome de OUTRO cliente que já usa esse CPF/CNPJ, se houver. */
+    /** Só o nome é obrigatório. O CPF/CNPJ é opcional: se vier, tem que ser válido e não pode ser de outro cliente. */
     fun cliente(nome: String, docTxt: String, donoDoDoc: String?, producao: Boolean): ErroForm? {
         if (nome.isBlank()) return ErroForm(CampoForm.NOME, "Informe o nome do cliente")
         val d = Documento.soDigitos(docTxt)
-        if (d.isEmpty()) return ErroForm(CampoForm.DOC, "Informe o CPF ou o CNPJ")
+        if (d.isEmpty()) return null
         if (!Documento.aceito(d, producao)) {
             val causa = if (d.length == 11 || d.length == 14) "${Documento.tipo(d)} inválido" else "CPF tem 11 números e CNPJ tem 14"
             return ErroForm(CampoForm.DOC, "$causa. Confira os números.")
