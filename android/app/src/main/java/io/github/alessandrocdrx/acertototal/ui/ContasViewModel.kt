@@ -4,8 +4,11 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.alessandrocdrx.acertototal.dados.Banco
+import io.github.alessandrocdrx.acertototal.dados.Conta
 import io.github.alessandrocdrx.acertototal.dados.ContaComCliente
 import io.github.alessandrocdrx.acertototal.dados.Exemplo
+import io.github.alessandrocdrx.acertototal.dados.Repositorio
+import io.github.alessandrocdrx.acertototal.dados.novoId
 import io.github.alessandrocdrx.acertototal.dominio.Situacao
 import io.github.alessandrocdrx.acertototal.dominio.situacaoDe
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,12 +38,15 @@ data class ContasUi(
     val atrasadas: Total = Total(0, 0),
     val pagasNoMes: Total = Total(0, 0),
     val lista: List<ContaComCliente> = emptyList(),
+    /** Todas as contas, sem filtro: o detalhe e a tela do cliente procuram aqui. */
+    val todas: List<ContaComCliente> = emptyList(),
     val temContas: Boolean = false,
     val carregado: Boolean = false,
 )
 
 class ContasViewModel(app: Application) : AndroidViewModel(app) {
     private val banco = Banco.obter(app)
+    private val repo = Repositorio(banco)
     private val hoje = LocalDate.now()
     private val filtro = MutableStateFlow(FiltroContas.ABERTAS)
     private val busca = MutableStateFlow("")
@@ -49,7 +55,7 @@ class ContasViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { Exemplo.semearSeVazio(banco, hoje) }
     }
 
-    val ui: StateFlow<ContasUi> = combine(banco.contas().todas(), filtro, busca) { contas, f, q ->
+    val ui: StateFlow<ContasUi> = combine(repo.contas, filtro, busca) { contas, f, q ->
         montar(contas, f, q, hoje)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ContasUi(hoje))
 
@@ -58,15 +64,40 @@ class ContasViewModel(app: Application) : AndroidViewModel(app) {
     fun verTudo() { filtro.value = FiltroContas.ABERTAS }
     fun buscar(q: String) { busca.value = q }
 
-    /** Dar baixa com a data de hoje. O aviso oferece "Desfazer" (R5). */
-    fun darBaixa(id: String, data: LocalDate = hoje) = viewModelScope.launch {
-        val c = banco.contas().porId(id) ?: return@launch
-        banco.contas().atualizar(c.copy(pagoEm = data))
+    // ---- Escrita. Toda ação que apaga ou muda devolve o estado de antes, para o "Desfazer" (R5). ----
+
+    /** Marca como paga. Devolve a conta como estava antes. */
+    fun darBaixa(id: String, data: LocalDate, aoGravar: (antes: Conta) -> Unit = {}) = viewModelScope.launch {
+        val c = repo.conta(id) ?: return@launch
+        repo.salvarConta(c.copy(pagoEm = data))
+        aoGravar(c)
     }
 
-    fun desfazerBaixa(id: String) = viewModelScope.launch {
-        val c = banco.contas().porId(id) ?: return@launch
-        banco.contas().atualizar(c.copy(pagoEm = null))
+    fun restaurarConta(c: Conta) = viewModelScope.launch { repo.salvarConta(c) }
+
+    fun desfazerBaixa(id: String, aoGravar: (antes: Conta) -> Unit = {}) = viewModelScope.launch {
+        val c = repo.conta(id) ?: return@launch
+        repo.salvarConta(c.copy(pagoEm = null))
+        aoGravar(c)
+    }
+
+    fun salvarNovaConta(clienteId: String, descricao: String, valor: Long, venc: LocalDate) = viewModelScope.launch {
+        repo.salvarConta(
+            Conta(id = novoId(), clienteId = clienteId, descricao = descricao.trim().ifEmpty { "Conta" }, valor = valor, venc = venc),
+        )
+    }
+
+    fun editarConta(
+        id: String, clienteId: String, descricao: String, valor: Long, venc: LocalDate,
+        aoGravar: (antes: Conta) -> Unit,
+    ) = viewModelScope.launch {
+        val c = repo.conta(id) ?: return@launch
+        repo.salvarConta(c.copy(clienteId = clienteId, descricao = descricao.trim().ifEmpty { "Conta" }, valor = valor, venc = venc))
+        aoGravar(c)
+    }
+
+    fun excluirConta(id: String, aoExcluir: (Conta) -> Unit) = viewModelScope.launch {
+        repo.excluirConta(id)?.let(aoExcluir)
     }
 
     companion object {
@@ -96,7 +127,7 @@ class ContasViewModel(app: Application) : AndroidViewModel(app) {
                 aVencer = total(abertas.filter { it.venc >= hoje }),
                 atrasadas = total(abertas.filter { it.venc < hoje }),
                 pagasNoMes = total(mes),
-                lista = lista, temContas = contas.isNotEmpty(), carregado = true,
+                lista = lista, todas = contas, temContas = contas.isNotEmpty(), carregado = true,
             )
         }
     }

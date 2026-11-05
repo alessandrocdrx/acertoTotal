@@ -7,6 +7,8 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import java.time.LocalDate
 
+fun novoId(): String = java.util.UUID.randomUUID().toString().take(8)
+
 @Entity(tableName = "clientes", indices = [Index(value = ["doc"], unique = true)])
 data class Cliente(
     @PrimaryKey val id: String,

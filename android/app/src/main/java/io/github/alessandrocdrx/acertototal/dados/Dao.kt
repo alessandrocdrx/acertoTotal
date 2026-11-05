@@ -33,6 +33,9 @@ interface ContaDao {
 
     @Query("SELECT COUNT(*) FROM contas")
     suspend fun quantas(): Int
+
+    @Query("SELECT COUNT(*) FROM contas WHERE clienteId = :clienteId")
+    suspend fun quantasDoCliente(clienteId: String): Int
 }
 
 @Dao
