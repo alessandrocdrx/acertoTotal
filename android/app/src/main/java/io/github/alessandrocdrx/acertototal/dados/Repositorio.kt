@@ -24,6 +24,12 @@ class Repositorio(private val banco: Banco) {
 
     suspend fun salvarCliente(c: Cliente) = banco.clientes().inserirTodos(listOf(c))
 
+    /** Só na versão de teste (R60). As contas saem antes dos clientes por causa da chave estrangeira. */
+    suspend fun apagarTudo() {
+        banco.contas().apagarTodas()
+        banco.clientes().apagarTodos()
+    }
+
     suspend fun quantasContasDoCliente(id: String): Int = banco.contas().quantasDoCliente(id)
 
     /** Cliente com contas não pode ser excluído. Devolve o cliente removido ou null. */

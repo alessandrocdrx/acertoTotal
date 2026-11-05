@@ -59,16 +59,27 @@ sealed interface Janela {
     data class Cliente(val id: String) : Janela
     /** [fila]: "Completar agora" abre um cliente sem CPF/CNPJ por vez (R59). */
     data class FormCliente(val id: String?, val fila: Boolean = false) : Janela
+    data object Sobre : Janela
+    data object Tema : Janela
+    data object Faq : Janela
+    data object Apagar : Janela
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun App(contasVm: ContasViewModel = viewModel(), clientesVm: ClientesViewModel = viewModel()) {
+fun App(
+    tema: io.github.alessandrocdrx.acertototal.ui.Tema,
+    aoMudarTema: (io.github.alessandrocdrx.acertototal.ui.Tema) -> Unit,
+    contasVm: ContasViewModel = viewModel(),
+    clientesVm: ClientesViewModel = viewModel(),
+    numerosVm: NumerosViewModel = viewModel(),
+) {
     var aba by rememberSaveable { mutableStateOf(Aba.CONTAS) }
     var noMenu by rememberSaveable { mutableStateOf(false) }
     var janela by remember { mutableStateOf<Janela?>(null) }
     val ui by contasVm.ui.collectAsStateWithLifecycle()
     val uiClientes by clientesVm.ui.collectAsStateWithLifecycle()
+    val uiNumeros by numerosVm.ui.collectAsStateWithLifecycle()
     val aviso = remember { SnackbarHostState() }
     val escopo = rememberCoroutineScope()
     val listaContas = rememberLazyListState()
@@ -145,7 +156,15 @@ fun App(contasVm: ContasViewModel = viewModel(), clientesVm: ClientesViewModel =
     ) { margens ->
         val corpo = Modifier.fillMaxSize().padding(margens)
         when {
-            noMenu -> EmConstrucao("Menu", corpo)
+            noMenu -> TelaMenu(
+                versao = io.github.alessandrocdrx.acertototal.BuildConfig.VERSION_NAME,
+                mostrarApagar = !io.github.alessandrocdrx.acertototal.BuildConfig.COBRANCA_REAL,
+                aoSobre = { janela = Janela.Sobre },
+                aoTema = { janela = Janela.Tema },
+                aoFaq = { janela = Janela.Faq },
+                aoApagar = { janela = Janela.Apagar },
+                modifier = corpo,
+            )
             aba == Aba.CONTAS -> TelaContas(
                 ui = ui,
                 aoFiltrar = contasVm::alternarFiltro,
@@ -166,11 +185,34 @@ fun App(contasVm: ContasViewModel = viewModel(), clientesVm: ClientesViewModel =
                 modifier = corpo,
                 estado = listaClientes,
             )
+            aba == Aba.NUMEROS -> TelaNumeros(
+                ui = uiNumeros,
+                aoEscolherPeriodo = numerosVm::escolher,
+                aoAbrirCliente = { id -> janela = Janela.Cliente(id) },
+                modifier = corpo,
+            )
             else -> EmConstrucao(aba.rotulo, corpo)
         }
 
         when (val j = janela) {
             null -> Unit
+            Janela.Sobre -> FolhaSobre(io.github.alessandrocdrx.acertototal.BuildConfig.VERSION_NAME) { janela = null }
+            Janela.Tema -> FolhaTema(tema, aoEscolher = aoMudarTema, aoFechar = { janela = null })
+            Janela.Faq -> FolhaFaq { janela = null }
+            Janela.Apagar -> FolhaApagar(
+                clientes = uiClientes.todos.size,
+                contas = ui.todas.size,
+                comprovantes = ui.todas.count { it.temComprovante },
+                aoApagar = {
+                    contasVm.apagarTudo {
+                        janela = null
+                        noMenu = false
+                        aba = Aba.CONTAS
+                        avisar("Tudo apagado. O app está vazio.")
+                    }
+                },
+                aoFechar = { janela = null },
+            )
             is Janela.Conta -> ui.todas.firstOrNull { it.id == j.id }?.let { c ->
                 FolhaConta(
                     conta = c, hoje = ui.hoje,

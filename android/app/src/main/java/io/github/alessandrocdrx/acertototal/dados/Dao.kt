@@ -34,6 +34,9 @@ interface ContaDao {
     @Query("SELECT COUNT(*) FROM contas")
     suspend fun quantas(): Int
 
+    @Query("DELETE FROM contas")
+    suspend fun apagarTodas()
+
     @Query("SELECT COUNT(*) FROM contas WHERE clienteId = :clienteId")
     suspend fun quantasDoCliente(clienteId: String): Int
 }
@@ -60,6 +63,9 @@ interface ClienteDao {
 
     @Query("DELETE FROM clientes WHERE id = :id")
     suspend fun excluir(id: String)
+
+    @Query("DELETE FROM clientes")
+    suspend fun apagarTodos()
 
     @Query("SELECT COUNT(*) FROM clientes")
     suspend fun quantos(): Int

@@ -1,6 +1,7 @@
 package io.github.alessandrocdrx.acertototal.ui
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.alessandrocdrx.acertototal.dados.Banco
@@ -52,7 +53,19 @@ class ContasViewModel(app: Application) : AndroidViewModel(app) {
     private val busca = MutableStateFlow("")
 
     init {
-        viewModelScope.launch { Exemplo.semearSeVazio(banco, hoje) }
+        // Os dados de exemplo entram uma vez só: depois de "Apagar tudo", o app não volta a se encher.
+        val prefs = app.getSharedPreferences("ajustes", Context.MODE_PRIVATE)
+        viewModelScope.launch {
+            if (!prefs.getBoolean("exemplo_semeado", false)) {
+                Exemplo.semearSeVazio(banco, hoje)
+                prefs.edit().putBoolean("exemplo_semeado", true).apply()
+            }
+        }
+    }
+
+    fun apagarTudo(aoTerminar: () -> Unit) = viewModelScope.launch {
+        repo.apagarTudo()
+        aoTerminar()
     }
 
     val ui: StateFlow<ContasUi> = combine(repo.contas, filtro, busca) { contas, f, q ->

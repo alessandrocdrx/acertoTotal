@@ -47,6 +47,10 @@ private val Claro = lightColorScheme(
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFE2DD),
     onErrorContainer = Color(0xFF0A2225),
+    // O aviso com "Desfazer" é escuro no tema claro: o botão usa o verde-água da marca.
+    inverseSurface = Color(0xFF0A2225),
+    inverseOnSurface = Color(0xFFF0F8F7),
+    inversePrimary = Color(0xFF49D3C3),
 )
 
 private val Escuro = darkColorScheme(
@@ -69,6 +73,9 @@ private val Escuro = darkColorScheme(
     onError = Color(0xFF061213),
     errorContainer = Color(0xFF47211D),
     onErrorContainer = Color(0xFFE7F1F0),
+    inverseSurface = Color(0xFFE7F1F0),
+    inverseOnSurface = Color(0xFF061213),
+    inversePrimary = Color(0xFF00766C),
 )
 
 private val CoresClaro = CoresAcerto(
