@@ -59,7 +59,7 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 ### App Android (APK)
 
-- R25. O protótipo é a única fonte da interface. O APK é montado a partir dele por `android/preparar-assets.sh`. Nunca edite `android/app/src/main/assets/` à mão. [android]
+- R25. ~~O protótipo é a única fonte da interface.~~ **Revogada em 05/11/2026** (decisão do Alessandro, regra R87): o app é nativo em Jetpack Compose e a interface vive em `android/app/src/main/java/.../ui/`. O protótipo HTML ficou só como referência de comportamento e de textos.
 - R26. O APK funciona sem internet: a página não pode ter nenhum endereço externo, e o leitor de Excel vai dentro do APK. [android]
 - R27. Foto de comprovante é reduzida para JPEG de no máximo 1280 px antes de guardar. O armazenamento do app tem cerca de 5 MB, e uma única foto de câmera pode lotá-lo. [android]
 - R28. Falha ao salvar nunca é silenciosa: com a memória cheia, o app avisa e diz o que fazer. [android]
@@ -128,11 +128,25 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R84. O que se toca parece tocável em **todo** o app: sanfona (`details`) sempre com setinha (para baixo fechada, para cima aberta), botão só de texto colorido e sublinhado, linha de lista com seta, cartão que filtra com ícone. Nada que seja botão pode ter cara de rótulo. [experiencia]
 - R85. A contagem do teste grátis só existe nos apps empacotados (o APK define `ACERTO_LIMITE_DIAS`): 32 dias no app da Play na aprovação, 7 no app de teste. O protótipo no artefato, sem a variável, não conta dias: a faixa só diz "Ambiente de teste" e a assinatura mostra "Escolha um plano quando quiser". Os testes que precisam do limite o ligam de propósito. [avaliacao, assinatura]
 - R86. Teste que imita a casca Android só vale se imitar o que o Kotlin **realmente** produz. Todo campo e estado da ponte (`Assinatura.estado()`) tem um teste de contrato na suíte `android`, que lê o código Kotlin e confere que a página trata cada valor. Antes de dizer que um erro "foi corrigido", reproduza o estado real, e não o que se supõe. [android, assinatura]
+- R87. O app é **nativo (Jetpack Compose + Room)**, e não mais uma página dentro de uma WebView. As regras de usabilidade (uma tarefa por tela, estado escrito, 48 dp, erro sob o campo, Desfazer por 6 s, tema claro padrão) continuam valendo; o que mudou foi onde elas moram. A lógica fica em Kotlin puro (`dominio/`, `planilha/`), testada no computador; a tela (`ui/`) é testada com testes do Compose no emulador. [android]
+- R88. Teste de regra vai no teste de unidade (`app/src/test`); teste do que a pessoa lê e toca vai no teste de tela (`app/src/androidTest`, `./gradlew connectedHomologDebugAndroidTest`). Os testes Playwright em `testes/` só cobrem o protótipo HTML. Toda correção do app nativo ganha um teste de um dos dois tipos. [android]
+- R89. Dinheiro é guardado em **centavos** (`Long`) e datas como `LocalDate`. O texto de moeda do Android usa espaço sem quebra entre "R$" e o número: testes comparam com `\u00a0`, e mensagens para o WhatsApp trocam por espaço comum. [android]
+- R90. O modo "só consulta" (R41) tem duas travas: a tela esconde os botões e as janelas de escrita viram a explicação; e `Repositorio` recusa toda escrita enquanto `Licenca.somenteConsulta` estiver ligado. Função nova que grava passa pelo `Repositorio`. [android]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-043 · 05/11/2026 · Conversão para app nativo (Jetpack Compose)
+- **Pedido do cliente:** converter tudo em app nativo, começando pela base de dados e pelas telas (usuários fictícios, sem migrar dados antigos).
+- **O que foi feito:** reescrita do app em Compose + Room (banco versão 2 com migração): Contas, Clientes, Números, Menu, Planilha (exportar, cópia de segurança, importar, atualizar pelo Excel, histórico e desfazer), comprovantes (foto reduzida a 1280 px, PDF, ver, compartilhar, salvar em Downloads), Cobrar no WhatsApp, Meu negócio, teste grátis, modo só consulta e assinatura (Play Billing, simulada no app de teste). Ponte JavaScript e `preparar-assets.sh` removidos.
+- **Problemas achados no caminho:**
+  - Gravar cliente existente com "substituir" apagava a linha antes, e a chave estrangeira recusava quando havia contas. Agora é atualizar-ou-inserir (R59 mantém clientes antigos sem documento, por isso o índice do CPF/CNPJ não é único).
+  - O aviso "Desfazer" ficava escondido atrás da janela. As janelas de arquivo mostram o resultado dentro delas.
+  - O botão "Fechar" da foto em tela cheia ficava sob a barra de gestos; agora respeita as barras do sistema.
+  - O campo de moeda usa espaço sem quebra, e o teste de tela falhou até comparar com ele (R89).
+- **Como evitar:** regras R87 a R90; 108 testes de unidade e 7 testes de tela.
 
 ### A-042 · 02/11/2026 · O erro dos planos voltou: "Não consegui falar com a Google Play. Confira a internet"
 - **Relato do cliente** (3 capturas do app 0.9.6): ao tocar em "Assinar", o aviso mandava conferir a internet, o mesmo erro que a 0.9.5 dizia ter corrigido. Também não aparecia "Cobrar no WhatsApp", porque o celular estava com a 0.9.6, e o WhatsApp só entrou na 0.9.7.
@@ -626,9 +640,11 @@ As entradas mais recentes ficam no topo.
   - confirmar no Play Console se esta conta precisa do teste fechado com 12 testadores por 14 dias antes da produção.
 
 - A miniatura do link no WhatsApp é gerada pelo Claude e não pode ser trocada pelo app.
-- Os testes rodam no navegador (Chromium). A casca Android ainda não foi testada num aparelho: faltam o seletor de arquivos, o salvamento em Downloads e o botão Voltar.
+- O app nativo foi testado só no emulador (Android 35). Falta passar por um celular de verdade, principalmente a leitura de `.xlsx` (no emulador a primeira leitura demorou vários segundos), a câmera e o WhatsApp.
+- Fontes da marca (Bricolage Grotesque, IBM Plex Sans) ainda não estão no app nativo: o Compose precisa de `.ttf`, e só temos `.woff2` em `android/fontes`.
+- Planilha `.xls` antiga (e com senha) não é lida pelo app nativo: ele explica como salvar como `.xlsx`.
 - Lint: três bibliotecas AndroidX têm versões mais novas (activity, core, webkit). Atualizar exige compileSdk 36 e uma versão nova do AGP.
-- O app guarda os dados no armazenamento da WebView. Se o app for desinstalado, os dados se perdem. A cópia de segurança em Excel é a proteção.
+- Se o app for desinstalado, os dados se perdem (banco Room no aparelho). A cópia de segurança em Excel é a proteção.
 - Os comprovantes (fotos e PDFs) não vão na cópia de segurança em Excel, porque a planilha não guarda arquivos. Restaurar num celular novo traz as baixas, mas não os comprovantes.
 - O APK abre com os dados de exemplo. Na versão de teste, "Apagar tudo" deixa o app vazio. A versão de produção ainda precisa decidir se abre vazia.
 - "Apagar tudo" é confirmado digitando APAGAR. Quem tem o celular desbloqueado consegue apagar; a cópia de segurança continua sendo a proteção.

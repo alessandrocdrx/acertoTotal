@@ -6,7 +6,6 @@ Pacote: `io.github.alessandrocdrx.acertototal`. Primeira versão da Play: 0.9.0 
 ## 1. Gerar o pacote (feito)
 
 ```
-bash android/preparar-assets.sh
 cd android && rm -rf app/build/outputs && ./gradlew clean bundleProducaoRelease --max-workers=1
 ```
 

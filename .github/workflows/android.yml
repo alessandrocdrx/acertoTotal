@@ -25,8 +25,12 @@ jobs:
         run: |
           npm install -g playwright
           playwright install --with-deps chromium
-      - name: Testes automatizados (11 suítes)
+      - name: Testes do protótipo (Playwright)
         run: bash testes/rodar.sh
+      - name: Testes de unidade do app nativo
+        run: |
+          cd android
+          ./gradlew --no-daemon testHomologDebugUnitTest
       # Só confere que o APK de teste compila. Ele não é publicado em lugar nenhum: o repositório é público,
       # e o APK de teste tem a assinatura simulada, que liberaria o app de graça para quem baixasse.
       - name: Compilar o APK de teste (só conferência)
@@ -64,7 +68,6 @@ jobs:
           printf 'arquivo=%s\nalias=%s\nsenha=%s\n' "$RUNNER_TEMP/envio.keystore" "$ALIAS" "$SENHA" > android/assinatura-play.properties
       - name: Compilar o AAB assinado
         run: |
-          bash android/preparar-assets.sh
           cd android
           ./gradlew --no-daemon bundleProducaoRelease
           cp app/build/outputs/bundle/producaoRelease/app-producao-release.aab ../acertototal.aab
