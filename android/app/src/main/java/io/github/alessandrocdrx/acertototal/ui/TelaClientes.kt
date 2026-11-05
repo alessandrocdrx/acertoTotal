@@ -39,7 +39,7 @@ fun TelaClientes(
     ui: ClientesUi,
     aoBuscar: (String) -> Unit,
     aoAbrir: (Cliente) -> Unit,
-    aoCompletarDocs: () -> Unit,
+    aoCompletarDocs: (() -> Unit)?,
     modifier: Modifier = Modifier,
     estado: LazyListState = rememberLazyListState(),
 ) {
@@ -49,7 +49,7 @@ fun TelaClientes(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        if (ui.semDoc > 0) {
+        if (ui.semDoc > 0 && aoCompletarDocs != null) {
             item("aviso-semdoc") {
                 Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(12.dp)) {
                     Column(Modifier.padding(12.dp)) {

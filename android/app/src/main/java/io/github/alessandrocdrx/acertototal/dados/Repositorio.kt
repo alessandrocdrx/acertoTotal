@@ -1,11 +1,15 @@
 package io.github.alessandrocdrx.acertototal.dados
 
 import androidx.room.withTransaction
+import io.github.alessandrocdrx.acertototal.dominio.Licenca
 import io.github.alessandrocdrx.acertototal.planilha.Aplicacao
 import io.github.alessandrocdrx.acertototal.planilha.Gravacao
 import io.github.alessandrocdrx.acertototal.planilha.RegistroJson
 
-/** Único ponto de escrita dos dados. As telas nunca falam com o Room direto. */
+/**
+ * Único ponto de escrita dos dados. As telas nunca falam com o Room direto. No modo só consulta (R41, teste grátis
+ * encerrado) toda escrita é recusada aqui, sem apagar nada: a tela já esconde os botões, e esta é a trava do código.
+ */
 class Repositorio(private val banco: Banco) {
     val contas = banco.contas().todas()
     val contasCompletas = banco.contas().completas()
@@ -18,10 +22,13 @@ class Repositorio(private val banco: Banco) {
     suspend fun contasAgora(): List<Conta> = banco.contas().todasAgora()
 
     /** Grava (ou regrava) a conta. Serve para nova, edição, baixa e para o "Desfazer". */
-    suspend fun salvarConta(c: Conta) = banco.contas().inserir(c)
+    suspend fun salvarConta(c: Conta) {
+        if (!Licenca.somenteConsulta) banco.contas().inserir(c)
+    }
 
     /** Devolve a conta removida, para o aviso poder oferecer "Desfazer". */
     suspend fun excluirConta(id: String): Conta? {
+        if (Licenca.somenteConsulta) return null
         val c = banco.contas().porId(id) ?: return null
         banco.contas().excluir(id)
         return c
@@ -36,6 +43,7 @@ class Repositorio(private val banco: Banco) {
      * antes de gravar de novo, e a chave estrangeira recusa apagar um cliente que tem contas.
      */
     suspend fun salvarCliente(c: Cliente) {
+        if (Licenca.somenteConsulta) return
         if (banco.clientes().porId(c.id) != null) banco.clientes().atualizar(c) else banco.clientes().inserir(c)
     }
 
@@ -43,6 +51,7 @@ class Repositorio(private val banco: Banco) {
 
     /** Cliente com contas não pode ser excluído. Devolve o cliente removido ou null. */
     suspend fun excluirCliente(id: String): Cliente? {
+        if (Licenca.somenteConsulta) return null
         val c = banco.clientes().porId(id) ?: return null
         if (banco.contas().quantasDoCliente(id) > 0) return null
         banco.clientes().excluir(id)
@@ -51,6 +60,7 @@ class Repositorio(private val banco: Banco) {
 
     /** Só na versão de teste (R60). As contas saem antes dos clientes por causa da chave estrangeira. */
     suspend fun apagarTudo() = banco.withTransaction {
+        if (Licenca.somenteConsulta) return@withTransaction
         banco.contas().apagarTodas()
         banco.clientes().apagarTodos()
         banco.importacoes().apagarTodas()
@@ -60,6 +70,7 @@ class Repositorio(private val banco: Banco) {
 
     /** Grava tudo de uma vez ou nada: se algo falhar no meio, o banco fica como estava (R37). Devolve o id do registro. */
     suspend fun gravarImportacao(ap: Aplicacao, arquivo: String, quando: String): Long = banco.withTransaction {
+        if (Licenca.somenteConsulta) return@withTransaction -1L
         banco.clientes().inserirTodos(ap.clientesNovos)
         banco.clientes().atualizarTodos(ap.clientesAtualizados)
         banco.contas().atualizarTodas(ap.contasAtualizadas)
@@ -78,6 +89,7 @@ class Repositorio(private val banco: Banco) {
 
     /** Desfaz a importação com o que está no banco agora. Devolve quantos itens ficaram por já terem sido usados, ou null se não dá. */
     suspend fun desfazerImportacao(id: Long, quando: String): Int? = banco.withTransaction {
+        if (Licenca.somenteConsulta) return@withTransaction null
         val reg = banco.importacoes().porId(id) ?: return@withTransaction null
         if (reg.desfeita != null) return@withTransaction null
         // Só a mais recente que ainda vale pode ser desfeita: as de depois dela partem do que ela deixou.

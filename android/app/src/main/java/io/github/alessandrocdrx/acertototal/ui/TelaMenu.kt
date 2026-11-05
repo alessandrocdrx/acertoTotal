@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Store
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -142,6 +143,9 @@ fun TelaMenu(
     backup: io.github.alessandrocdrx.acertototal.dominio.InfoBackup,
     aoBackup: () -> Unit,
     aoRestaurar: () -> Unit,
+    somenteConsulta: Boolean,
+    textoAssinatura: String,
+    aoAssinatura: () -> Unit,
     aoSobre: () -> Unit,
     aoTema: () -> Unit,
     aoFaq: () -> Unit,
@@ -168,6 +172,8 @@ fun TelaMenu(
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        Grupo("Conta")
+        Opcao(Icons.Filled.WorkspacePremium, "Assinatura", textoAssinatura, aoAssinatura)
         Grupo("Aparência")
         Opcao(Icons.Filled.Palette, "Tema", "Claro, escuro ou igual ao celular", aoTema)
         Grupo("Cobrança")
@@ -177,12 +183,14 @@ fun TelaMenu(
                 .joinToString(" · ").ifEmpty { "Seu nome e sua chave Pix, para a mensagem de cobrança" },
             aoNegocio,
         )
-        Grupo("Seus dados")
-        Opcao(
-            Icons.Filled.Backup, "Cópia de segurança", "Tudo numa planilha, para guardar ou trocar de celular", aoBackup,
-            extra = { SeloSituacao(backup.tom, backup.texto) },
-        )
-        Opcao(Icons.Filled.Restore, "Restaurar uma cópia", "Traga de volta os dados de uma cópia de segurança", aoRestaurar)
+        if (!somenteConsulta) {
+            Grupo("Seus dados")
+            Opcao(
+                Icons.Filled.Backup, "Cópia de segurança", "Tudo numa planilha, para guardar ou trocar de celular", aoBackup,
+                extra = { SeloSituacao(backup.tom, backup.texto) },
+            )
+            Opcao(Icons.Filled.Restore, "Restaurar uma cópia", "Traga de volta os dados de uma cópia de segurança", aoRestaurar)
+        }
         Grupo("Ajuda")
         Opcao(Icons.Filled.Star, "Avaliar o acertoTotal", "Na Play Store · ajuda muito o app a crescer", { links.openUri(LINK_LOJA) }, externo = true)
         Opcao(Icons.Filled.Feedback, "Relatar problema ou sugestão", "Abre a página do projeto", { links.openUri("$REPO/issues/new") }, externo = true)

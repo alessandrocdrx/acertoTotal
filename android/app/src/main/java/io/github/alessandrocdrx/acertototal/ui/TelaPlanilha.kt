@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.alessandrocdrx.acertototal.dados.ImportacaoReg
 import io.github.alessandrocdrx.acertototal.dominio.InfoBackup
+import io.github.alessandrocdrx.acertototal.dominio.MSG_SOMENTE_CONSULTA
 import io.github.alessandrocdrx.acertototal.planilha.RegistroJson
 import io.github.alessandrocdrx.acertototal.planilha.quandoTexto
 
@@ -37,10 +38,14 @@ fun TelaPlanilha(
     aoExportar: () -> Unit,
     aoBackup: () -> Unit,
     registros: List<ImportacaoReg>,
+    somenteConsulta: Boolean,
     aoAbrirRegistro: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (somenteConsulta) {
+            Alerta(MSG_SOMENTE_CONSULTA)
+        } else {
         Text("O que você quer fazer?", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Opcao(Icons.Filled.FileUpload, "Importar planilha", "Cadastrar clientes e contas de uma vez", aoImportar)
         Opcao(Icons.Filled.Edit, "Atualizar pelo Excel", "Mudar valores, vencimentos e baixas de várias contas", aoAtualizar)
@@ -49,6 +54,7 @@ fun TelaPlanilha(
             Icons.Filled.Backup, "Cópia de segurança", "Tudo numa planilha, para guardar ou trocar de celular", aoBackup,
             extra = { SeloSituacao(backup.tom, backup.texto) },
         )
+        }
         if (registros.isNotEmpty()) {
             Text("Últimas importações", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 12.dp))
             registros.take(5).forEach { r ->

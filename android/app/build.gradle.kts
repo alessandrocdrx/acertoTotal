@@ -56,12 +56,16 @@ android {
             versionNameSuffix = "-teste"
             resValue("string", "app_name", "acertoTotal Teste")
             buildConfigField("boolean", "COBRANCA_REAL", "false")
+            // Dias de teste grátis (R67, R85): 7 no app de teste.
+            buildConfigField("int", "LIMITE_DIAS", "7")
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
         create("producao") {
             dimension = "ambiente"
             resValue("string", "app_name", "acertoTotal")
             buildConfigField("boolean", "COBRANCA_REAL", "true")
+            // 32 dias na fase de aprovação da Play, para a revisão e o teste fechado não travarem; 7 na versão final.
+            buildConfigField("int", "LIMITE_DIAS", "32")
             // Google Play: assinado com a chave de envio (assinatura-play.properties, fora do repositório).
             signingConfigs.findByName("play")?.let { signingConfig = it }
         }

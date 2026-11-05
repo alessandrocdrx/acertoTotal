@@ -28,6 +28,7 @@ import io.github.alessandrocdrx.acertototal.dominio.CampoForm
 import io.github.alessandrocdrx.acertototal.dominio.Dinheiro
 import io.github.alessandrocdrx.acertototal.dominio.Documento
 import io.github.alessandrocdrx.acertototal.dominio.ErroForm
+import io.github.alessandrocdrx.acertototal.dominio.MSG_SOMENTE_CONSULTA
 import io.github.alessandrocdrx.acertototal.dominio.Situacao
 import io.github.alessandrocdrx.acertototal.dominio.Validacao
 import io.github.alessandrocdrx.acertototal.dominio.brl
@@ -49,6 +50,7 @@ private fun Linha(rotulo: String, conteudo: @Composable () -> Unit) {
 fun FolhaConta(
     conta: ContaComCliente,
     hoje: LocalDate,
+    somenteConsulta: Boolean,
     aoFechar: () -> Unit,
     aoBaixar: (LocalDate, Anexo?) -> Unit,
     aoAnexar: (Anexo) -> Unit,
@@ -70,6 +72,11 @@ fun FolhaConta(
         Linha("Situação") { SeloSituacao(sit, infoPrazo(conta.venc, conta.pagoEm, hoje)) }
         if (conta.pagoEm != null) Linha("Pago em") { Text(dataCompleta(conta.pagoEm)) }
         HorizontalDivider()
+        if (somenteConsulta) {
+            Text(MSG_SOMENTE_CONSULTA, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            BotaoBloco("Fechar", aoClicar = aoFechar)
+            return@Folha
+        }
         if (sit != Situacao.PAGA) {
             Text("Dar baixa", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             CampoData(
@@ -178,6 +185,7 @@ fun FolhaFormCliente(
 @Composable
 fun FolhaCliente(
     cliente: Cliente,
+    somenteConsulta: Boolean,
     contas: List<ContaComCliente>,
     hoje: LocalDate,
     aoFechar: () -> Unit,
@@ -193,7 +201,9 @@ fun FolhaCliente(
         "${Documento.tipo(cliente.doc)} ${Documento.formatar(cliente.doc)}" +
             (if (Documento.valido(cliente.doc)) "" else " · não é válido (aceito na versão de teste)") + "\n"
     Folha(titulo = cliente.nome, subtitulo = docTxt + contato, aoFechar = aoFechar) {
-        if (cliente.doc.isEmpty()) {
+        if (somenteConsulta) {
+            Text(MSG_SOMENTE_CONSULTA, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else if (cliente.doc.isEmpty()) {
             Text(
                 "Falta o CPF ou CNPJ. Sem ele não dá para lançar contas nem usar planilhas com este cliente.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -206,7 +216,7 @@ fun FolhaCliente(
             BotaoBloco("Editar dados", aoClicar = aoEditar)
             if (contas.isNotEmpty()) BotaoBloco("Atualizar pelo Excel", aoClicar = aoAtualizarExcel)
         }
-        if (contas.isEmpty()) BotaoBloco("Excluir cliente", perigo = true, aoClicar = aoExcluir)
+        if (contas.isEmpty() && !somenteConsulta) BotaoBloco("Excluir cliente", perigo = true, aoClicar = aoExcluir)
         Text("Contas (${contas.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         if (contas.isEmpty()) Text("Sem contas ainda.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         contas.sortedWith { a, b ->

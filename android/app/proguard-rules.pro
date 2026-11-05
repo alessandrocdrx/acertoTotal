@@ -1,4 +1,1 @@
-# A ponte JavaScript é chamada pela página por nome: não pode ser renomeada.
--keepclassmembers class io.github.alessandrocdrx.acertototal.Ponte {
-    @android.webkit.JavascriptInterface <methods>;
-}
+# Sem regras especiais: o app nativo não usa reflexão nem ponte JavaScript.

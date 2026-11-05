@@ -39,7 +39,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.alessandrocdrx.acertototal.BuildConfig
 import io.github.alessandrocdrx.acertototal.dominio.Documento
+import io.github.alessandrocdrx.acertototal.dominio.FaixaTopo
+import io.github.alessandrocdrx.acertototal.dominio.Licenca
+import io.github.alessandrocdrx.acertototal.dominio.Teste
 import io.github.alessandrocdrx.acertototal.dominio.backupPendente
 import io.github.alessandrocdrx.acertototal.dominio.brl
 import io.github.alessandrocdrx.acertototal.dominio.infoBackup
@@ -89,6 +93,7 @@ sealed interface Janela {
     data class Cobrar(val clienteId: String, val contaId: String?) : Janela
     /** [voltar]: ao salvar, volta para a cobrança de onde a pessoa veio. */
     data class Negocio(val voltar: Cobrar?) : Janela
+    data object Planos : Janela
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,6 +105,7 @@ fun App(
     clientesVm: ClientesViewModel = viewModel(),
     numerosVm: NumerosViewModel = viewModel(),
     importVm: ImportacaoViewModel = viewModel(),
+    licVm: LicencaViewModel = viewModel(),
 ) {
     var aba by rememberSaveable { mutableStateOf(Aba.CONTAS) }
     var noMenu by rememberSaveable { mutableStateOf(false) }
@@ -107,6 +113,11 @@ fun App(
     val ui by contasVm.ui.collectAsStateWithLifecycle()
     val uiClientes by clientesVm.ui.collectAsStateWithLifecycle()
     val uiNumeros by numerosVm.ui.collectAsStateWithLifecycle()
+    val assin by licVm.estado.collectAsStateWithLifecycle()
+    val agora = System.currentTimeMillis()
+    // Teste grátis encerrado e sem assinatura: o app só consulta (R41). A trava vale também no código (Repositorio).
+    val consulta = Teste.somenteConsulta(licVm.avaliacao, assin.ativa, agora)
+    androidx.compose.runtime.SideEffect { Licenca.somenteConsulta = consulta }
     val estadoImp by importVm.estado.collectAsStateWithLifecycle()
     val registros by importVm.registros.collectAsStateWithLifecycle()
     // Planilhas de qualquer origem: o tipo vem do conteúdo, não do nome nem do tipo que o app de origem declara (R48).
@@ -127,7 +138,7 @@ fun App(
     // Cada janela começa sem a resposta da anterior.
     androidx.compose.runtime.LaunchedEffect(janela) { retorno = null }
     val infoBackup = infoBackup(ultimoBackup, ui.hoje)
-    val pendente = backupPendente(ultimoBackup, ui.hoje)
+    val pendente = backupPendente(ultimoBackup, ui.hoje) && !consulta // R42: não manda usar o que está bloqueado
 
     // No Menu, o Voltar do Android devolve à aba de onde a pessoa veio.
     BackHandler(enabled = noMenu) { noMenu = false }
@@ -219,6 +230,7 @@ fun App(
 
     Scaffold(
         topBar = {
+          Column {
             TopAppBar(
                 title = { Text(if (noMenu) "Menu" else aba.rotulo) }, // o título é o rótulo da aba tocada (R72)
                 navigationIcon = {
@@ -239,6 +251,8 @@ fun App(
                     }
                 },
             )
+            FaixaDoTopo(FaixaTopo.montar(licVm.avaliacao, assin.ativa, agora, BuildConfig.COBRANCA_REAL)) { janela = Janela.Planos }
+          }
         },
         bottomBar = {
             if (!noMenu) {
@@ -255,7 +269,7 @@ fun App(
             }
         },
         floatingActionButton = {
-            if (!noMenu) when (aba) {
+            if (!noMenu && !consulta) when (aba) {
                 Aba.CONTAS -> BotaoNovo("Nova conta", listaContas) { novaConta() }
                 Aba.CLIENTES -> BotaoNovo("Novo cliente", listaClientes) { janela = Janela.FormCliente(null) }
                 else -> Unit
@@ -271,6 +285,9 @@ fun App(
                 backup = infoBackup,
                 aoBackup = { janela = Janela.ExportarPrevia(backup = true) },
                 aoRestaurar = { abrirImportar() },
+                somenteConsulta = consulta,
+                textoAssinatura = FaixaTopo.cartao(licVm.avaliacao, assin.ativa, agora),
+                aoAssinatura = { janela = Janela.Planos },
                 aoSobre = { janela = Janela.Sobre },
                 aoTema = { janela = Janela.Tema },
                 aoFaq = { janela = Janela.Faq },
@@ -284,7 +301,7 @@ fun App(
                 aoFiltrar = contasVm::alternarFiltro,
                 aoBuscar = contasVm::buscar,
                 aoVerTudo = contasVm::verTudo,
-                aoDarBaixa = { c -> janela = Janela.Conta(c.id) },
+                aoDarBaixa = if (consulta) null else ({ c -> janela = Janela.Conta(c.id) }),
                 aoAbrirConta = { c -> janela = Janela.Conta(c.id) },
                 modifier = corpo,
                 estado = listaContas,
@@ -293,9 +310,9 @@ fun App(
                 ui = uiClientes,
                 aoBuscar = clientesVm::buscar,
                 aoAbrir = { c -> janela = Janela.Cliente(c.id) },
-                aoCompletarDocs = {
+                aoCompletarDocs = if (consulta) null else ({
                     uiClientes.todos.firstOrNull { it.doc.isEmpty() }?.let { janela = Janela.FormCliente(it.id, fila = true) }
-                },
+                }),
                 modifier = corpo,
                 estado = listaClientes,
             )
@@ -307,6 +324,7 @@ fun App(
                 aoExportar = { filtros = FiltrosExport(); janela = Janela.ExportarFiltros },
                 aoBackup = { janela = Janela.ExportarPrevia(backup = true) },
                 registros = registros,
+                somenteConsulta = consulta,
                 aoAbrirRegistro = { janela = Janela.RegistroImp(it) },
                 modifier = corpo,
             )
@@ -319,8 +337,26 @@ fun App(
             else -> EmConstrucao(aba.rotulo, corpo)
         }
 
-        when (val j = janela) {
+        // Em modo só consulta, toda janela que escreve, importa ou exporta vira a explicação (R41).
+        val escrita = janela.let {
+            it is Janela.FormConta || it is Janela.FormCliente || it == Janela.ExportarFiltros || it is Janela.ExportarPrevia ||
+                it == Janela.Importar || it == Janela.AtualizarExcel || it is Janela.DesfazerImp || it is Janela.Cobrar || it == Janela.Apagar
+        }
+        if (consulta && escrita) FolhaSomenteConsulta(aoVerPlanos = { janela = Janela.Planos }, aoFechar = { janela = null })
+        else when (val j = janela) {
             null -> Unit
+            Janela.Planos -> FolhaPlanos(
+                estado = assin, avaliacao = licVm.avaliacao, agora = agora,
+                aoAssinar = { plano, aoFalhar ->
+                    val atividade = contexto as? android.app.Activity
+                    if (licVm.assinatura.assinar(atividade, plano)) {
+                        if (!assin.real) { janela = null; avisar("Assinatura simulada ativada") }
+                    } else aoFalhar("Não consegui abrir a compra. Tente de novo em instantes.")
+                },
+                aoRestaurar = { licVm.assinatura.atualizar(); avisar("Conferindo a assinatura na Google Play…") },
+                aoCancelarSimulada = { licVm.assinatura.cancelarSimulada(); janela = null; avisar("Assinatura simulada cancelada") },
+                aoFechar = { janela = null },
+            )
             Janela.ExportarFiltros -> FolhaFiltrosExport(
                 filtros = filtros, clientes = uiClientes.todos, contas = completas, hoje = ui.hoje,
                 aoMudar = { filtros = it },
@@ -457,7 +493,7 @@ fun App(
             )
             is Janela.Conta -> ui.todas.firstOrNull { it.id == j.id }?.let { c ->
                 FolhaConta(
-                    conta = c, hoje = ui.hoje,
+                    conta = c, hoje = ui.hoje, somenteConsulta = consulta,
                     aoFechar = { janela = null },
                     aoAnexar = { novo -> contasVm.anexar(c.id, novo) },
                     aoRemoverComprovante = {
@@ -508,7 +544,7 @@ fun App(
             }
             is Janela.Cliente -> uiClientes.todos.firstOrNull { it.id == j.id }?.let { cl ->
                 FolhaCliente(
-                    cliente = cl,
+                    cliente = cl, somenteConsulta = consulta,
                     contas = ui.todas.filter { it.clienteId == cl.id },
                     hoje = ui.hoje,
                     aoFechar = { janela = null },

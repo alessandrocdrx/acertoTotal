@@ -57,7 +57,7 @@ fun TelaContas(
     aoFiltrar: (FiltroContas) -> Unit,
     aoBuscar: (String) -> Unit,
     aoVerTudo: () -> Unit,
-    aoDarBaixa: (ContaComCliente) -> Unit,
+    aoDarBaixa: ((ContaComCliente) -> Unit)?,
     aoAbrirConta: (ContaComCliente) -> Unit,
     modifier: Modifier = Modifier,
     estado: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
@@ -181,7 +181,7 @@ private fun LinhaConta(
     c: ContaComCliente,
     hoje: LocalDate,
     aoAbrir: (ContaComCliente) -> Unit,
-    aoDarBaixa: (ContaComCliente) -> Unit,
+    aoDarBaixa: ((ContaComCliente) -> Unit)?,
 ) {
     val sit = situacaoDe(c.venc, c.pagoEm, hoje)
     Card(
@@ -202,7 +202,7 @@ private fun LinhaConta(
             }
             Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(start = 8.dp)) {
                 Text(brl(c.valor), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                if (sit != Situacao.PAGA) {
+                if (sit != Situacao.PAGA && aoDarBaixa != null) {
                     Spacer(Modifier.size(6.dp))
                     Button(
                         onClick = { aoDarBaixa(c) },
