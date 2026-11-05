@@ -108,6 +108,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     testImplementation("junit:junit:4.13.2")
+    // O Android já traz o leitor de XML; nos testes do computador ele precisa vir junto.
+    testImplementation("net.sf.kxml:kxml2:2.3.0")
     androidTestImplementation(composeBom)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

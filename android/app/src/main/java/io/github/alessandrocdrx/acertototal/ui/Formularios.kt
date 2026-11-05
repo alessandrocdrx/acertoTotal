@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
@@ -134,6 +135,8 @@ fun CampoData(
     modifier: Modifier = Modifier,
     maxima: LocalDate? = null,
     erro: String? = null,
+    /** Quando informado, aparece um "x" para esvaziar o campo (datas opcionais, como nos filtros). */
+    aoLimpar: (() -> Unit)? = null,
 ) {
     var aberto by remember { mutableStateOf(false) }
     Column(modifier.fillMaxWidth()) {
@@ -146,8 +149,15 @@ fun CampoData(
             isError = erro != null,
             supportingText = erro?.let { { Text(it) } },
             trailingIcon = {
-                IconButton(onClick = { aberto = true }, modifier = Modifier.heightIn(min = 48.dp)) {
-                    Icon(Icons.Filled.DateRange, contentDescription = "Escolher $rotulo")
+                androidx.compose.foundation.layout.Row {
+                    if (aoLimpar != null && data != null) {
+                        IconButton(onClick = aoLimpar, modifier = Modifier.heightIn(min = 48.dp)) {
+                            Icon(Icons.Filled.Close, contentDescription = "Limpar $rotulo")
+                        }
+                    }
+                    IconButton(onClick = { aberto = true }, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Icon(Icons.Filled.DateRange, contentDescription = "Escolher $rotulo")
+                    }
                 }
             },
             colors = camposAcerto(),

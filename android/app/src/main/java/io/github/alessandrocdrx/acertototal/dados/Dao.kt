@@ -16,6 +16,10 @@ interface ContaDao {
     )
     fun todas(): Flow<List<ContaComCliente>>
 
+    /** Todos os campos de cada conta: para exportar e para a cópia de segurança. */
+    @Query("SELECT * FROM contas")
+    fun completas(): Flow<List<Conta>>
+
     @Query("SELECT * FROM contas WHERE id = :id")
     suspend fun porId(id: String): Conta?
 

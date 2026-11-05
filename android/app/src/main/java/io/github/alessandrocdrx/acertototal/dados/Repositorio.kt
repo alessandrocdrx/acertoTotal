@@ -3,6 +3,7 @@ package io.github.alessandrocdrx.acertototal.dados
 /** Único ponto de escrita dos dados. As telas nunca falam com o Room direto. */
 class Repositorio(private val banco: Banco) {
     val contas = banco.contas().todas()
+    val contasCompletas = banco.contas().completas()
     val clientes = banco.clientes().todos()
 
     suspend fun conta(id: String): Conta? = banco.contas().porId(id)

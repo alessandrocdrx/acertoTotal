@@ -72,6 +72,10 @@ class ContasViewModel(app: Application) : AndroidViewModel(app) {
         montar(contas, f, q, hoje)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ContasUi(hoje))
 
+    /** Todos os campos de cada conta, para exportar e fazer a cópia de segurança. */
+    val completas: StateFlow<List<Conta>> =
+        repo.contasCompletas.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     /** Tocar de novo no cartão marcado tira o filtro (R77). */
     fun alternarFiltro(f: FiltroContas) = filtro.update { if (it == f) FiltroContas.ABERTAS else f }
     fun verTudo() { filtro.value = FiltroContas.ABERTAS }

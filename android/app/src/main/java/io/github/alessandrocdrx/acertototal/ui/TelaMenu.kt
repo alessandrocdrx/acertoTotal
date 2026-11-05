@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -100,7 +102,14 @@ private fun Grupo(titulo: String) {
 
 /** Linha tocável do Menu: ícone, título, explicação e seta (R84: o que se toca parece tocável). */
 @Composable
-private fun Opcao(icone: ImageVector, titulo: String, texto: String, aoClicar: () -> Unit, externo: Boolean = false) {
+fun Opcao(
+    icone: ImageVector,
+    titulo: String,
+    texto: String,
+    aoClicar: () -> Unit,
+    externo: Boolean = false,
+    extra: (@Composable () -> Unit)? = null,
+) {
     Card(
         onClick = aoClicar,
         shape = RoundedCornerShape(12.dp),
@@ -113,6 +122,7 @@ private fun Opcao(icone: ImageVector, titulo: String, texto: String, aoClicar: (
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                 Text(titulo, fontWeight = FontWeight.SemiBold)
                 Text(texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (extra != null) Box(Modifier.padding(top = 6.dp)) { extra() }
             }
             Icon(
                 if (externo) Icons.AutoMirrored.Filled.OpenInNew else Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -127,6 +137,8 @@ private fun Opcao(icone: ImageVector, titulo: String, texto: String, aoClicar: (
 fun TelaMenu(
     versao: String,
     mostrarApagar: Boolean,
+    backup: io.github.alessandrocdrx.acertototal.dominio.InfoBackup,
+    aoBackup: () -> Unit,
     aoSobre: () -> Unit,
     aoTema: () -> Unit,
     aoFaq: () -> Unit,
@@ -153,6 +165,11 @@ fun TelaMenu(
         }
         Grupo("Aparência")
         Opcao(Icons.Filled.Palette, "Tema", "Claro, escuro ou igual ao celular", aoTema)
+        Grupo("Seus dados")
+        Opcao(
+            Icons.Filled.Backup, "Cópia de segurança", "Tudo numa planilha, para guardar ou trocar de celular", aoBackup,
+            extra = { SeloSituacao(backup.tom, backup.texto) },
+        )
         Grupo("Ajuda")
         Opcao(Icons.Filled.Star, "Avaliar o acertoTotal", "Na Play Store · ajuda muito o app a crescer", { links.openUri(LINK_LOJA) }, externo = true)
         Opcao(Icons.Filled.Feedback, "Relatar problema ou sugestão", "Abre a página do projeto", { links.openUri("$REPO/issues/new") }, externo = true)

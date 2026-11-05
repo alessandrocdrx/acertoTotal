@@ -40,8 +40,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.alessandrocdrx.acertototal.dominio.Documento
+import io.github.alessandrocdrx.acertototal.dominio.backupPendente
 import io.github.alessandrocdrx.acertototal.dominio.brl
+import io.github.alessandrocdrx.acertototal.dominio.infoBackup
+import io.github.alessandrocdrx.acertototal.planilha.Exportacao
+import io.github.alessandrocdrx.acertototal.planilha.FiltrosExport
+import io.github.alessandrocdrx.acertototal.planilha.PlanilhaPronta
+import io.github.alessandrocdrx.acertototal.planilha.Xlsx
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 /** No rodapé, só destinos de trabalho (R4). Assinatura, tema, ajuda e "Apagar tudo" ficam no Menu. */
@@ -63,6 +73,9 @@ sealed interface Janela {
     data object Tema : Janela
     data object Faq : Janela
     data object Apagar : Janela
+    data object ExportarFiltros : Janela
+    /** [backup]: a cópia de segurança não tem filtros nem tabela, só o resumo. */
+    data class ExportarPrevia(val backup: Boolean) : Janela
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,6 +97,16 @@ fun App(
     val escopo = rememberCoroutineScope()
     val listaContas = rememberLazyListState()
     val listaClientes = rememberLazyListState()
+    val contexto = androidx.compose.ui.platform.LocalContext.current
+    val area = androidx.compose.ui.platform.LocalClipboardManager.current
+    val completas by contasVm.completas.collectAsStateWithLifecycle()
+    var filtros by remember { mutableStateOf(FiltrosExport()) }
+    var ultimoBackup by remember { mutableStateOf(Preferencias.ultimoBackup(contexto)) }
+    var retorno by remember { mutableStateOf<Retorno?>(null) }
+    // Cada janela começa sem a resposta da anterior.
+    androidx.compose.runtime.LaunchedEffect(janela) { retorno = null }
+    val infoBackup = infoBackup(ultimoBackup, ui.hoje)
+    val pendente = backupPendente(ultimoBackup, ui.hoje)
 
     // No Menu, o Voltar do Android devolve à aba de onde a pessoa veio.
     BackHandler(enabled = noMenu) { noMenu = false }
@@ -111,6 +134,43 @@ fun App(
         }
     }
 
+    /** A planilha que a janela de prévia mostra agora, pronta para gravar. */
+    fun planilhaAtual(backup: Boolean): PlanilhaPronta =
+        if (backup) Exportacao.copiaDeSeguranca(uiClientes.todos, completas)
+        else Exportacao.relatorioOuEditar(uiClientes.todos, completas, filtros, ui.hoje)
+
+    fun nomeDoArquivo(p: PlanilhaPronta) = "${p.arquivo}-${ui.hoje}.xlsx"
+
+    /** Falha ao salvar nunca é silenciosa (R28). A data da cópia só muda se o arquivo foi gravado. */
+    fun baixar(backup: Boolean) {
+        val p = planilhaAtual(backup)
+        escopo.launch {
+            val nome = nomeDoArquivo(p)
+            val ok = withContext(Dispatchers.IO) {
+                runCatching { Arquivos.salvarEmDownloads(contexto, nome, Xlsx.escrever(p.abas())) }.getOrDefault(false)
+            }
+            if (ok) {
+                if (backup) {
+                    Preferencias.salvarUltimoBackup(contexto, ui.hoje)
+                    ultimoBackup = ui.hoje
+                }
+                retorno = Retorno("Arquivo Excel salvo em Downloads: $nome")
+            } else {
+                retorno = Retorno("Não foi possível salvar o arquivo. Confira se há espaço no aparelho.", erro = true)
+            }
+        }
+    }
+
+    fun compartilhar(backup: Boolean) {
+        val p = planilhaAtual(backup)
+        escopo.launch {
+            val ok = withContext(Dispatchers.IO) {
+                runCatching { Arquivos.compartilhar(contexto, nomeDoArquivo(p), Xlsx.escrever(p.abas())) }.getOrDefault(false)
+            }
+            if (!ok) retorno = Retorno("Não encontrei um app para enviar o arquivo. Use “Baixar Excel” e abra em Downloads.", erro = true)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -125,7 +185,10 @@ fun App(
                 actions = {
                     if (!noMenu) {
                         IconButton(onClick = { noMenu = true }) {
-                            Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                            // Cópia de segurança pendente: ponto vermelho no ☰ (R78), dito também por escrito.
+                            BadgedBox(badge = { if (pendente) Badge() }) {
+                                Icon(Icons.Filled.Menu, contentDescription = if (pendente) "Menu, cópia de segurança pendente" else "Menu")
+                            }
                         }
                     }
                 },
@@ -159,6 +222,8 @@ fun App(
             noMenu -> TelaMenu(
                 versao = io.github.alessandrocdrx.acertototal.BuildConfig.VERSION_NAME,
                 mostrarApagar = !io.github.alessandrocdrx.acertototal.BuildConfig.COBRANCA_REAL,
+                backup = infoBackup,
+                aoBackup = { janela = Janela.ExportarPrevia(backup = true) },
                 aoSobre = { janela = Janela.Sobre },
                 aoTema = { janela = Janela.Tema },
                 aoFaq = { janela = Janela.Faq },
@@ -185,6 +250,13 @@ fun App(
                 modifier = corpo,
                 estado = listaClientes,
             )
+            aba == Aba.PLANILHA -> TelaPlanilha(
+                backup = infoBackup,
+                // Cada tarefa abre com os filtros limpos: nada herdado de outra tarefa (R56).
+                aoExportar = { filtros = FiltrosExport(); janela = Janela.ExportarFiltros },
+                aoBackup = { janela = Janela.ExportarPrevia(backup = true) },
+                modifier = corpo,
+            )
             aba == Aba.NUMEROS -> TelaNumeros(
                 ui = uiNumeros,
                 aoEscolherPeriodo = numerosVm::escolher,
@@ -196,6 +268,31 @@ fun App(
 
         when (val j = janela) {
             null -> Unit
+            Janela.ExportarFiltros -> FolhaFiltrosExport(
+                filtros = filtros, clientes = uiClientes.todos, contas = completas, hoje = ui.hoje,
+                aoMudar = { filtros = it },
+                aoVerPrevia = { janela = Janela.ExportarPrevia(backup = false) },
+                aoFechar = { janela = null },
+            )
+            is Janela.ExportarPrevia -> {
+                val p = planilhaAtual(j.backup)
+                FolhaPreviaExport(
+                    planilha = p,
+                    backup = if (j.backup) ResumoBackup(
+                        clientes = uiClientes.todos.size, contas = completas.size,
+                        pagas = completas.count { it.pagoEm != null }, comprovantes = completas.count { it.compArquivo != null },
+                    ) else null,
+                    retorno = retorno,
+                    aoBaixar = { baixar(j.backup) },
+                    aoCompartilhar = { compartilhar(j.backup) },
+                    aoCopiar = {
+                        area.setText(androidx.compose.ui.text.AnnotatedString(p.tsv()))
+                        retorno = Retorno("Copiado. Cole numa planilha do Excel.")
+                    },
+                    aoVoltar = if (j.backup) null else ({ janela = Janela.ExportarFiltros }),
+                    aoFechar = { janela = null },
+                )
+            }
             Janela.Sobre -> FolhaSobre(io.github.alessandrocdrx.acertototal.BuildConfig.VERSION_NAME) { janela = null }
             Janela.Tema -> FolhaTema(tema, aoEscolher = aoMudarTema, aoFechar = { janela = null })
             Janela.Faq -> FolhaFaq { janela = null }
@@ -205,6 +302,8 @@ fun App(
                 comprovantes = ui.todas.count { it.temComprovante },
                 aoApagar = {
                     contasVm.apagarTudo {
+                        Preferencias.limparUltimoBackup(contexto)
+                        ultimoBackup = null
                         janela = null
                         noMenu = false
                         aba = Aba.CONTAS
