@@ -12,6 +12,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         applicationId = "io.github.alessandrocdrx.acertototal"
         minSdk = 29
         targetSdk = 36
@@ -119,6 +120,8 @@ dependencies {
     testImplementation("org.json:json:20231013")
     androidTestImplementation(composeBom)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     // O Play Billing traz um Fragment antigo; a janela de arquivos (ActivityResult) exige 1.3.0 ou mais.
     implementation("androidx.fragment:fragment:1.8.5")
