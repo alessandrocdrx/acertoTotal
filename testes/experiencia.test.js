@@ -202,7 +202,12 @@ const medir = () => {
   await p.click('.tabs [data-tab=numeros]');
   const num = await p.locator('#screen').innerText();
   ok('Números: sem "Valor médio por conta", "Pagas com comprovante" e sem Em aberto/Em atraso repetidos', !/Valor médio|Pagas com comprovante/.test(num) && !/^Em aberto$/m.test(num) && (await p.locator('.sum .mini').count()) === 0, num.slice(0, 300));
-  ok('Números: no começo do mês, sem "0%" desanimador (explica o motivo)', !(await p.locator('.pct').count()) && /Nenhuma conta vencida neste mês foi paga ainda/.test(num));
+  // Depende do dia em que o teste roda: no começo do mês ninguém pagou ainda, mais tarde já há porcentagem.
+  // A regra vale nos dois casos: nunca um "0%" solto; ou a frase explica, ou a porcentagem vem com o valor recebido.
+  const pcts = await p.locator('.pct').allInnerTexts();
+  ok('Números: sem "0%" desanimador (explica o motivo em qualquer dia do mês)',
+    pcts.length === 0 ? !/(^|\D)0%/.test(num)
+                      : pcts.every(t => t.trim() !== '0%') && /você já recebeu R\$/.test(num), pcts.join(' ') + ' | ' + num.slice(0, 200));
   ok('Números: o subtítulo não repete o período escolhido', (await p.locator('#subtitle').innerText()).trim() === '');
   // Textos: "Marcar como paga" e "Desfazer baixa" sem vermelho
   await p.click('.tabs [data-tab=contas]'); await p.click('.crow .btn.primary');

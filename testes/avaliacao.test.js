@@ -127,31 +127,8 @@ const DIA = 864e5;
     await ctx.close();
   }
 
-  // APK: homolog tem 7 dias; produção não tem limite
-  const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
-  {
-    const { p, ctx } = await abrir(8, { url: 'file://' + path.join(SRC, 'homolog', 'assets', 'index.html') });
-    ok('APK de teste: limite de 7 dias ligado', /Teste grátis encerrado/.test(await faixa(p)));
-    await ctx.close();
-  }
-  const PROD = 'file://' + path.join(SRC, 'producao', 'assets', 'index.html');
-  {
-    const { p, ctx } = await abrir(5, { url: PROD });
-    ok('APK de produção: teste de 32 dias, sem a faixa "Ambiente de teste" e sem aviso logo no começo', !(await p.locator('#ambiente').isVisible()) && (await p.locator('.fab').count()) === 1);
-    ok('APK de produção: o Menu mostra quantos dias faltam do teste (27)', await (async () => { await p.click('[data-act=abrir-menu]'); return /Teste grátis: faltam 27 dias/.test(await p.locator('.assin').innerText()); })());
-    await ctx.close();
-  }
-  {
-    const { p, ctx } = await abrir(30, { url: PROD });
-    const f = await faixa(p);
-    ok('APK de produção: nos últimos 3 dias a faixa avisa e oferece "Ver planos", sem "Ambiente de teste"', /Teste grátis: faltam 2 dias/.test(f) && !/Ambiente de teste/.test(f) && (await p.locator('#ambiente [data-act=planos]').count()) === 1, f);
-    await ctx.close();
-  }
-  {
-    const { p, ctx } = await abrir(33, { url: PROD });
-    ok('APK de produção: depois dos 32 dias fica só para consulta, com "Assinar"', /Teste grátis encerrado/.test(await faixa(p)) && (await p.locator('.fab').count()) === 0 && (await p.locator('#ambiente [data-act=planos]').count()) === 1);
-    await ctx.close();
-  }
+  // Os blocos "APK de teste/produção" abriam android/app/src/*/assets/index.html, que deixou de existir
+  // quando o app virou nativo (R87). O limite de dias por variante é testado em AvaliacaoTest.kt.
 
   await b.close();
   console.log(out.join('\n'));

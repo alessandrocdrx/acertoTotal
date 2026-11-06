@@ -134,11 +134,20 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 - R90. O modo "só consulta" (R41) tem duas travas: a tela esconde os botões e as janelas de escrita viram a explicação; e `Repositorio` recusa toda escrita enquanto `Licenca.somenteConsulta` estiver ligado. Função nova que grava passa pelo `Repositorio`. [android]
 - R91. **CPF/CNPJ é opcional** (decisão do Alessandro, 05/11/2026). Só o nome do cliente é obrigatório. Se o CPF/CNPJ for preenchido, continua conferindo o dígito verificador (R52) e não pode repetir. Não há mais "Completar cadastro", aviso de cliente sem documento nem bloqueio de conta. Na planilha, a coluna CPF/CNPJ é opcional: sem ela (ou com a célula vazia) o **nome** acha o cliente (sem acento nem maiúscula), e o mesmo nome em várias linhas é um cliente só. A **busca de clientes é por nome ou telefone** (o telefone vale só pelos números, com ou sem pontuação); o CPF/CNPJ não entra na busca. [android]
 - R92. **Deslizar o dedo** na horizontal troca de aba, na ordem Contas, Clientes, Números e Planilha: para a esquerda vai para a próxima, para a direita volta. Não vale no Menu nem com janela aberta, e rolar a lista na vertical não troca de aba. Os botões do rodapé continuam sendo o caminho principal (R4); o gesto é um atalho. [android]
+- R93. Teste não pode depender do dia em que roda. Se o resultado muda com a data (começo ou fim do mês, dia da semana), fixe o relógio ou confira a regra que vale em qualquer dia. E o GitHub precisa ficar verde: um passo vermelho no começo esconde todos os testes que vêm depois. [experiencia]
 - R67. Teste grátis: 7 dias no app de teste e, na versão final da Play, 7 dias; na fase de aprovação, 32 dias para a revisão e os 14 dias de teste fechado não travarem. O prazo vem de `android/preparar-assets.sh` (`producao:producao:32`). Depois do prazo, sem assinatura, o app fica só para consulta (R41). [avaliacao, assinatura]
 
 ## Registro
 
 As entradas mais recentes ficam no topo.
+
+### A-045 · 06/11/2026 · Testes do GitHub vermelhos desde a conversão para nativo
+- **Achado numa revisão:** as 5 últimas rodadas do GitHub (main e aprovacao) falharam. 3 suítes do protótipo davam erro, e como esse passo vem antes, os testes de unidade do Kotlin **nunca rodavam** no GitHub.
+- **Causas:**
+  - `avaliacao` e `assinatura` ainda abriam `android/app/src/{homolog,producao}/assets/index.html`, a página da WebView que saiu na conversão (A-043). O erro era do teste, não do app (R35).
+  - `experiencia` exigia a frase "Nenhuma conta vencida neste mês foi paga ainda", que só aparece no começo do mês. Rodando no dia 5, já havia conta paga e o teste quebrava.
+- **Correção:** os blocos da WebView saíram (o limite de dias e a faixa já são testados em `AvaliacaoTest.kt`). O teste dos Números agora confere a regra em qualquer dia: nunca um "0%" solto, ou a frase explica, ou a porcentagem vem com o valor recebido.
+- **Como evitar:** regra R93. Ao remover um arquivo ou uma camada, procure quem ainda aponta para ela (`grep -rn` no repositório, inclusive em `testes/`). E depois de cada push, olhe o resultado do GitHub, não só o teste local.
 
 ### A-044 · 05/11/2026 · CPF/CNPJ opcional, busca por nome ou telefone e troca de aba por gesto
 - **Pedido do cliente:** tirar a obrigação do CPF/CNPJ, buscar por nome ou telefone e trocar de aba deslizando o dedo.

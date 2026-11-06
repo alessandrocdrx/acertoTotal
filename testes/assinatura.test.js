@@ -109,77 +109,8 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
     await ctx.close();
   }
 
-  // ===== App da Play (cobrança real): ponte falsa no lugar da casca Android
-  const PONTE = estado => `
-    window.__chamadas = [];
-    window.__estado = ${JSON.stringify(estado)};
-    window.acertoTotalAndroid = {
-      assinaturaEstado: () => JSON.stringify(window.__estado),
-      assinar: p => { window.__chamadas.push('assinar:' + p); return 'ok'; },
-      atualizarAssinatura: () => { window.__chamadas.push('atualizar'); },
-      gerenciarAssinatura: () => { window.__chamadas.push('gerenciar'); },
-    };`;
-  const PRECOS = { semanal: 'R$ 2,99', mensal: 'R$ 9,99', semestral: 'R$ 56,90', anual: 'R$ 107,90' };
-  const PROD = 'file://' + path.join(SRC, 'producao', 'assets', 'index.html');
-  {
-    const { p, ctx } = await abrir(40, { url: PROD, ponte: PONTE({ real: true, ativa: false, pronto: true, precos: { ...PRECOS, anual: 'R$ 108,00' } }) });
-    ok('Play: teste terminado e sem assinatura → só consulta', (await p.locator('.fab').count()) === 0 && /Teste grátis encerrado/.test(await p.locator('#ambiente').innerText()));
-    await p.click('#ambiente [data-act=planos]');
-    const tela = (await p.locator('.sheet').innerText()).replace(/ /g, ' ');
-    ok('Play: os preços mostrados são os que a Play informou', /R\$\s108,00/.test(tela) && !/R\$\s107,90/.test(tela), tela);
-    ok('Play: não aparece o aviso de simulação', !/simulada/.test(tela));
-    await p.click('.plano[data-p=semestral]'); await p.click('#bt-assinar');
-    ok('Play: "Assinar" chama a casca Android com o plano escolhido', JSON.stringify(await p.evaluate(() => window.__chamadas)) === '["assinar:semestral"]');
-    // A Play confirma a compra e avisa a página
-    await p.evaluate(() => window.acertoAssinatura(JSON.stringify({ real: true, ativa: true, pronto: true, precos: {} })));
-    await p.waitForTimeout(200);
-    ok('Play: quando a Play avisa que há assinatura, o app é liberado e a janela mostra "Sua assinatura"', (await p.locator('.fab').count()) === 1 && /Sua assinatura/.test(await p.locator('.sheet h2').innerText()));
-    await p.click('[data-act=gerenciar-assin]');
-    ok('Play: "Gerenciar" abre a Google Play pela casca', (await p.evaluate(() => window.__chamadas)).includes('gerenciar'));
-    await p.evaluate(() => window.acertoAssinatura({ real: true, ativa: false, pronto: true, precos: {} }));
-    await p.waitForTimeout(200);
-    ok('Play: se a assinatura acabar, o app volta ao modo só consulta', (await p.locator('.fab').count()) === 0);
-    await p.keyboard.press('Escape'); await p.click('#ambiente [data-act=planos]'); await p.click('[data-act=restaurar-assin]');
-    ok('Play: "Restaurar" pede à casca para conferir de novo', (await p.evaluate(() => window.__chamadas)).includes('atualizar'));
-    ok('Sem erros de JavaScript', p.errs.length === 0, p.errs.join(' | '));
-    await ctx.close();
-  }
-  {
-    // Assinante conhecido do aparelho abre o app já liberado, mesmo antes da Play responder
-    const { p, ctx } = await abrir(40, { url: PROD, ponte: PONTE({ real: true, ativa: true, pronto: false, precos: {} }) });
-    ok('Play: assinante abre o app liberado, mesmo sem internet', (await p.locator('.fab').count()) === 1 && !(await p.locator('#ambiente').isVisible()));
-    await ctx.close();
-  }
-  // Os estados abaixo são os que Assinatura.kt realmente produz (conferidos também pelo teste de contrato na suíte android):
-  //   tudo certo                → pronto:true,  precos cheios, motivo ''
-  //   Play respondeu, sem produto → pronto:false, precos {},    motivo 'sem_planos'   (relato do cliente, 02/11: foi o que apareceu no celular)
-  //   não falou com a Play      → pronto:false, precos {},    motivo 'play'
-  //   ainda carregando          → pronto:false, precos {},    motivo ''
-  const FALHA = "return 'ok'", NAO = "return 'indisponivel'";
-  for (const [rotulo, estado, achar, evitar] of [
-    ['Play sem planos (o produto ainda não existe no Console)', { real: true, ativa: false, pronto: false, precos: {}, motivo: 'sem_planos', erro: 'Os planos ainda não estão disponíveis na Google Play.' }, /ainda não estão à venda/, /internet/],
-    ['Play sem conexão', { real: true, ativa: false, pronto: false, precos: {}, motivo: 'play', erro: 'A Google Play não respondeu (3).' }, /Não consegui falar com a Google Play\. Confira a internet/, /à venda/],
-    ['Play ainda carregando', { real: true, ativa: false, pronto: false, precos: {}, motivo: '' }, /ainda está carregando os planos/, /internet|à venda/],
-  ]) {
-    const { p, ctx } = await abrir(3, { url: PROD, ponte: PONTE(estado).replace(FALHA, NAO) });
-    await p.click('[data-act=abrir-menu]'); await p.click('.assin [data-act=planos]');
-    if (estado.motivo) ok(`${rotulo}: a janela avisa e lembra que o teste grátis continua`, await p.locator('#aviso-planos').count() === 1 && /continua valendo até/.test(await p.locator('#aviso-planos').innerText()), await p.locator('.sheet').innerText());
-    else ok(`${rotulo}: a janela não mostra aviso de erro`, await p.locator('#aviso-planos').count() === 0);
-    await p.click('#bt-assinar');
-    const t = await p.locator('.toast').innerText();
-    ok(`${rotulo}: "Assinar" explica o motivo certo`, achar.test(t) && !evitar.test(t), t);
-    ok(`${rotulo}: sem erros de JavaScript`, p.errs.length === 0, p.errs.join(' | '));
-    await ctx.close();
-  }
-  {
-    // A Play responde depois de a janela abrir: o toque em "Assinar" lê o estado de novo
-    const { p, ctx } = await abrir(3, { url: PROD, ponte: PONTE({ real: true, ativa: false, pronto: false, precos: {}, motivo: '' }).replace(FALHA, NAO) });
-    await p.click('[data-act=abrir-menu]'); await p.click('.assin [data-act=planos]');
-    await p.evaluate(() => { window.__estado = { real: true, ativa: false, pronto: false, precos: {}, motivo: 'sem_planos' }; });
-    await p.click('#bt-assinar');
-    ok('Se a Play responde "sem planos" depois de a janela abrir, o aviso do toque já é o certo', /ainda não estão à venda/.test(await p.locator('.toast').innerText()));
-    await ctx.close();
-  }
+  // A janela da Play com ponte falsa (window.acertoTotalAndroid) saiu em 06/11/2026: o app é nativo (R87)
+  // e não existe mais página dentro do APK. O comportamento real fica em android/app/src/test (AvaliacaoTest).
 
   // ===== Casca Android: o que o pacote promete
   const kt = fs.readFileSync(path.join(SRC, 'main', 'java', 'io', 'github', 'alessandrocdrx', 'acertototal', 'Assinatura.kt'), 'utf8');
