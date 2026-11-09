@@ -69,6 +69,10 @@ const SRC = path.join(__dirname, '..', 'android', 'app', 'src');
     await p.click('#bt-assinar'); await p.waitForSelector('.toast:has-text("simulada ativada")');
     ok('Assinar (simulado): fecha a janela, avisa e o cartão mostra "Ativa"', (await p.locator('.sheet').count()) === 0 && /simulada ativada/.test(await p.locator('.toast').innerText()) && /Ativa/.test(await p.locator('.assin').innerText()));
     ok('Com assinatura, a faixa do teste grátis some', !/Teste grátis/.test(await p.locator('#ambiente').innerText()));
+    // No GitHub, recarregar logo depois de assinar às vezes perdia a gravação (file:// grava o localStorage depois).
+    // Confere que a assinatura simulada foi gravada e dá tempo de ela chegar ao disco antes de reabrir.
+    ok('A assinatura simulada fica gravada no aparelho', await p.waitForFunction(() => localStorage.getItem('acertototal-assin-sim')).then(() => true, () => false));
+    await p.waitForTimeout(500);
     await p.reload(); await p.waitForSelector('.crow'); await p.click('[data-act=abrir-menu]');
     // Espera o cartão mostrar "Ativa" e a janela trazer o botão de cancelar, e não só o título (falhou uma vez no GitHub).
     ok('A assinatura continua depois de reabrir o app', await p.waitForSelector('.assin:has-text("Ativa")', { timeout: 10000 }).then(() => true, () => false), await p.locator('.assin').innerText().catch(() => ''));
