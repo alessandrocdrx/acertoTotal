@@ -141,6 +141,13 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 As entradas mais recentes ficam no topo.
 
+### A-046 · 09/11/2026 · Testadores não conseguem baixar a 1.0.0 (20) pela Play Store
+- **Sintoma:** depois de publicada no Teste Fechado, a página do app na loja dava "O URL solicitado não foi encontrado" no navegador, e "Algo deu errado / Não há conexão com a Internet" ou tela escura no app da Play Store, para todos os testadores. A Play Console dizia "Versão disponível para testadores selecionados" e não mostrava nenhum problema de política nem de conteúdo.
+- **Causa provável:** a versão 1.0.0 (20) aparecia na faixa como **"Não há códigos de versão"**, e o pacote 20 estava como "inativo" em Pacotes de apps. Ou seja, a versão estava publicada sem nenhum arquivo do app dentro, e a loja não tinha o que servir. Isso aconteceu na época em que a chave de envio foi redefinida e o código 20 foi enviado de novo.
+- **Correção:** foi gerada a versão 1.0.1 (21), sem mudança no app e assinada com a chave de envio nova. Antes dela rodaram 109 testes de unidade (homolog e produção), 7 testes de tela e o APK de produção no emulador, abrindo Contas e Assinatura. Na Play Console foi criada uma nova versão no Teste Fechado com lançamento completo, enviada para revisão.
+- **Paliativo:** o APK de produção (assinado com a chave de envio) foi instalado direto no celular. Ele não atualiza pela Play, porque a assinatura é diferente: para passar à versão da loja é preciso desinstalar, e exportar o Excel antes para não perder dados.
+- **Como evitar:** depois de publicar numa faixa, conferir na linha da versão que aparece "1 código de versão" e não "Não há códigos de versão". Nunca reaproveitar um versionCode depois de trocar a chave: subir sempre um código novo.
+
 ### A-045 · 06/11/2026 · Testes do GitHub vermelhos desde a conversão para nativo
 - **Achado numa revisão:** as 5 últimas rodadas do GitHub (main e aprovacao) falharam. 3 suítes do protótipo davam erro, e como esse passo vem antes, os testes de unidade do Kotlin **nunca rodavam** no GitHub.
 - **Causas:**
