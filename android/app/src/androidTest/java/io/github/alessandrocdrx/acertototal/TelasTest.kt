@@ -4,6 +4,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.semantics.SemanticsProperties
 import io.github.alessandrocdrx.acertototal.dados.Cliente
 import io.github.alessandrocdrx.acertototal.dados.ContaComCliente
 import io.github.alessandrocdrx.acertototal.dominio.Avaliacao
@@ -11,6 +15,7 @@ import io.github.alessandrocdrx.acertototal.dominio.Faixa
 import io.github.alessandrocdrx.acertototal.dominio.Negocio
 import io.github.alessandrocdrx.acertototal.ui.FaixaDoTopo
 import io.github.alessandrocdrx.acertototal.ui.FolhaConta
+import io.github.alessandrocdrx.acertototal.ui.FolhaFormCliente
 import io.github.alessandrocdrx.acertototal.ui.FolhaCobrar
 import io.github.alessandrocdrx.acertototal.ui.FolhaPlanos
 import io.github.alessandrocdrx.acertototal.ui.FolhaSomenteConsulta
@@ -115,5 +120,26 @@ class TelasTest {
         regra.onNodeWithText("Assinar o plano mensal por R$ 9,99").assertExists()
         regra.onNodeWithText("Anual · 10% mais barato").performClick()
         regra.onNodeWithText("Assinar o plano anual por R$ 107,90").assertExists()
+    }
+
+    private fun textoNaTela(campo: String) =
+        regra.onNodeWithContentDescription(campo).fetchSemanticsNode().config[SemanticsProperties.EditableText].text
+
+    // R94: a pessoa digita só números e a pontuação aparece sozinha; o telefone é gravado com máscara.
+    @Test fun cliente_novo_mascara_telefone_e_cpf_enquanto_digita() {
+        var salvo: Pair<String, String>? = null
+        regra.setContent {
+            TemaAcerto(escuro = false) {
+                FolhaFormCliente(inicial = null, aoFechar = {}, aoSalvar = { _, doc, tel, _, _, _ -> salvo = doc to tel })
+            }
+        }
+        regra.onNodeWithContentDescription("Telefone").performTextInput("11987654321")
+        assertEquals("(11) 98765-4321", textoNaTela("Telefone"))
+        regra.onNodeWithContentDescription("CPF ou CNPJ (opcional)").performTextInput("529.982.247-25")
+        assertEquals("529.982.247-25", textoNaTela("CPF ou CNPJ (opcional)"))
+        regra.onNodeWithContentDescription("Nome").performTextInput("Marina Alves")
+        regra.onNodeWithText("Salvar cliente").performScrollTo().performClick()
+        regra.waitForIdle()
+        assertEquals("52998224725" to "(11) 98765-4321", salvo)
     }
 }

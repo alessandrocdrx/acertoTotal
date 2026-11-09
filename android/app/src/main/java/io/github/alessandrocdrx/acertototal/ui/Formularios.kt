@@ -140,6 +140,8 @@ fun CampoForm(
     teclado: KeyboardType = KeyboardType.Text,
     prefixo: String? = null,
     linhas: Int = 1,
+    /** Mostra o valor com pontuação (telefone, CPF/CNPJ) sem mudar o que fica guardado (R94). */
+    mascara: ((String) -> String)? = null,
 ) {
     Column(modifier.fillMaxWidth()) {
         Text(rotulo, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
@@ -156,6 +158,7 @@ fun CampoForm(
             },
             prefix = prefixo?.let { { Text(it) } },
             keyboardOptions = KeyboardOptions(keyboardType = teclado),
+            visualTransformation = mascara?.let { MascaraVisual(it) } ?: androidx.compose.ui.text.input.VisualTransformation.None,
             singleLine = linhas == 1,
             minLines = linhas,
             colors = camposAcerto(),
@@ -255,5 +258,34 @@ fun SeletorCliente(
                 }
             }
         }
+    }
+}
+
+/**
+ * Máscara visual: o campo guarda só os números e mostra com pontuação (R94).
+ * O cursor anda pelos números: depois do n-ésimo número na tela fica depois do n-ésimo número guardado.
+ */
+class MascaraVisual(private val formatar: (String) -> String) : androidx.compose.ui.text.input.VisualTransformation {
+    override fun filter(text: androidx.compose.ui.text.AnnotatedString): androidx.compose.ui.text.input.TransformedText {
+        val original = text.text
+        val visto = formatar(original)
+        // posicoes[i] = onde o i-ésimo caractere guardado aparece na tela; o cursor fica logo depois dele.
+        val posicoes = IntArray(original.length)
+        var j = 0
+        for (i in original.indices) {
+            while (j < visto.length && visto[j] != original[i]) j++
+            posicoes[i] = j.coerceAtMost(visto.length)
+            j++
+        }
+        val mapa = object : androidx.compose.ui.text.input.OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int = when {
+                offset <= 0 -> 0
+                offset >= original.length -> visto.length
+                else -> posicoes[offset - 1] + 1
+            }
+            override fun transformedToOriginal(offset: Int): Int =
+                posicoes.count { it < offset.coerceIn(0, visto.length) }
+        }
+        return androidx.compose.ui.text.input.TransformedText(androidx.compose.ui.text.AnnotatedString(visto), mapa)
     }
 }

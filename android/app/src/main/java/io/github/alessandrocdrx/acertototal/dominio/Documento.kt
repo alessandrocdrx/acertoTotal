@@ -54,6 +54,13 @@ object Documento {
         }
     }
 
+    /**
+     * Erro mostrado enquanto a pessoa digita (R94): só quando o número já está completo (11 ou 14) e o
+     * dígito verificador não confere. Incompleto não é erro ainda; o Salvar explica.
+     */
+    fun erroAoDigitar(d: String): String? =
+        if ((d.length == 11 || d.length == 14) && !valido(d)) "${tipo(d)} inválido. Confira os números." else null
+
     fun tipo(doc: String?): String = if (soDigitos(doc).length == 14) "CNPJ" else "CPF"
 
     const val AVISO_TESTE =

@@ -29,6 +29,8 @@ import io.github.alessandrocdrx.acertototal.dominio.Dinheiro
 import io.github.alessandrocdrx.acertototal.dominio.Documento
 import io.github.alessandrocdrx.acertototal.dominio.ErroForm
 import io.github.alessandrocdrx.acertototal.dominio.MSG_SOMENTE_CONSULTA
+import io.github.alessandrocdrx.acertototal.dominio.Mascara
+import io.github.alessandrocdrx.acertototal.dominio.Telefone
 import io.github.alessandrocdrx.acertototal.dominio.Situacao
 import io.github.alessandrocdrx.acertototal.dominio.Validacao
 import io.github.alessandrocdrx.acertototal.dominio.brl
@@ -147,8 +149,9 @@ fun FolhaFormCliente(
     aoSalvar: (nome: String, doc: String, tel: String, email: String, obs: String, aoErro: (ErroForm) -> Unit) -> Unit,
 ) {
     var nome by remember { mutableStateOf(inicial?.nome.orEmpty()) }
-    var doc by remember { mutableStateOf(inicial?.doc?.let(Documento::formatar).orEmpty()) }
-    var tel by remember { mutableStateOf(inicial?.telefone.orEmpty()) }
+    // Os campos guardam só os números; a máscara mostra a pontuação enquanto a pessoa digita (R94).
+    var doc by remember { mutableStateOf(Documento.soDigitos(inicial?.doc).take(14)) }
+    var tel by remember { mutableStateOf(Telefone.digitos(inicial?.telefone)) }
     var email by remember { mutableStateOf(inicial?.email.orEmpty()) }
     var obs by remember { mutableStateOf(inicial?.obs.orEmpty()) }
     var erro by remember { mutableStateOf<ErroForm?>(null) }
@@ -158,6 +161,8 @@ fun FolhaFormCliente(
     val d = Documento.soDigitos(doc)
     val avisoTeste = if (!BuildConfig.COBRANCA_REAL && Documento.aceito(d, false) && !Documento.valido(d))
         "Atenção: este ${Documento.tipo(d)} ${Documento.AVISO_TESTE}" else null
+    // Na versão oficial, o CPF/CNPJ completo e inválido já fica em vermelho enquanto digita (R94).
+    val erroAoVivo = if (BuildConfig.COBRANCA_REAL) Documento.erroAoDigitar(d) else null
 
     Folha(
         titulo = if (inicial != null) "Editar cliente" else "Novo cliente",
@@ -166,15 +171,20 @@ fun FolhaFormCliente(
     ) {
         CampoForm("Nome", nome, { nome = it; erro = null }, erro = erroDe(CampoForm.NOME))
         CampoForm(
-            "CPF ou CNPJ (opcional)", doc, { doc = it; erro = null },
-            dica = "Se preencher, ajuda a reconhecer o cliente nas planilhas. Pode digitar com ou sem pontos.",
-            teclado = KeyboardType.Number, erro = erroDe(CampoForm.DOC), aviso = avisoTeste,
+            "CPF ou CNPJ (opcional)", doc, { doc = Documento.soDigitos(it).take(14); erro = null },
+            dica = "Se preencher, ajuda a reconhecer o cliente nas planilhas. Digite só os números: os pontos entram sozinhos.",
+            teclado = KeyboardType.Number, erro = erroDe(CampoForm.DOC) ?: erroAoVivo, aviso = avisoTeste,
+            mascara = Mascara::documento,
         )
-        CampoForm("Telefone", tel, { tel = it }, teclado = KeyboardType.Phone)
+        CampoForm(
+            "Telefone", tel, { tel = Telefone.digitos(it) },
+            dica = "Com DDD. Ex.: (11) 98765-4321",
+            teclado = KeyboardType.Phone, mascara = Mascara::telefone,
+        )
         CampoForm("E-mail", email, { email = it }, teclado = KeyboardType.Email)
         CampoForm("Observações", obs, { obs = it }, linhas = 2)
         BotaoBloco(if (inicial == null) "Salvar cliente" else "Salvar alterações", principal = true, aoClicar = {
-            aoSalvar(nome, doc, tel, email, obs) { erro = it }
+            aoSalvar(nome, doc, Mascara.telefone(tel), email, obs) { erro = it }
         })
         BotaoBloco("Cancelar", aoClicar = aoFechar)
     }
@@ -194,7 +204,7 @@ fun FolhaCliente(
     aoExcluir: () -> Unit,
     aoAbrirConta: (ContaComCliente) -> Unit,
 ) {
-    val contato = listOf(cliente.telefone, cliente.email).filter { it.isNotBlank() }.joinToString("\n").ifEmpty { "Sem contato" }
+    val contato = listOf(Telefone.exibir(cliente.telefone), cliente.email).filter { it.isNotBlank() }.joinToString("\n").ifEmpty { "Sem contato" }
     val docTxt = if (cliente.doc.isEmpty()) "" else
         "${Documento.tipo(cliente.doc)} ${Documento.formatar(cliente.doc)}" +
             (if (Documento.valido(cliente.doc)) "" else " · não é válido (aceito na versão de teste)") + "\n"
