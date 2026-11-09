@@ -15,3 +15,4 @@ android/*.keystore
 android/*.jks
 android/assinatura*.properties
 android/.kotlin/
+android/*.pem
