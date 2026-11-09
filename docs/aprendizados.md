@@ -141,6 +141,12 @@ Cada regra tem um teste que a verifica. A suíte aparece entre colchetes.
 
 As entradas mais recentes ficam no topo.
 
+### A-047 · 09/11/2026 · Teste da assinatura instável no GitHub e tags de versão
+- **Achado numa revisão do git:** o mesmo commit (1.0.1) passou na `main` e falhou no envio da tag `v1.0.1`. A suíte `assinatura` esperou 6 s pelo botão "Cancelar a assinatura simulada" e parou com erro. Por causa do erro, as conferências feitas antes não apareceram no registro. Aqui no computador a suíte passou 12 vezes seguidas.
+- **Correção:** depois de reabrir o app, o teste espera o cartão mostrar "Ativa" e a janela trazer o botão de cancelar (até 10 s), e não só o título da janela. Se der erro, a suíte imprime antes as conferências já feitas. O workflow passou a rodar só em envio de branch: a tag marca um commit que já foi testado.
+- **Organização do git:** as versões enviadas à Play agora têm tag anotada (`v1.0.0` = código 20, `v1.0.1` = código 21). As tags `build-N` antigas eram dos APKs da época da WebView e não seguem o versionCode. As capturas da loja 1.0.0 e o `gerar-molduras.js` entraram no repositório. O certificado exportado da chave de envio (`android/*.pem`) fica fora dele.
+- **Como evitar:** a cada versão enviada à Play, criar a tag `vX.Y.Z` no commit que gerou o AAB. Em teste de tela, esperar o elemento que vai ser usado, e não um vizinho dele.
+
 ### A-046 · 09/11/2026 · Testadores não conseguem baixar a 1.0.0 (20) pela Play Store
 - **Sintoma:** depois de publicada no Teste Fechado, a página do app na loja dava "O URL solicitado não foi encontrado" no navegador, e "Algo deu errado / Não há conexão com a Internet" ou tela escura no app da Play Store, para todos os testadores. A Play Console dizia "Versão disponível para testadores selecionados" e não mostrava nenhum problema de política nem de conteúdo.
 - **Causa provável:** a versão 1.0.0 (20) aparecia na faixa como **"Não há códigos de versão"**, e o pacote 20 estava como "inativo" em Pacotes de apps. Ou seja, a versão estava publicada sem nenhum arquivo do app dentro, e a loja não tinha o que servir. Isso aconteceu na época em que a chave de envio foi redefinida e o código 20 foi enviado de novo.

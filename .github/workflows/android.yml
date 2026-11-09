@@ -2,6 +2,7 @@ name: Android
 
 on:
   push:
+    branches: ['**']   # tags (v1.0.1...) marcam commits já testados: não rodam de novo
   pull_request:
   workflow_dispatch:
 
