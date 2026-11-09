@@ -2,7 +2,7 @@ package io.github.alessandrocdrx.acertototal.dominio
 
 import java.time.LocalDate
 
-enum class CampoForm { CLIENTE, VALOR, VENCIMENTO, DATA_PAGO, NOME, DOC }
+enum class CampoForm { CLIENTE, VALOR, VENCIMENTO, DATA_PAGO, NOME, DOC, EMAIL }
 
 /** O erro aparece embaixo do campo, em vermelho, explicando como corrigir (R8). */
 data class ErroForm(val campo: CampoForm, val mensagem: String)
@@ -25,8 +25,10 @@ object Validacao {
     }
 
     /** Só o nome é obrigatório. O CPF/CNPJ é opcional: se vier, tem que ser válido e não pode ser de outro cliente. */
-    fun cliente(nome: String, docTxt: String, donoDoDoc: String?, producao: Boolean): ErroForm? {
+    fun cliente(nome: String, docTxt: String, donoDoDoc: String?, producao: Boolean, email: String = ""): ErroForm? {
         if (nome.isBlank()) return ErroForm(CampoForm.NOME, "Informe o nome do cliente")
+        // O e-mail é opcional; se vier, precisa ter @ e domínio (R94).
+        if (email.isNotBlank() && !Email.valido(email)) return ErroForm(CampoForm.EMAIL, "E-mail incompleto. Ex.: nome@gmail.com")
         val d = Documento.soDigitos(docTxt)
         if (d.isEmpty()) return null
         if (!Documento.aceito(d, producao)) {

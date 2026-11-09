@@ -61,7 +61,7 @@ class ClientesViewModel(app: Application) : AndroidViewModel(app) {
     ) = viewModelScope.launch {
         val d = Documento.soDigitos(docTxt)
         val dono = if (d.isNotEmpty()) repo.donoDoDoc(d, id)?.nome else null
-        val erro = Validacao.cliente(nome, docTxt, dono, producao = BuildConfig.COBRANCA_REAL)
+        val erro = Validacao.cliente(nome, docTxt, dono, producao = BuildConfig.COBRANCA_REAL, email = email)
         if (erro != null) return@launch aoTerminar(Resultado.Erro(erro))
         val c = Cliente(id ?: novoId(), nome.trim(), d, telefone.trim(), email.trim(), obs.trim())
         repo.salvarCliente(c)

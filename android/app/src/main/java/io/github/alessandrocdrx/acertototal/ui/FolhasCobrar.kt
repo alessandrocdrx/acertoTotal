@@ -28,6 +28,7 @@ import io.github.alessandrocdrx.acertototal.dados.Cliente
 import io.github.alessandrocdrx.acertototal.dados.ContaComCliente
 import io.github.alessandrocdrx.acertototal.dominio.Cobranca
 import io.github.alessandrocdrx.acertototal.dominio.ContaParaCobrar
+import io.github.alessandrocdrx.acertototal.dominio.ChavePix
 import io.github.alessandrocdrx.acertototal.dominio.Negocio
 import io.github.alessandrocdrx.acertototal.dominio.brl
 import io.github.alessandrocdrx.acertototal.dominio.plural
@@ -110,9 +111,9 @@ fun FolhaNegocio(inicial: Negocio, aoSalvar: (Negocio) -> Unit, aoFechar: () -> 
         CampoForm("Seu nome ou do negócio", nome, { nome = it }, dica = "Aparece no fim da mensagem. Ex.: Padaria Bom Pão")
         CampoForm(
             "Sua chave Pix", pix, { pix = it },
-            dica = "CPF, CNPJ, telefone, e-mail ou chave aleatória. A mensagem convida a pagar por ela.",
+            dica = "CPF, CNPJ, telefone, e-mail ou chave aleatória. CPF, CNPJ e telefone ganham a pontuação ao salvar.",
         )
-        BotaoBloco("Salvar", principal = true, aoClicar = { aoSalvar(Negocio(nome.trim(), pix.trim())) })
+        BotaoBloco("Salvar", principal = true, aoClicar = { aoSalvar(Negocio(nome.trim(), ChavePix.formatar(pix))) })
         BotaoBloco("Cancelar", aoClicar = aoFechar)
     }
 }

@@ -31,6 +31,7 @@ import io.github.alessandrocdrx.acertototal.dominio.ErroForm
 import io.github.alessandrocdrx.acertototal.dominio.MSG_SOMENTE_CONSULTA
 import io.github.alessandrocdrx.acertototal.dominio.Mascara
 import io.github.alessandrocdrx.acertototal.dominio.Telefone
+import io.github.alessandrocdrx.acertototal.dominio.ValorDigitado
 import io.github.alessandrocdrx.acertototal.dominio.Situacao
 import io.github.alessandrocdrx.acertototal.dominio.Validacao
 import io.github.alessandrocdrx.acertototal.dominio.brl
@@ -115,7 +116,9 @@ fun FolhaFormConta(
 ) {
     var clienteId by remember { mutableStateOf(inicial?.clienteId ?: clientePre?.takeIf { id -> clientes.any { it.id == id } }) }
     var descricao by remember { mutableStateOf(inicial?.descricao.orEmpty()) }
-    var valorTxt by remember { mutableStateOf(inicial?.let { Dinheiro.paraCampo(it.valor) }.orEmpty()) }
+    // O campo guarda só os números e enche a partir dos centavos (R94): 15000 aparece como 150,00.
+    var valorDig by remember { mutableStateOf(inicial?.let { ValorDigitado.deCentavos(it.valor) }.orEmpty()) }
+    val valorTxt = ValorDigitado.formatar(valorDig)
     var venc by remember { mutableStateOf<LocalDate?>(inicial?.venc ?: hoje.plusDays(7)) }
     var erro by remember { mutableStateOf<ErroForm?>(null) }
     fun erroDe(c: CampoForm) = erro?.takeIf { it.campo == c }?.mensagem
@@ -129,8 +132,10 @@ fun FolhaFormConta(
         SeletorCliente(clientes, clienteId, aoEscolher = { clienteId = it; erro = null }, erro = erroDe(CampoForm.CLIENTE))
         CampoForm("Descrição", descricao, { descricao = it }, dica = "Ex.: Mensalidade de novembro")
         CampoForm(
-            "Valor", valorTxt, { valorTxt = it; erro = null }, dica = "Use vírgula nos centavos. Ex.: 150,00",
-            prefixo = "R$ ", teclado = KeyboardType.Decimal, erro = erroDe(CampoForm.VALOR),
+            "Valor", valorDig, { valorDig = ValorDigitado.digitos(it); erro = null },
+            dica = "Digite só os números: a vírgula entra sozinha. Ex.: 15000 vira 150,00",
+            prefixo = "R$ ", teclado = KeyboardType.Number, erro = erroDe(CampoForm.VALOR),
+            mascara = ValorDigitado::formatar,
         )
         CampoData("Vencimento", venc, { venc = it; erro = null }, erro = erroDe(CampoForm.VENCIMENTO))
         BotaoBloco(if (inicial == null) "Salvar conta" else "Salvar alterações", principal = true, aoClicar = {
@@ -181,7 +186,7 @@ fun FolhaFormCliente(
             dica = "Com DDD. Ex.: (11) 98765-4321",
             teclado = KeyboardType.Phone, mascara = Mascara::telefone,
         )
-        CampoForm("E-mail", email, { email = it }, teclado = KeyboardType.Email)
+        CampoForm("E-mail", email, { email = it; if (erro?.campo == CampoForm.EMAIL) erro = null }, teclado = KeyboardType.Email, erro = erroDe(CampoForm.EMAIL))
         CampoForm("Observações", obs, { obs = it }, linhas = 2)
         BotaoBloco(if (inicial == null) "Salvar cliente" else "Salvar alterações", principal = true, aoClicar = {
             aoSalvar(nome, doc, Mascara.telefone(tel), email, obs) { erro = it }

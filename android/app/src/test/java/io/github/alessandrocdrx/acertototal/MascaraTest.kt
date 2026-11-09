@@ -4,6 +4,14 @@ import androidx.compose.ui.text.AnnotatedString
 import io.github.alessandrocdrx.acertototal.dominio.Documento
 import io.github.alessandrocdrx.acertototal.dominio.Mascara
 import io.github.alessandrocdrx.acertototal.dominio.Telefone
+import io.github.alessandrocdrx.acertototal.dominio.ValorDigitado
+import io.github.alessandrocdrx.acertototal.dominio.Email
+import io.github.alessandrocdrx.acertototal.dominio.ChavePix
+import io.github.alessandrocdrx.acertototal.dominio.Dinheiro
+import io.github.alessandrocdrx.acertototal.dominio.Validacao
+import io.github.alessandrocdrx.acertototal.dominio.CampoForm
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import io.github.alessandrocdrx.acertototal.ui.MascaraVisual
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -63,5 +71,42 @@ class MascaraTest {
             val tp = MascaraVisual(Mascara::telefone).filter(AnnotatedString(parcial))
             assertEquals(tp.text.length, tp.offsetMapping.originalToTransformed(n))
         }
+    }
+
+    @Test fun valorEnchePelosCentavos() {
+        assertEquals("", ValorDigitado.formatar(""))
+        assertEquals("0,05", ValorDigitado.formatar("5"))
+        assertEquals("1,50", ValorDigitado.formatar("150"))
+        assertEquals("150,00", ValorDigitado.formatar("15000"))
+        assertEquals("1.500,00", ValorDigitado.formatar("150000"))
+        assertEquals("1.234.567,89", ValorDigitado.formatar("123456789"))
+        assertEquals("15000", ValorDigitado.digitos("R$ 0150,00"))       // colado com pontuação e zero na frente
+        assertEquals("15000", ValorDigitado.deCentavos(15000))
+        assertEquals(150000L, Dinheiro.parse(ValorDigitado.formatar("150000")))  // o que vai para o banco
+        assertEquals("1.500,00", MascaraVisual(ValorDigitado::formatar).filter(AnnotatedString("150000")).text.text)
+        val m = MascaraVisual(ValorDigitado::formatar).filter(AnnotatedString("5")).offsetMapping
+        assertEquals(4, m.originalToTransformed(1))                    // cursor depois do 5 em "0,05"
+    }
+
+    @Test fun emailPrecisaDeArrobaEDominio() {
+        assertTrue(Email.valido("marina@gmail.com"))
+        assertTrue(Email.valido(" contato@fenix.com.br "))
+        assertFalse(Email.valido("marina"))
+        assertFalse(Email.valido("marina@gmail"))
+        assertFalse(Email.valido("marina @gmail.com"))
+        val e = Validacao.cliente("Ana", "", null, producao = true, email = "ana@")
+        assertEquals(CampoForm.EMAIL, e!!.campo)
+        assertEquals("E-mail incompleto. Ex.: nome@gmail.com", e.mensagem)
+        assertNull("e-mail é opcional", Validacao.cliente("Ana", "", null, producao = true, email = ""))
+    }
+
+    @Test fun chavePixGanhaPontuacaoQuandoENumero() {
+        assertEquals("529.982.247-25", ChavePix.formatar("52998224725"))
+        assertEquals("11.444.777/0001-61", ChavePix.formatar("11444777000161"))
+        assertEquals("+55 (11) 98765-4321", ChavePix.formatar("11987654321"))   // 11 números que não são CPF
+        assertEquals("+55 (11) 98765-4321", ChavePix.formatar("+55 11 98765-4321"))
+        assertEquals("marina@gmail.com", ChavePix.formatar(" marina@gmail.com "))
+        assertEquals("123e4567-e89b-12d3-a456-426614174000", ChavePix.formatar("123e4567-e89b-12d3-a456-426614174000"))
+        assertEquals("12345", ChavePix.formatar("12345"))                       // não sabe o que é: fica como está
     }
 }
